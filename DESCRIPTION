@@ -1,13 +1,12 @@
 Package: CDatanet
 Type: Package
-Title: Social Network Model with Rational Expectation for Count Data
-Version: 1.0
+Title: Count Data Model With Social Interactions
+Version: 0.1
 Date: 2019-10-24
 Author: Elysee Aristide Houndetoungan
 Maintainer: Elysee Aristide Houndetoungan <ariel92and@gmail.com>
-Description: Estimate model of social network with counting responses
+Description: Estimating social networks models where the dependent variable is counting.
 License: GPL2
 Imports: Rcpp (>= 1.0.0)
-Depends: MCMCglmm
 LinkingTo: Rcpp, RcppArmadillo
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
