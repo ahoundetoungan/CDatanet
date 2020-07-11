@@ -1,5 +1,5 @@
 # An R package for estimating a Count Data Model With Social Interactions
-The **CDatanet** package includes all functions for the replication of the results in Houndetoungan (2020). The exact replication codes are located in the folder [**test**](https://github.com/ahoundetoungan/CDatanet/tree/master/test). Below, we also provide detailed examples on how to use the estimators described in the paper.
+The **CDatanet** package includes all functions for the replication of the results in Houndetoungan (2020). The exact replication codes of the Monte Carlo study are located in the folder [**test**](https://github.com/ahoundetoungan/CDatanet/tree/master/test).
 
 ## Installation
 ### Requirements
@@ -18,3 +18,5 @@ Once the installation is done, **CDatanet** can be loaded as a common package in
 ```R
 library(CDatanet)
 ```
+### Function
+Use help pages provided in the package.
