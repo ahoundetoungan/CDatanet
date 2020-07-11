@@ -1,48 +1,36 @@
+# This code replicates the Monte Carlo Results
+
 rm(list = ls())
 library(CDatanet)
 library(doParallel)
 
-set.seed(123)
+# You need de define the number of cores
+# I set the number of available cores - 1
+n.cores <- parallel::detectCores(all.tests = FALSE, logical = TRUE)-1
 
-# summary function
-my.sum <- function(x) {
-  out <- c(mean(x, na.rm = TRUE),
-           sd(x, na.rm = TRUE),
-           min(x, na.rm = TRUE),
-           quantile(x, 0.25, na.rm = TRUE),
-           median(x, na.rm = TRUE),
-           quantile(x, 0.75, na.rm = TRUE),
-           max(x, na.rm = TRUE))
-  names(out) <- c("Mean", "Sd.", "Min", "1st Qu.", "Median", "3rd Qu.", "Max")
-  return(out)
-}
-
-# estimation on one data 
-f      <- function(N, disp, type) {
-  lambda         <- 0.4
+# This function does one iteration in the Monte Carlo
+# 'm' stand for the m-th iteration to perform out of 'iteration'
+# 'N' is the sample size. 'disp' is the dispersion: low or high
+#  type specifies the type of data: A or B
+f      <- function(m, iteration, N, type, dispersion) {
+  # parameters
+  thetal         <- rbind(c(0.4, 2, -2.5, 0.6, 1.3, -1.2, 1.5),
+                          c(0.4, 3, -5.5, 1.9, -0.5, -0.9, 1.5),
+                          c(0.4, 1.1, 0.5, 0.5, 0.4, -0.6, 1.5),
+                          c(0.4, 2, 1.8, 0.9, 0.5, 1.6, 1.5))
   
-  blist          <- rbind(c(1, -1.9, 0.5),
-                          c(2, -3.8, 1.3),
-                          c(3, -5.5, 1.9),
-                          c(2, -0.5, 0.2),
-                          c(2, 1.8, 0.9),
-                          c(3, 3.9, 1.7))
+  theta          <- NULL
   
-  b              <- NULL
-  if (type == 1) {
-    b            <- blist[disp,]
+  disp           <- (1:2)[c("LOW", "HIGH") == toupper(dispersion)]
+  if (type == "A") {
+    theta        <- thetal[disp,]
   } else {
-    b            <- blist[disp + 3,]
+    theta        <- thetal[disp + 2,]
   }
-  
-  
-  sigma          <- 1.5
-  
-  theta          <- c(lambda, b, sigma)
-  
-  # X
-  X              <- cbind(rep(1, N), rnorm(N, 1, 1), rexp(N, 0.4))
 
+  # X
+  X              <- cbind(rnorm(N, 1, 1), rexp(N, 0.4))
+  
   # Network
   G              <- matrix(0, N, N)
   nmax_f         <- 30
@@ -55,57 +43,105 @@ f      <- function(N, disp, type) {
   Glist          <- list(G)
   
   # data
-  y              <- simCDnet(X, Glist, theta)$y
+  ytmp           <- simCDnet(formula = ~ X|X, Glist = Glist, theta = theta)
+  y              <- ytmp$y
   
-  # solver
-  opt.ctr1       <- list(gradtol = 1e-12, steptol = 1e-12, iterlim = 2e3)
-  opt.ctr2       <- list(iterlim = 2e3)
-  opt.ctr3       <- list(control = list(method = "BFGS"))
-  
-  # init 
-  theta          <- c(alpha, b, sigma^2)
-  
-  
-  # RE
-  resRE          <- CDnet(X = X, Glist = Glist, y = y, yb = yb, opt.ctr = opt.ctr1,
-                          theta0 = theta, npl.ctr = list(print = FALSE), cov = FALSE,
-                          optimizer = "nlm")
+  # CD
+  CDest          <- CDnetNPL(formula = y ~ X|X, Glist = Glist, npl.ctr = list(print = F))
   
   
   # TOBIT
-  resTO          <- SARTML(y, X, Glist, opt.ctr = opt.ctr2, theta0 = theta,
-                           print =  FALSE, cov = FALSE, optimizer = "nlm")
+  TOest          <- SARTML(formula = y ~ X|X, Glist = Glist, print =  F, cov = F, optimizer = "nlm")
   
   
   #SAR
-  resSAR         <- SARML(y, X, Glist, opt.ctr = opt.ctr3, alpha0 = alpha,
-                          print =  FALSE, cov = FALSE, optimizer = "optim")
+  SARest         <- SARML(formula = y ~ X|X, Glist = Glist, print =  F, cov = F, optimizer = "nlm")
   
-  cat("RE", "\n")
-  print(resRE$estimate)
   
-  cat("TO", "\n")
-  print(resTO$estimate)
+  cat("Iteration : ", m, "/", iteration, "\n")
+  cat("CDSI", "\n")
+  print(CDest$estimate)
+  
+  cat("SART", "\n")
+  print(TOest$estimate)
   
   cat("SAR", "\n")
-  print(resSAR$estimate)
+  print(SARest$estimate)
   
-  c(resRE$estimate, resTO$estimate, resSAR$estimate)
+  c(CDest$estimate, TOest$estimate, SARest$estimate)
 }
 
 
-fMC       <- function(iteration, N, disp, type) {
+# This function performs 'iteration' iteration one one model
+# defined by N, dispersion and type
+# and saves the in the working directory 
+fMC       <- function(iteration, N, dispersion, type) {
+  set.seed(123)
   out.mc  <- mclapply(1:iteration, function(m) 
-    f(m, iteration, N, disp, type), mc.cores = 4L)
+    f(m, iteration, N, type, dispersion), mc.cores = n.cores)
+  saveRDS(out.mc, file = paste0("_output/MC_N=", N, "_type=", type, "_disp=", dispersion, ".RDS"))
 }
-tmp      <- fMC(iteration = 1000, N = 750, disp = 1, type = 1)
+
+## Create a folder _output to save the results
+if (dir.exists("_output")) {
+  unlink("_output", recursive = TRUE)
+}
+dir.create("_output")
+
+## RUN THE MONTE CARLO
+iteration <- 10
+
+fMC(iteration, N = 250, disp = "low", type = "A")
+fMC(iteration, N = 250, disp = "low", type = "B")
+fMC(iteration, N = 250, disp = "high", type = "A")
+fMC(iteration, N = 250, disp = "high", type = "B")
+
+fMC(iteration, N = 750, disp = "low", type = "A")
+fMC(iteration, N = 750, disp = "low", type = "B")
+fMC(iteration, N = 750, disp = "high", type = "A")
+fMC(iteration, N = 750, disp = "high", type = "B")
+
+fMC(iteration, N = 1500, disp = "low", type = "A")
+fMC(iteration, N = 1500, disp = "low", type = "B")
+fMC(iteration, N = 1500, disp = "high", type = "A")
+fMC(iteration, N = 1500, disp = "high", type = "B")
 
 
 
-out                <-  readRDS("Output/MC_N=1500_disp=1_type=1.RDS")
-out                <- do.call(rbind, out)
-out[,c(5, 10, 15)] <- sqrt(out[,c(5, 10, 15)])
-r.out              <- t(apply(out, 2, my.sum))
-sum(is.na(out))
-print(r.out)
-# write.csv(r.out, file = "MC.yst.out.csv")
+# The sumary functions
+my.sum <- function(x) {
+  out        <- c(mean(x, na.rm = TRUE),
+                  sd(x, na.rm = TRUE))
+  names(out) <- c("Mean", "Sd.")
+  return(out)
+}
+MC.summary <- function(N, type, dispersion) {
+  cat("Sample size: ", N, "\n")
+  cat("Data type  : ", type, "\n")
+  cat("Dispersion : ", dispersion, "\n")
+  out                <- readRDS(paste0("_output/MC_N=", N, "_type=", type, "_disp=", dispersion, ".RDS"))
+  out                <- do.call(rbind, out)
+  s.out              <- t(apply(out, 2, my.sum))
+  s.out              <- cbind(s.out[1:7,], s.out[8:14,], s.out[15:21,])
+  colnames(s.out)    <- paste(c("Mean", "Sd."), rep(c("CDSI", "SART", "SAR"), c(2, 2, 2)))
+  s.out
+}
+
+
+# Print monte Carlo results for each sample size, dispersion and type
+MC.summary(N = 250, type = "A", dispersion = "low")
+MC.summary(N = 250, type = "A", dispersion = "high")
+MC.summary(N = 250, type = "B", dispersion = "low")
+MC.summary(N = 250, type = "B", dispersion = "high")
+
+
+MC.summary(N = 750, type = "A", dispersion = "low")
+MC.summary(N = 750, type = "A", dispersion = "high")
+MC.summary(N = 750, type = "B", dispersion = "low")
+MC.summary(N = 750, type = "B", dispersion = "high")
+
+
+MC.summary(N = 1500, type = "A", dispersion = "low")
+MC.summary(N = 1500, type = "A", dispersion = "high")
+MC.summary(N = 1500, type = "B", dispersion = "low")
+MC.summary(N = 1500, type = "B", dispersion = "high")
