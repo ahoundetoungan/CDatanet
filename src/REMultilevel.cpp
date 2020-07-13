@@ -194,9 +194,10 @@ double foptimREM_NPL(arma::vec& yb,
   arma::vec logp  = flogp(y, yb, Gyb, xb, h1, lambda, sigma, n);
   double llh      = sum(logp);
   
-  if(llh < -1e307) {
-    llh           = -1e307;
+  if(llh < -1e293) {
+    llh           = -1e293;
   }
+
   return -llh;
 }
 

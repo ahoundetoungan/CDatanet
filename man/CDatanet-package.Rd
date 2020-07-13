@@ -6,5 +6,17 @@
 \alias{CDatanet-package}
 \title{CDatanet: Count Data Model With Social Interactions}
 \description{
-Estimating social networks models where the dependent variable is counting.
+Estimating a count data model with social interactions.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/ahoundetoungan/CDatanet}
+  \item Report bugs at \url{https://github.com/ahoundetoungan/CDatanet/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Elysée Aristide Houndetoungan \email{ariel92and@gmail.com}
+
 }

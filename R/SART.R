@@ -123,9 +123,9 @@ SARTML <- function(formula,
   
   names(theta)       <- c(coln, "sigma")
   
-  sdata <- c(deparse(substitute(formula)), deparse(substitute(contextual)), deparse(substitute(Glist)))
+  sdata <- c(as.character(formula), deparse(substitute(Glist)))
   if (!missing(data)) {
-    sdata         <- c(sdata, deparse(substitute(Data)))
+    sdata         <- c(sdata, deparse(substitute(data)))
   }
   
   out                <- list("M"             = M,
@@ -173,7 +173,7 @@ SARTML <- function(formula,
   std                  <- sqrt(diag(x$cov))
   sigma                <- estimate[K]
   llh                  <- x$likelihood
-  Glist                <- get(x$codedata[3])
+  Glist                <- get(x$codedata[2])
   tmp                  <- fcoefficients(coef, std)
   out_print            <- tmp$out_print
   out                  <- tmp$out

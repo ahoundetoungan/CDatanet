@@ -143,7 +143,7 @@ CDnetNPL    <- function(formula,
       cat(paste0("Step          : ", t), "\n")
       cat(paste0("Distance      : ", round(dist,3)), "\n")
       cat(paste0("Likelihood    : ", round(llht,3)), "\n")
-      cat("Estimate", "\n")
+      cat("Estimate:", "\n")
       print(theta)
       
     }
@@ -170,7 +170,7 @@ CDnetNPL    <- function(formula,
   names(theta)    <- c(coln, "sigma")
   
   
-  sdata <- c(deparse(substitute(formula)), deparse(substitute(contextual)), deparse(substitute(Glist)))
+  sdata <- c(as.character(formula), deparse(substitute(Glist)))
   if (!missing(data)) {
     sdata         <- c(sdata, deparse(substitute(data)))
   }
@@ -198,11 +198,10 @@ CDnetNPL    <- function(formula,
   stopifnot(class(object) == "CDnetNPL")
   codedata      <- object$codedata
   formula       <- as.formula(codedata[1])
-  contextual    <- as.logical(codedata[2])
-  Glist         <- get(codedata[3])
+  Glist         <- get(codedata[2])
   data          <- environment(formula)
-  if (length(codedata) == 4) {
-    data        <- get(codedata[4])
+  if (length(codedata) == 3) {
+    data        <- get(codedata[3])
   }
   theta         <- object$estimate
   Gyb           <- object$Gyb
@@ -224,7 +223,7 @@ CDnetNPL    <- function(formula,
   n             <- sum(nvec)
   igr           <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
   
-  f.t.data      <- formula.to.data(formula, contextual, Glist, M, igr, data, theta0 = 0)
+  f.t.data      <- formula.to.data(formula, FALSE, Glist, M, igr, data, theta0 = 0)
   X             <- f.t.data$X
   coln          <- c("lambda", colnames(X))
   
@@ -267,6 +266,7 @@ CDnetNPL    <- function(formula,
   C             <- c(tmp[[3]])
   d             <- c(tmp[[4]])
   b             <- c(tmp[[5]])
+  m2d           <- c(tmp[[6]])
   
   # Sigma and Omega
   AZ            <- A*Z
@@ -301,15 +301,38 @@ CDnetNPL    <- function(formula,
   tmp1          <- solve(Sigma + Omega)
   tmp2          <- tmp1 %*% Sigma %*% t(tmp1)
   
-  covout          <- tmp2[-J, -J]
+  # marginal effect
+  meand           <- mean(d)
+  meandzd         <- colSums(d*Z)/n
+  meanm2d         <- mean(m2d)
   
-  colnames(covout)<- coln
-  rownames(covout)<- coln
+  meff            <- theta[-J]*meand
+  tmp3            <- diag(J - 1)*meand + (theta[-J]/sigma^2)*meandzd
+  tmp4            <- (meanm2d/sigma^3  - mean(d)/sigma)*theta[-J]
+  tmp5            <- cbind(tmp3, tmp4)
+  tmp6            <- tmp5 %*% tmp2 %*% t(tmp5)
+  
+  covout            <- tmp2[-J, -J]
+  colnames(covout)  <- coln
+  rownames(covout)  <- coln
+  
+  covmeff           <- tmp6
+  colnames(covmeff) <- coln
+  rownames(covmeff) <- coln
+  if("(Intercept)" %in% coln) {
+    in.tmp            <- which("(Intercept)" == coln)
+    covmeff           <- tmp6[-in.tmp, -in.tmp]
+    colnames(covmeff) <- coln[-in.tmp]
+    rownames(covmeff) <- coln[-in.tmp]
+    meff              <- meff[-in.tmp]
+  }
   
   cov.ctr         <- list("R0" = R0, "S0" = S0)
   
   out             <- c(object[-9], 
                        list("cov"       = covout, 
+                            "meffects"  = meff,
+                            "cov.me"    = covmeff,
                             "cov.ctr"   = cov.ctr, 
                             "codedata"  = codedata,
                             "..."       = ...)) 
@@ -330,14 +353,22 @@ CDnetNPL    <- function(formula,
   estimate             <- x$estimate
   K                    <- length(estimate)
   coef                 <- estimate[-K]
+  meff                 <- x$meffects
   std                  <- sqrt(diag(x$cov))
+  std.meff             <- sqrt(diag(x$cov.me))
   sigma                <- estimate[K]
   llh                  <- x$likelihood
   Glist                <- get(x$codedata[3])
   tmp                  <- fcoefficients(coef, std)
   out_print            <- tmp$out_print
   out                  <- tmp$out
-  out_print            <- c(list(out_print), x[-(1:11)])
+  out_print            <- c(list(out_print), x[-(1:13)])
+  
+  
+  tmp.meff             <- fcoefficients(meff, std.meff)
+  out_print.meff       <- tmp.meff$out_print
+  out.meff             <- tmp.meff$out
+  out_print.meff       <- c(list(out_print.meff), x[-(1:13)])
   
   if (!is.list(Glist)) {
     Glist  <- list(Glist)
@@ -352,11 +383,14 @@ CDnetNPL    <- function(formula,
   
   cat("Coefficients:\n")
   do.call("print", out_print)
+  
+  cat("\nMarginal Effects:\n")
+  do.call("print", out_print.meff)
   cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
   cat("sigma: ", sigma, "\n")
   cat("log pseudo-likelihood: ", llh, "\n")
   
-  out                  <- c(x[1:4], list("coefficients" = out), x[-(1:4)])
+  out                  <- c(x[1:4], list("coefficients" = out, "coefficients.me" = out.meff), x[-(1:4)])
   class(out)           <- "print.summary.CDnetNPL"
   invisible(out)
 }

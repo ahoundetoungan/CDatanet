@@ -31,7 +31,7 @@ double foptimTobit(const arma::vec& theta,
   NumericVector tzcpp  = wrap(tmpzer);
   tmp                  = y - tmp;
   thetacpp(0)          = alpha;
-  thetacpp(K + 1)      = sigma*sigma;
+  thetacpp(K + 1)      = sigma;
   Rcpp::print(thetacpp);
   
   if(alphatilde(0) != theta(0)) {
@@ -51,8 +51,8 @@ double foptimTobit(const arma::vec& theta,
   double llh        = sum(Rcpp::pnorm(tzcpp, 0, sigma, false, true)) -
     sum(Npos)*(0.5*log(2*acos(-1)) + log(sigma)) + logdetA2(0) - 0.5*sum(pow(tmp.elem(idpos)/sigma, 2));
   Rcpp::Rcout <<"Likelihood: "<< llh << endl;
-  if(llh < -1e307) {
-    llh           = -1e307;
+  if(llh < -1e293) {
+    llh           = -1e293;
   }
   return -llh;
 }
@@ -97,8 +97,8 @@ double foptimTobit0(const arma::vec& theta,
   double llh        = sum(Rcpp::pnorm(tzcpp, 0, sigma, false, true)) -
     sum(Npos)*(0.5*log(2*acos(-1)) + log(sigma)) + logdetA2(0) - 0.5*sum(pow(tmp.elem(idpos)/sigma, 2));
   
-  if(llh < -1e307) {
-    llh           = -1e307;
+  if(llh < -1e293) {
+    llh           = -1e293;
   }
   return -llh;
 }
@@ -177,8 +177,8 @@ double foptimSAR(const double& alphatilde,
   double llh      = - 0.5*N*(log(2*acos(-1)*s2)) + logdetA - 0.5*N;
   Rcpp::Rcout <<"Likelihood: "<< llh << endl;
   
-  if(llh < -1e307) {
-    llh           = -1e307;
+  if(llh < -1e293) {
+    llh           = -1e293;
   }
   return -llh;
 }
@@ -211,8 +211,8 @@ double foptimSAR0(const double& alphatilde,
   }
   
   double llh      = - 0.5*N*(log(2*acos(-1)*s2)) + logdetA - 0.5*N;
-  if(llh < -1e307) {
-    llh           = -1e307;
+  if(llh < -1e293) {
+    llh           = -1e293;
   }
   return -llh;
 }

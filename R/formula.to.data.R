@@ -59,7 +59,7 @@ formula.to.data <- function(formula,
       stop("contextual cannot be TRUE while contextual variable are declared after the pipe.")
     }
     X              <- Xone
-    tmpx           <- as.character(formula(formula, lhs = 1, rhs = 1))
+    tmpx           <- as.character.default(formula(formula, lhs = 1, rhs = 1))
     formula        <- Formula::as.Formula(paste(c(tmpx[c(2, 1, 3)], "|", tmpx[3]), collapse = " "))
   } 
   

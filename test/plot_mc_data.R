@@ -2,17 +2,17 @@
 # with social interactions
 
 rm(list = ls())
-set.seed(123)
+set.seed(0)
 
 library(CDatanet)
 library(ggplot2)
 library(latex2exp)
 
 
-thetal  <- rbind(c(0.4, 2, -2.5, 0.6, 1.3, -1.2, 1.5),
-                        c(0.4, 3, -5.5, 1.9, -0.5, -0.9, 1.5),
-                        c(0.4, 1.1, 0.5, 0.5, 0.4, -0.6, 1.5),
-                        c(0.4, 2, 1.8, 0.9, 0.5, 1.6, 1.5))
+thetal  <- rbind(c(0.4, -2, -2.5, 2.1, 1.5, -1.2, 1.5),
+                 c(0.4, -1, -6.8, 2.3, -2.5, 2.5, 1.5),
+                 c(0.4, 1, 0.4, 0.5, 0.5, 0.6, 1.5),
+                 c(0.4, 2, -1.8, 2.3, 2.5, 2.5, 1.5))
 
 
 
@@ -28,15 +28,15 @@ N       <- 1500
 
 fgraph  <- function(j) {
   # parameters
-  theta          <- thetal[,j]
+  theta          <- thetal[j,]
   
   # X
-  X              <- cbind(rnorm(N, 1, 1), rexp(N, 0.4))
+  X              <- cbind(rnorm(N, 1, 2), rpois(N, 3))
   
   
   # Network
   G              <- matrix(0, N, N)
-  nmax_f         <- 30
+  nmax_f         <- c(30, 35, 50)[N == c(250, 750, 1500)]
   for (i in 1:N) {
     tmp          <- sample((1:N)[-i], sample(0:nmax_f, 1))
     G[i, tmp]    <- 1
@@ -89,5 +89,4 @@ multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
 
 Graph <- lapply(1:4, fgraph)
 multiplot(Graph[[1]], Graph[[3]], Graph[[2]], Graph[[4]], cols = 2)
-
 # save with de dimension 7.42 × 4 

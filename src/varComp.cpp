@@ -16,7 +16,7 @@ List cABC(const int& n,
           const arma::mat& cpdf,
           const arma::mat& ccdf) {
   
-  arma::vec A(arma::zeros(n)), B(arma::zeros(n)), C(arma::zeros(n)), d(arma::zeros(n)), b(arma::zeros(n));
+  arma::vec A(arma::zeros(n)), B(arma::zeros(n)), C(arma::zeros(n)), d(arma::zeros(n)), b(arma::zeros(n)), m2d(arma::zeros(n));
   double sigma2 = sigma*sigma;
   
   for(int i(0); i < n; ++ i) {
@@ -27,7 +27,7 @@ List cABC(const int& n,
     // moreover in index the first is treated a part
     bool cont = true;
     int r1(1), r2(1), indp(0), ind0, indn, lenr;
-    double x1, x2, ltm, lf1, lf2, f1, f2, lfm, lF1, lF2, F1, F2, lFm, ldFir, lSAm, lSBm, lSCm, lSbm;
+    double x1, x2, ltm, lf1, lf2, f1, f2, lfm, lm2fm, lF1, lF2, F1, F2, lFm, ldFir, lSAm, lSBm, lSCm, lSbm;
     arma::vec lt;
     
     while(cont) {
@@ -164,10 +164,13 @@ List cABC(const int& n,
       b(i)          -= exp(lSbm + log(sum(exp(lSbi - lSbm))));
     }
     
-    //compute d
-    arma::rowvec tmp = cpdf.submat(i, 0, i, R); 
-    lfm              =  max(tmp); 
-    d(i)             = exp(lfm + log(sum(exp(tmp - lfm)))); 
+    //compute d m2d
+    arma::rowvec tp1 = cpdf.submat(i, 0, i, R); 
+    arma::rowvec tp2 = log(pow(miq.submat(i, 0, i, R), 2));
+    lfm              = max(tp1); 
+    lm2fm            = max(tp1 + tp2);
+    d(i)             = exp(lfm + log(sum(exp(tp1 - lfm)))); 
+    m2d(i)           = exp(lm2fm + log(sum(exp(tp1 + tp2 - lm2fm)))); 
   }
   
   
@@ -175,5 +178,7 @@ List cABC(const int& n,
   C                 /= -sigma;       
   b                 /= -sigma;              
 
-  return List::create(A, B, C, d, b);
+  return List::create(Named("A") = A, Named("B") = B, 
+                      Named("C") = C, Named("d") = d, 
+                      Named("b") = b, Named("m2d") = m2d);
 }

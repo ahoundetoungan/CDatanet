@@ -36,7 +36,7 @@ simCDnet   <- function(formula,
   
   K        <- length(theta)
   if(K != (ncol(X) + 2)) {
-    stop("Length of theta0 is not suited.")
+    stop("Length of theta is not suited.")
   }
   lambda   <- theta[1]
   b        <- theta[2:(K - 1)]
