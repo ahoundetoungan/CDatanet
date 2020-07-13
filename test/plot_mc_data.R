@@ -89,4 +89,9 @@ multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
 
 Graph <- lapply(1:4, fgraph)
 multiplot(Graph[[1]], Graph[[3]], Graph[[2]], Graph[[4]], cols = 2)
+<<<<<<< HEAD
 # save with de dimension 7.42 × 4 
+=======
+
+# save with dimension 7.42 × 4 
+>>>>>>> fb56818f6974a792c24362bf5c584c60a8be15ae
