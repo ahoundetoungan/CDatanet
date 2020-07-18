@@ -26,7 +26,7 @@ List cABC(const int& n,
     // in index 0 it is positive and the computation can be done without using log transform
     // moreover in index the first is treated a part
     bool cont = true;
-    int r1(1), r2(1), indp(0), ind0, indn, lenr;
+    int r1(1), r2(1), indp(0), ind0, lenr;
     double x1, x2, ltm, lf1, lf2, f1, f2, lfm, lm2fm, lF1, lF2, F1, F2, lFm, ldFir, lSAm, lSBm, lSCm, lSbm;
     arma::vec lt;
     

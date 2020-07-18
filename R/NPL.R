@@ -174,6 +174,10 @@ CDnetNPL    <- function(formula,
   if (!missing(data)) {
     sdata         <- c(sdata, deparse(substitute(data)))
   }
+  
+  if (npl.maxit == t) {
+    warning("The maximum number of iterations of the NPL algorithm has been reached.")
+  }
   out             <- list("M"          = M,
                           "n"          = n,
                           "iteration"  = t, 
@@ -303,29 +307,22 @@ CDnetNPL    <- function(formula,
   
   # marginal effect
   meand           <- mean(d)
-  meandzd         <- colSums(d*Z)/n
+  meanbzd         <- colSums(b*Z)/n
   meanm2d         <- mean(m2d)
   
   meff            <- theta[-J]*meand
-  tmp3            <- diag(J - 1)*meand + (theta[-J]/sigma^2)*meandzd
-  tmp4            <- (meanm2d/sigma^3  - mean(d)/sigma)*theta[-J]
+  tmp3            <- diag(J - 1)*meand + (theta[-J]/sigma) %*% matrix(meanbzd, nrow = 1)
+  tmp4            <- (meanm2d/sigma^3  - meand/sigma)*theta[-J]
   tmp5            <- cbind(tmp3, tmp4)
   tmp6            <- tmp5 %*% tmp2 %*% t(tmp5)
   
-  covout            <- tmp2[-J, -J]
-  colnames(covout)  <- coln
-  rownames(covout)  <- coln
+  covout            <- tmp2
+  colnames(covout)  <- c(coln, "sigma")
+  rownames(covout)  <- c(coln, "sigma")
   
   covmeff           <- tmp6
   colnames(covmeff) <- coln
   rownames(covmeff) <- coln
-  if("(Intercept)" %in% coln) {
-    in.tmp            <- which("(Intercept)" == coln)
-    covmeff           <- tmp6[-in.tmp, -in.tmp]
-    colnames(covmeff) <- coln[-in.tmp]
-    rownames(covmeff) <- coln[-in.tmp]
-    meff              <- meff[-in.tmp]
-  }
   
   cov.ctr         <- list("R0" = R0, "S0" = S0)
   
@@ -354,11 +351,11 @@ CDnetNPL    <- function(formula,
   K                    <- length(estimate)
   coef                 <- estimate[-K]
   meff                 <- x$meffects
-  std                  <- sqrt(diag(x$cov))
+  std                  <- sqrt(diag(x$cov)[-K])
   std.meff             <- sqrt(diag(x$cov.me))
   sigma                <- estimate[K]
   llh                  <- x$likelihood
-  Glist                <- get(x$codedata[3])
+  Glist                <- get(x$codedata[2])
   tmp                  <- fcoefficients(coef, std)
   out_print            <- tmp$out_print
   out                  <- tmp$out
