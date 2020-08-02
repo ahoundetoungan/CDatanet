@@ -6,6 +6,7 @@
 #' @importFrom stats model.matrix
 #' @importFrom stats delete.response
 #' @importFrom Matrix rankMatrix
+#' @importFrom ddpcr quiet
 formula.to.data <- function(formula,
                             contextual, 
                             Glist, 
@@ -112,10 +113,16 @@ formula.to.data <- function(formula,
     }
   }
 
-  
-  if (rankMatrix(Xone)[1] != ncol(Xone))  {
-    stop("X or [X, GX] is not a full rank matrix. May be there is an intercept in X and in GX.")
+  if(type != "network") {
+    if(rankMatrix(Xone)[1] != ncol(Xone))  {
+      stop("X or [X, GX] is not a full rank matrix. May be there is an intercept in X and in GX.")
+    }
+  } else {
+    if(rankMatrix(Xone)[1] != ncol(Xone))  {
+      stop("X is not a full rank matrix. May be there is an intercept in X and you add intercept in the formula or fixed effects.")
+    }
   }
+  
   
   colnames(Xone)   <- cnames
   

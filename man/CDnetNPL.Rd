@@ -28,7 +28,7 @@ without intercept or \code{ y ~ x1 + x2 | x2 + x3} to allow the contextual varia
 the `formula` as `y ~ x1 + x2` and `contextual` as `TRUE` is equivalent to set the formula as `y ~ x1 + x2 | x1 + x2`.}
 
 \item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `mcmcARD` is called.}
+in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `CDnetNPL` is called.}
 }
 \value{
 A list consisting of:

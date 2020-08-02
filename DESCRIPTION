@@ -11,6 +11,6 @@ BugReports: https://github.com/ahoundetoungan/CDatanet/issues
 URL: https://github.com/ahoundetoungan/CDatanet
 LazyData: true
 Depends: R (>= 3.0.0), formula.tools
-Imports: Rcpp (>= 1.0.0), Formula, formula.tools
-LinkingTo: Rcpp, RcppArmadillo
+Imports: Rcpp (>= 1.0.0), Formula, formula.tools, ddpcr
+LinkingTo: Rcpp, RcppArmadillo, RcppProgress
 RoxygenNote: 7.1.0

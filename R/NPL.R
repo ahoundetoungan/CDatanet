@@ -7,7 +7,7 @@
 #' @param  contextual (optional) logical; if true, this means that all individual variables will be set as contextual variables. Set the
 #' the `formula` as `y ~ x1 + x2` and `contextual` as `TRUE` is equivalent to set the formula as `y ~ x1 + x2 | x1 + x2`.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `mcmcARD` is called.
+#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `CDnetNPL` is called.
 #' @return A list consisting of:
 #'     \item{theta0}{starting values.}
 #'     \item{formula}{input value of `formula`.}
