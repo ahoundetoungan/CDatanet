@@ -226,9 +226,8 @@ List updategparms1(const arma::vec A,
   NumericVector spdis(iteration);
   spdis.attr("dim") = R_NilValue;
   
-  double mmu, jsbetatmp, jsmutmp, jsbetaall = 1;
+  double jsbetatmp, jsmutmp, jsbetaall = 1;
   Progress p(iteration, true);
-  int n1, n2;
   
   for(int t(0); t < iteration1; ++ t) {
     p.increment(); 
@@ -344,8 +343,7 @@ List updategparms2(const arma::vec A,
   NumericVector spdis(iteration);
   spdis.attr("dim") = R_NilValue;
   
-  double mmu, jsbetatmp, jsmutmp, jsbetaall = 1;
-  int n1, n2;
+  double jsbetatmp, jsmutmp, jsbetaall = 1;
   
   for(int t(0); t < iteration1; ++ t) {
     updatebeta1(beta, dxbeta, dxbpmu, llh, A, dX, musum, jsbeta, betaaccept, K);
