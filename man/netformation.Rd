@@ -9,7 +9,6 @@ netformation(
   formula,
   data,
   init = list(),
-  prior = list(),
   mcmc.ctr = list(),
   fixed.effects = FALSE,
   print = TRUE

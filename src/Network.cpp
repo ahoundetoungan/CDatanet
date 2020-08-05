@@ -50,32 +50,31 @@ arma::vec fmusum(const arma::vec& mu,
 
 void updatebeta1(arma::vec& beta,
                  arma::vec& dxbeta,
+                 arma::vec& dxbpmu,
+                 double& llh,
                  const arma::vec A,
                  const arma::mat& dX,
                  const arma::vec& musum,
-                 const arma::mat& invSb,
-                 const arma::vec& invSbmub,
                  const arma::vec& jsbeta,
                  arma::vec& betaaccept,
                  const int& K){
   
   arma::vec betast, dxbetast; 
-  double llh, llhst, lalpha2;
-  arma::vec tmp  = dxbeta + musum;
-  llh            = arma::sum(A%(tmp) - log(1 + exp(tmp)));
+  double llhst, lalpha2;
+  arma::vec dxbpmust;
   
   for(int k(0); k < K; ++ k) {
     betast           = beta;
     betast(k)        = R::rnorm(betast(k), jsbeta(k));
     dxbetast         = dX*betast;
-    arma::vec tmpst  = dxbetast + musum;
-    llhst            = arma::sum(A%(tmpst) - log(1 + exp(tmpst)));
-    lalpha2          = llhst - llh  - 0.5*(sum(arma::dot(betast, invSb*betast) - arma::dot(beta, invSb*beta))) +
-      sum(arma::dot(invSbmub, betast - beta));
+    dxbpmust         = dxbetast + musum;
+    llhst            = arma::sum(A%(dxbpmust) - log(1 + exp(dxbpmust)));
+    lalpha2          = llhst - llh;
     if(unif_rand() < exp(lalpha2)){
       beta(k)        = betast(k);    
-      llh            = llhst;
       dxbeta         = dxbetast; 
+      dxbpmu         = dxbpmust;
+      llh            = llhst;
       betaaccept(k) +=1.0;
     }
   }
@@ -85,26 +84,25 @@ void updatebeta1(arma::vec& beta,
 
 void updatebeta2(arma::vec& beta,
                  arma::vec& dxbeta,
+                 arma::vec& dxbpmu,
+                 double& llh,
                  const arma::vec A,
                  const arma::mat& dX,
                  const arma::vec& musum,
-                 const arma::mat& invSb,
-                 const arma::vec& invSbmub,
                  const arma::mat& jscovbeta,
                  double& betaaccept,
                  const int& K){
   
   arma::vec betast   = Fmvnorm(K, beta, jscovbeta);
   arma::vec dxbetast = dX*betast;
-  arma::vec tmp      = dxbeta + musum;
-  arma::vec tmpst    = dxbetast + musum;
-  double llh         = arma::sum(A%(tmp) - log(1 + exp(tmp)));
-  double llhst       = arma::sum(A%(tmpst) - log(1 + exp(tmpst)));
-  double lalpha2     = llhst - llh  - 0.5*(sum(arma::dot(betast, invSb*betast) - arma::dot(beta, invSb*beta))) +
-    sum(arma::dot(invSbmub, betast - beta));
+  arma::vec dxbpmust = dxbetast + musum;
+  double llhst       = arma::sum(A%(dxbpmust) - log(1 + exp(dxbpmust)));
+  double lalpha2     = llhst - llh;
   if(unif_rand() < exp(lalpha2)){
-    beta             = betast;    
+    beta             = betast; 
     dxbeta           = dxbetast; 
+    dxbpmu           = dxbpmust;
+    llh              = llhst;
     betaaccept      += 1.0;
   }
 }
@@ -115,7 +113,7 @@ void updatemu(arma::vec& mu,
               const arma::vec& dxbeta,
               const arma::vec& sigmau2,
               const arma::vec& uu,
-              const arma::vec& possigma,
+              const arma::uvec& possigma,
               const int& M,
               const arma::vec& nvec,
               const arma::mat& index,
@@ -197,9 +195,7 @@ List updategparms1(const arma::vec A,
                    const arma::mat& index,
                    const arma::mat& indexgr,
                    const arma::mat& indexsigma,
-                   const arma::vec& possigma,
-                   const arma::mat& invSb,
-                   const arma::vec& invSbmub,
+                   const arma::uvec& possigma,
                    const int& N,
                    const int& M,
                    const int& K,
@@ -218,6 +214,8 @@ List updategparms1(const arma::vec A,
   int n                = sum(nvec);
   arma::vec musum      = fmusum(mu, index, indexgr, M, N);
   arma::vec dxbeta     = dX*beta;
+  arma::vec dxbpmu     = dxbeta + musum;
+  double llh           = arma::sum(A%(dxbpmu) - log(1 + exp(dxbpmu)));
   arma::vec betaaccept = arma::zeros(K);
   double    betaallac  = 0;
   arma::vec muaccept   = arma::zeros(n);
@@ -225,6 +223,8 @@ List updategparms1(const arma::vec A,
   arma::mat sbeta(K, iteration);
   arma::mat suu(Msigma, iteration);
   arma::mat ssigmamu2(Msigma, iteration);
+  NumericVector spdis(iteration);
+  spdis.attr("dim") = R_NilValue;
   
   double mmu, jsbetatmp, jsmutmp, jsbetaall = 1;
   Progress p(iteration, true);
@@ -232,17 +232,13 @@ List updategparms1(const arma::vec A,
   
   for(int t(0); t < iteration1; ++ t) {
     p.increment(); 
-    updatebeta1(beta, dxbeta, A, dX, musum, invSb, invSbmub, jsbeta, betaaccept, K);
+    updatebeta1(beta, dxbeta, dxbpmu, llh, A, dX, musum, jsbeta, betaaccept, K);
+    
     updatemu(mu, A, dxbeta, sigmau2, uu, possigma, M, nvec, index, indexgr, jsmu, muaccept);
+    musum     = fmusum(mu, index, indexgr, M, N);
+    dxbpmu    = dxbeta + musum;
+    llh       = arma::sum(A%(dxbpmu) - log(1 + exp(dxbpmu)));
     
-    //for(int m(0); m < Msigma; ++ m) {
-    //  n1                 = indexsigma(m, 0); 
-    //  n2                 = indexsigma(m, 1); 
-    //  mmu                = mean(mu.subvec(n1, n2));
-    //  mu.subvec(n1, n2) -= mmu;
-    //}
-    
-    musum = fmusum(mu, index, indexgr, M, N);
     updateusigmamu2(sigmau2, uu, mu, Msigma, indexsigma);
     
     for(int k(0); k < K; ++ k) {
@@ -259,16 +255,21 @@ List updategparms1(const arma::vec A,
     sbeta.col(t)      = beta;
     suu.col(t)        = uu;
     ssigmamu2.col(t)  = sigmau2;
+    spdis(t)          = llh - arma::sum(pow(mu - uu.elem(possigma), 2)/sigmau2.elem(possigma)) - 
+      arma::sum(0.5*(indexsigma.col(1) - indexsigma.col(0) + 2)%log(sigmau2));
   }
   
-  betaallac           = arma::accu(betaaccept)/K;
+  betaallac           = arma::sum(betaaccept)/K;
   arma::mat jscovbeta = arma::cov(arma::trans(sbeta.cols(0.5*iteration1, iteration1 - 1)));
   for(int t(iteration1); t < iteration; ++ t) {
     p.increment(); 
-    updatebeta2(beta, dxbeta, A, dX, musum, invSb, invSbmub, pow(jsbetaall, 2)*jscovbeta, betaallac, K);
+    updatebeta2(beta, dxbeta, dxbpmu, llh, A, dX, musum, pow(jsbetaall, 2)*jscovbeta, betaallac, K);
+    
     updatemu(mu, A, dxbeta, sigmau2, uu, possigma, M, nvec, index, indexgr, jsmu, muaccept);
-
-    musum = fmusum(mu, index, indexgr, M, N);
+    musum     = fmusum(mu, index, indexgr, M, N);
+    dxbpmu    = dxbeta + musum;
+    llh       = arma::sum(A%(dxbpmu) - log(1 + exp(dxbpmu)));
+    
     updateusigmamu2(sigmau2, uu, mu, Msigma, indexsigma);
     
     double jsbetatmp  = jsbetaall + (betaallac/t - tbeta)/pow(t,0.6);
@@ -283,12 +284,15 @@ List updategparms1(const arma::vec A,
     sbeta.col(t)      = beta;
     suu.col(t)        = uu;
     ssigmamu2.col(t)  = sigmau2;
+    spdis(t)          = llh - arma::sum(pow(mu - uu.elem(possigma), 2)/sigmau2.elem(possigma)) - 
+      arma::sum(0.5*(indexsigma.col(1) - indexsigma.col(0) + 2)%log(sigmau2));
   }
   
   List posterior      = List::create(Named("beta")     = sbeta.t(),
                                      Named("mu")       = smu.t(),
                                      Named("uu")       = suu.t(),
-                                     Named("sigmamu2") = ssigmamu2.t());
+                                     Named("sigmamu2") = ssigmamu2.t(),
+                                     Named("density")  = spdis);
   List accept         = List::create(Named("beta")     = betaallac/iteration,
                                      Named("mu")       = muaccept/iteration);
   return List::create(Named("posterior")       = posterior, 
@@ -309,9 +313,7 @@ List updategparms2(const arma::vec A,
                    const arma::mat& index,
                    const arma::mat& indexgr,
                    const arma::mat& indexsigma,
-                   const arma::vec& possigma,
-                   const arma::mat& invSb,
-                   const arma::vec& invSbmub,
+                   const arma::uvec& possigma, 
                    const int& N,
                    const int& M,
                    const int& K,
@@ -330,6 +332,8 @@ List updategparms2(const arma::vec A,
   int n                = sum(nvec);
   arma::vec musum      = fmusum(mu, index, indexgr, M, N);
   arma::vec dxbeta     = dX*beta;
+  arma::vec dxbpmu     = dxbeta + musum;
+  double llh           = arma::sum(A%(dxbpmu) - log(1 + exp(dxbpmu)));
   arma::vec betaaccept = arma::zeros(K);
   double    betaallac  = 0;
   arma::vec muaccept   = arma::zeros(n);
@@ -337,14 +341,20 @@ List updategparms2(const arma::vec A,
   arma::mat sbeta(K, iteration);
   arma::mat suu(Msigma, iteration);
   arma::mat ssigmamu2(Msigma, iteration);
+  NumericVector spdis(iteration);
+  spdis.attr("dim") = R_NilValue;
   
   double mmu, jsbetatmp, jsmutmp, jsbetaall = 1;
   int n1, n2;
   
   for(int t(0); t < iteration1; ++ t) {
-    updatebeta1(beta, dxbeta, A, dX, musum, invSb, invSbmub, jsbeta, betaaccept, K);
+    updatebeta1(beta, dxbeta, dxbpmu, llh, A, dX, musum, jsbeta, betaaccept, K);
+    
     updatemu(mu, A, dxbeta, sigmau2, uu, possigma, M, nvec, index, indexgr, jsmu, muaccept);
-    musum = fmusum(mu, index, indexgr, M, N);
+    musum     = fmusum(mu, index, indexgr, M, N);
+    dxbpmu    = dxbeta + musum;
+    llh       = arma::sum(A%(dxbpmu) - log(1 + exp(dxbpmu)));
+    
     updateusigmamu2(sigmau2, uu, mu, Msigma, indexsigma);
     
     for(int k(0); k < K; ++ k) {
@@ -361,15 +371,21 @@ List updategparms2(const arma::vec A,
     sbeta.col(t)      = beta;
     suu.col(t)        = uu;
     ssigmamu2.col(t)  = sigmau2;
+    spdis(t)          = llh - arma::sum(pow(mu - uu.elem(possigma), 2)/sigmau2.elem(possigma)) - 
+      arma::sum(0.5*(indexsigma.col(1) - indexsigma.col(0) + 2)%log(sigmau2));
   }
   
-  betaallac           = arma::accu(betaaccept)/K;
+  betaallac           = arma::sum(betaaccept)/K;
   arma::mat jscovbeta = arma::cov(arma::trans(sbeta.cols(0.5*iteration1, iteration1 - 1)));
 
   for(int t(iteration1); t < iteration; ++ t) {
-    updatebeta2(beta, dxbeta, A, dX, musum, invSb, invSbmub, pow(jsbetaall, 2)*jscovbeta, betaallac, K);
+    updatebeta2(beta, dxbeta, dxbpmu, llh, A, dX, musum, pow(jsbetaall, 2)*jscovbeta, betaallac, K);
+    
     updatemu(mu, A, dxbeta, sigmau2, uu, possigma, M, nvec, index, indexgr, jsmu, muaccept);
-    musum = fmusum(mu, index, indexgr, M, N);
+    musum     = fmusum(mu, index, indexgr, M, N);
+    dxbpmu    = dxbeta + musum;
+    llh       = arma::sum(A%(dxbpmu) - log(1 + exp(dxbpmu)));
+    
     updateusigmamu2(sigmau2, uu, mu, Msigma, indexsigma);
     
     double jsbetatmp  = jsbetaall + (betaallac/t - tbeta)/pow(t,0.6);
@@ -383,12 +399,15 @@ List updategparms2(const arma::vec A,
     sbeta.col(t)      = beta;
     suu.col(t)        = uu;
     ssigmamu2.col(t)  = sigmau2;
+    spdis(t)          = llh - arma::sum(pow(mu - uu.elem(possigma), 2)/sigmau2.elem(possigma)) - 
+      arma::sum(0.5*(indexsigma.col(1) - indexsigma.col(0) + 2)%log(sigmau2));
   }
   
   List posterior      = List::create(Named("beta")     = sbeta.t(),
                                      Named("mu")       = smu.t(),
                                      Named("uu")       = suu.t(),
-                                     Named("sigmamu2") = ssigmamu2.t());
+                                     Named("sigmamu2") = ssigmamu2.t(),
+                                     Named("density")  = spdis);
   List accept         = List::create(Named("beta")     = betaallac/iteration,
                                      Named("mu")       = muaccept/iteration);
   return List::create(Named("posterior")       = posterior, 

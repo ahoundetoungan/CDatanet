@@ -12,7 +12,6 @@ netformation <- function(network,
                          formula,
                          data,
                          init          = list(),
-                         prior         = list(),
                          mcmc.ctr      = list(),
                          fixed.effects = FALSE,
                          print         = TRUE) {
@@ -45,11 +44,11 @@ netformation <- function(network,
   
   Msigma          <- 1
   indexsigma      <- matrix(c(0, n - 1), nrow = 1)
-  possigma        <- rep(0, N)
+  possigma        <- rep(0, n)
   if(fixed.effects) {
     Msigma        <- M
     indexsigma    <- indexgr
-    possigma      <- unlist(lapply(1:M, function(x) rep(0, Nvec[x])))
+    possigma      <- unlist(lapply(1:M, function(x) rep(0, nvec[x])))
   }
   
   # Formula to data
@@ -109,23 +108,7 @@ netformation <- function(network,
   iteration1      <- 2*burnin
   iteration2      <- burnin + iteration
   iteration       <- iteration1 + iteration2
-  # prior
-  a               <- prior$a
-  b               <- prior$b
-  invSb           <- prior$invSb
-  mub             <- prior$mub
-  
-  if (is.null(invSb)) {
-    invSb         <- diag(K)
-  }
-  if (is.null(mub)) {
-    mub           <- rep(0, K)
-  }
-  
-  prior           <- list(invSb = invSb,
-                          mub   = mub)
-  
-  invSbmub        <- invSb %*% mub
+
   #starting value
   beta            <- init$beta
   mu              <- init$mu
@@ -153,13 +136,13 @@ netformation <- function(network,
   if(print) {
     estim         <- updategparms1(network, dX, beta, mu, sigmau2, uu, jsbeta, 
                                    jsmu, index, indexgr,  indexsigma,
-                                   possigma, invSb, invSbmub, N, M, K,
+                                   possigma, N, M, K,
                                    Msigma, nvec, iteration1, iteration2,
                                    tbeta, tmu)
   } else {
     estim         <- updategparms2(network, dX, beta, mu, sigmau2, uu, jsbeta, 
                                    jsmu, index, indexgr,  indexsigma,
-                                   possigma, invSb, invSbmub, N, M, K,
+                                   possigma, N, M, K,
                                    Msigma, nvec, iteration1, iteration2,
                                    tbeta, tmu)
   }
@@ -184,7 +167,6 @@ netformation <- function(network,
                       "posterior"       = posterior,
                       "acceptance.rate" = accept,
                       "mcmc.ctr"        = mcmc.ctr,
-                      "prior"           = prior,
                       "init"            = init)
   
   class(out)  <- "netformation"

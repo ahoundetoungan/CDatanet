@@ -5,12 +5,12 @@ fmusum <- function(mu, index, indexgr, M, N) {
     .Call(`_CDatanet_fmusum`, mu, index, indexgr, M, N)
 }
 
-updategparms1 <- function(A, dX, beta0, mu0, sigmau20, uu0, jsbeta, jsmu, index, indexgr, indexsigma, possigma, invSb, invSbmub, N, M, K, Msigma, nvec, iteration1, iteration2, tbeta, tmu) {
-    .Call(`_CDatanet_updategparms1`, A, dX, beta0, mu0, sigmau20, uu0, jsbeta, jsmu, index, indexgr, indexsigma, possigma, invSb, invSbmub, N, M, K, Msigma, nvec, iteration1, iteration2, tbeta, tmu)
+updategparms1 <- function(A, dX, beta0, mu0, sigmau20, uu0, jsbeta, jsmu, index, indexgr, indexsigma, possigma, N, M, K, Msigma, nvec, iteration1, iteration2, tbeta, tmu) {
+    .Call(`_CDatanet_updategparms1`, A, dX, beta0, mu0, sigmau20, uu0, jsbeta, jsmu, index, indexgr, indexsigma, possigma, N, M, K, Msigma, nvec, iteration1, iteration2, tbeta, tmu)
 }
 
-updategparms2 <- function(A, dX, beta0, mu0, sigmau20, uu0, jsbeta, jsmu, index, indexgr, indexsigma, possigma, invSb, invSbmub, N, M, K, Msigma, nvec, iteration1, iteration2, tbeta, tmu) {
-    .Call(`_CDatanet_updategparms2`, A, dX, beta0, mu0, sigmau20, uu0, jsbeta, jsmu, index, indexgr, indexsigma, possigma, invSb, invSbmub, N, M, K, Msigma, nvec, iteration1, iteration2, tbeta, tmu)
+updategparms2 <- function(A, dX, beta0, mu0, sigmau20, uu0, jsbeta, jsmu, index, indexgr, indexsigma, possigma, N, M, K, Msigma, nvec, iteration1, iteration2, tbeta, tmu) {
+    .Call(`_CDatanet_updategparms2`, A, dX, beta0, mu0, sigmau20, uu0, jsbeta, jsmu, index, indexgr, indexsigma, possigma, N, M, K, Msigma, nvec, iteration1, iteration2, tbeta, tmu)
 }
 
 fL <- function(um, lambda, sigma, psim, Gm, tol, nm) {

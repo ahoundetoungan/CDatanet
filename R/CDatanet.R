@@ -1,3 +1,31 @@
+#' @title The CDatanet package
+#' @description The \pkg{CDatanet} package implements a count data model with social interaction and a dyadic linking model developed by Houndetoungan (2020). 
+#' It also implements the Spatial Autoregressive Tobit model (LeSage, 2000; Xu and Lee, 2015) for left censored data at \emph{zero} and the Spatial Autoregressive Model (Lee, 2004). 
+#' To make the computations faster \pkg{CDatanet} uses \code{C++} through the \pkg{Rcpp} package (Eddelbuettel et al., 2011). 
+#'
+#' @details 
+#' Two main functions are provided to estimate the linear-in-mean SAR model using only the distribution of the network. The function
+#' \code{\link{sim.IV}} generates valid instruments using the distribution of the network (see Propositions 1 and 2 in Boucher and Houndetoungan (2020)). Once the instruments are constructed,
+#' one can estimate the model using standard IV estimators. We recommend the function \link[AER]{ivreg} 
+#' from the package \pkg{AER} (Kleiber et al., 2020). The function \link{mcmcSAR} performs a Bayesian estimation based on an adaptive MCMC (Atchadé and Rosenthal, 2005). In that case, 
+#' the distribution of the network acts as prior distribution for the network.\cr
+#' The package \pkg{CDatanet} also implements a network formation model based on Aggregate Relational Data (McCormick and Zheng, 2015; Breza et al., 2017). This part of the package
+#' relies on the functions \link{rvMF}, \link{dvMF} and \link{logCpvMF} partly implemented in C++, but using code from \pkg{movMF} (Hornik and Grün, 2014).
+#' 
+#' @references 
+#' Atchadé, Y. F., & Rosenthal, J. S. (2005). On adaptive markov chain monte carlo algorithms. \emph{Bernoulli}, 11(5), 815-828. \url{https://projecteuclid.org/euclid.bj/1130077595}.
+#' @references Breza, E., Chandrasekhar, A. G., McCormick, T. H., & Pan, M. (2020). Using aggregated relational data to feasibly
+#'  identify network structure without network data. \emph{American Economic Review, forthcoming.}, \url{https://arxiv.org/abs/1703.04157}
+#' @references Eddelbuettel, D., François, R., Allaire, J., Ushey, K., Kou, Q., Russel, N., ... & Bates, D. (2011),
+#' \pkg{Rcpp}: Seamless \R and \code{C++} integration. \emph{Journal of Statistical Software}, 40(8), 1-18.
+#' \url{http://www.jstatsoft.org/v40/i08/}.
+#' @references  
+#' Lee, L. F. (2004). Asymptotic distributions of quasi‐maximum likelihood estimators for spatial autoregressive models. Econometrica, 72(6), 1899-1925. \url{https://doi.org/10.1111/j.1468-0262.2004.00558.x}.
+#' @references  
+#' LeSage, J. P. (2000). Bayesian estimation of limited dependent variable spatial autoregressive models. Geographical Analysis, 32(1), 19-35. \url{https://doi.org/10.1111/j.1538-4632.2000.tb00413.x}.
+#' @references McCormick, T. H., & Zheng, T. (2015). Latent surface models for networks using Aggregated Relational Data. 
+#' Journal of the American Statistical Association, 110(512), 1684-1695. \url{https://www.tandfonline.com/doi/abs/10.1080/01621459.2014.991395}.
+#' @references Xu, X., & Lee, L. F. (2015). Maximum likelihood estimation of a spatial autoregressive Tobit model. Journal of Econometrics, 188(1), 264-280. \url{https://doi.org/10.1016/j.jeconom.2015.05.004}.
 #' @useDynLib CDatanet, .registration = TRUE
 "_PACKAGE"
 NULL
