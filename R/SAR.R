@@ -120,10 +120,13 @@ SARML <- function(formula,
   
   env.formula     <- environment(formula)
   sdata           <- list(
-    "formula"       = as.character(formula),
-    "env.formula"   = env.formula 
+    "formula"       = formula,
+    "env.formula"   = env.formula,
+    "Glist"         = deparse(substitute(Glist))
   )
-  rm(list = ls(envir = env.formula)[!(ls(envir = env.formula) %in% c("Glist", "Xone"))], envir = env.formula)
+  if (!missing(data)) {
+    sdata         <- c(sdata, list("data" = deparse(substitute(data))))
+  }  
   
   out             <- list("M"             = M,
                           "n"             = n,
@@ -171,7 +174,7 @@ SARML <- function(formula,
   llh                  <- x$likelihood
   
   if (missing(Glist)) {
-    Glist              <- get("Glist", envir = x$codedata$env.formula) 
+    Glist              <- get(x$codedata$Glist) 
   } else {
     if(!is.list(Glist)) {
       Glist            <- list(Glist)

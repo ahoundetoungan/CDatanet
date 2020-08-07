@@ -172,11 +172,15 @@ CDnetNPL    <- function(formula,
   
   env.formula     <- environment(formula)
   sdata           <- list(
-    "formula"       = as.character(formula),
-    "env.formula"   = env.formula 
+    "formula"       = formula,
+    "env.formula"   = env.formula,
+    "Glist"         = deparse(substitute(Glist))
   )
-  rm(list = ls(envir = env.formula)[!(ls(envir = env.formula) %in% c("Glist", "Xone"))], envir = env.formula)
+  if (!missing(data)) {
+    sdata         <- c(sdata, list("data" = deparse(substitute(data))))
+  }
   
+
   if (npl.maxit == t) {
     warning("The maximum number of iterations of the NPL algorithm has been reached.")
   }
@@ -212,7 +216,7 @@ CDnetNPL    <- function(formula,
   env.formula   <- codedata$env.formula
   
   if (missing(Glist)) {
-    Glist       <- get("Glist", envir = env.formula)
+    Glist       <- get(codedata$Glist)
   } else {
     if(!is.list(Glist)) {
       Glist     <- list(Glist)
@@ -234,19 +238,17 @@ CDnetNPL    <- function(formula,
   n             <- sum(nvec)
   igr           <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
   
-  X             <- NULL
   
   if(missing(data)) {
-    X           <- get("Xone", envir = env.formula) 
-  } else {
-    f.t.data    <- formula.to.data(formula, FALSE, Glist, M, igr, data, theta0 = 0)
-    X           <- f.t.data$X
-    formula     <- f.t.data$formula
-    env.formula <- environment(formula)
-    codedata    <- list("formula"       = as.character(formula),
-                       "env.formula"   = env.formula)
-  }
+    if (is.null(codedata$data)) {
+      data      <- env.formula
+    } else {
+      data      <- get(codedata$data)
+    }
+  } 
   
+  f.t.data      <- formula.to.data(formula, FALSE, Glist, M, igr, data, theta0 = 0)
+  X           <- f.t.data$X
   coln          <- c("lambda", colnames(X))
   
   Z             <- cbind(Gyb, X)
@@ -376,7 +378,7 @@ CDnetNPL    <- function(formula,
   llh                  <- x$likelihood
 
   if (missing(Glist)) {
-    Glist              <- get("Glist", envir = x$codedata$env.formula) 
+    Glist              <- get(x$codedata$Glist) 
   } else {
     if(!is.list(Glist)) {
       Glist            <- list(Glist)
