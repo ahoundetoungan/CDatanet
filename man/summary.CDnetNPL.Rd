@@ -6,9 +6,9 @@
 \alias{print.CDnetNPL}
 \title{Summarize Count Data Model With Social Interactions}
 \usage{
-\method{summary}{CDnetNPL}(object, cov.ctr = list(), ...)
+\method{summary}{CDnetNPL}(object, cov.ctr = list(), Glist, data, ...)
 
-\method{print}{summary.CDnetNPL}(x, ...)
+\method{print}{summary.CDnetNPL}(x, Glist, ...)
 
 \method{print}{CDnetNPL}(x, ...)
 }

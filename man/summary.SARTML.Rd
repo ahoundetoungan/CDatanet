@@ -8,7 +8,7 @@
 \usage{
 \method{summary}{SARTML}(object, ...)
 
-\method{print}{summary.SARTML}(x, ...)
+\method{print}{summary.SARTML}(x, Glist, ...)
 
 \method{print}{SARTML}(x, ...)
 }

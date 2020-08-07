@@ -170,10 +170,12 @@ CDnetNPL    <- function(formula,
   names(theta)    <- c(coln, "sigma")
   
   
-  sdata <- c(as.character(formula), deparse(substitute(Glist)))
-  if (!missing(data)) {
-    sdata         <- c(sdata, deparse(substitute(data)))
-  }
+  env.formula     <- environment(formula)
+  sdata           <- list(
+    "formula"       = as.character(formula),
+    "env.formula"   = env.formula 
+  )
+  rm(list = ls(envir = env.formula)[!(ls(envir = env.formula) %in% c("Glist", "Xone"))], envir = env.formula)
   
   if (npl.maxit == t) {
     warning("The maximum number of iterations of the NPL algorithm has been reached.")
@@ -198,15 +200,25 @@ CDnetNPL    <- function(formula,
 #' @export 
 "summary.CDnetNPL" <- function(object,
                                cov.ctr   = list(),
+                               Glist,
+                               data,
                                ...) {
   stopifnot(class(object) == "CDnetNPL")
-  codedata      <- object$codedata
-  formula       <- as.formula(codedata[1])
-  Glist         <- get(codedata[2])
-  data          <- environment(formula)
-  if (length(codedata) == 3) {
-    data        <- get(codedata[3])
+  if ((missing(Glist) & !missing(data)) | (!missing(Glist) & missing(data))) {
+    stop("Glist is missing while data is provided or vice versa")
   }
+  codedata      <- object$codedata
+  formula       <- as.formula(codedata$formula)
+  env.formula   <- codedata$env.formula
+  
+  if (missing(Glist)) {
+    Glist       <- get("Glist", envir = env.formula)
+  } else {
+    if(!is.list(Glist)) {
+      Glist     <- list(Glist)
+    }
+  }
+  
   theta         <- object$estimate
   Gyb           <- object$Gyb
   
@@ -216,21 +228,26 @@ CDnetNPL    <- function(formula,
   b             <- theta[2:(J - 1)]
   sigma         <- theta[J]
   
-  
-  #data
-  if (!is.list(Glist)) {
-    Glist       <- list(Glist)
-  }
-  
+
   M             <- length(Glist)
   nvec          <- unlist(lapply(Glist, nrow))
   n             <- sum(nvec)
   igr           <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
   
-  f.t.data      <- formula.to.data(formula, FALSE, Glist, M, igr, data, theta0 = 0)
-  X             <- f.t.data$X
-  coln          <- c("lambda", colnames(X))
+  X             <- NULL
   
+  if(missing(data)) {
+    X           <- get("Xone", envir = env.formula) 
+  } else {
+    f.t.data    <- formula.to.data(formula, FALSE, Glist, M, igr, data, theta0 = 0)
+    X           <- f.t.data$X
+    formula     <- f.t.data$formula
+    env.formula <- environment(formula)
+    codedata    <- list("formula"       = as.character(formula),
+                       "env.formula"   = env.formula)
+  }
+  
+  coln          <- c("lambda", colnames(X))
   
   Z             <- cbind(Gyb, X)
   Zd            <- Z %*% c(lambda, b)
@@ -324,15 +341,17 @@ CDnetNPL    <- function(formula,
   colnames(covmeff) <- coln
   rownames(covmeff) <- coln
   
-  cov.ctr         <- list("R0" = R0, "S0" = S0)
+  cov.ctr           <- list("R0" = R0, "S0" = S0)
   
-  out             <- c(object[-9], 
+  out               <- c(object[-9], 
                        list("cov"       = covout, 
                             "meffects"  = meff,
                             "cov.me"    = covmeff,
                             "cov.ctr"   = cov.ctr, 
                             "codedata"  = codedata,
                             "..."       = ...)) 
+  
+  rm(list = ls(envir = env.formula)[!(ls(envir = env.formula) %in% c("Glist", "out"))], envir = env.formula)
   
   class(out)      <- "summary.CDnetNPL"
   out
@@ -341,7 +360,7 @@ CDnetNPL    <- function(formula,
 
 #' @rdname summary.CDnetNPL
 #' @export
-"print.summary.CDnetNPL"  <- function(x, ...) {
+"print.summary.CDnetNPL"  <- function(x, Glist, ...) {
   stopifnot(class(x) == "summary.CDnetNPL")
   
   M                    <- x$M
@@ -355,7 +374,15 @@ CDnetNPL    <- function(formula,
   std.meff             <- sqrt(diag(x$cov.me))
   sigma                <- estimate[K]
   llh                  <- x$likelihood
-  Glist                <- get(x$codedata[2])
+
+  if (missing(Glist)) {
+    Glist              <- get("Glist", envir = x$codedata$env.formula) 
+  } else {
+    if(!is.list(Glist)) {
+      Glist            <- list(Glist)
+    }
+  }
+  
   tmp                  <- fcoefficients(coef, std)
   out_print            <- tmp$out_print
   out                  <- tmp$out

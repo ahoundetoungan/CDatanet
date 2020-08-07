@@ -118,10 +118,12 @@ SARML <- function(formula,
   theta           <- c(lambda, beta, sqrt(sigma2))
   names(theta)    <- c(coln, "sigma")
   
-  sdata <- c(as.character(formula), deparse(substitute(Glist)))
-  if (!missing(data)) {
-    sdata         <- c(sdata, deparse(substitute(data)))
-  }
+  env.formula     <- environment(formula)
+  sdata           <- list(
+    "formula"       = as.character(formula),
+    "env.formula"   = env.formula 
+  )
+  rm(list = ls(envir = env.formula)[!(ls(envir = env.formula) %in% c("Glist", "Xone"))], envir = env.formula)
   
   out             <- list("M"             = M,
                           "n"             = n,
@@ -156,7 +158,7 @@ SARML <- function(formula,
 
 #' @rdname summary.SARML
 #' @export
-"print.summary.SARML"  <- function(x, ...) {
+"print.summary.SARML"  <- function(x, Glist, ...) {
   stopifnot(class(x) == "summary.SARML")
   
   M                    <- x$M
@@ -167,7 +169,15 @@ SARML <- function(formula,
   std                  <- sqrt(diag(x$cov))
   sigma                <- estimate[K]
   llh                  <- x$likelihood
-  Glist                <- get(x$codedata[2])
+  
+  if (missing(Glist)) {
+    Glist              <- get("Glist", envir = x$codedata$env.formula) 
+  } else {
+    if(!is.list(Glist)) {
+      Glist            <- list(Glist)
+    }
+  }
+  
   tmp                  <- fcoefficients(coef, std)
   out_print            <- tmp$out_print
   out                  <- tmp$out

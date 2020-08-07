@@ -8,7 +8,7 @@
 \usage{
 \method{summary}{SARML}(object, ...)
 
-\method{print}{summary.SARML}(x, ...)
+\method{print}{summary.SARML}(x, Glist, ...)
 
 \method{print}{SARML}(x, ...)
 }
