@@ -307,11 +307,11 @@ CDnetNPL    <- function(formula,
   
   # marginal effect
   meand           <- mean(d)
-  meanbzd         <- colSums(b*Z)/n
+  meanbz          <- colSums(b*Z)/n
   meanm2d         <- mean(m2d)
   
   meff            <- theta[-J]*meand
-  tmp3            <- diag(J - 1)*meand + (theta[-J]/sigma) %*% matrix(meanbzd, nrow = 1)
+  tmp3            <- diag(J - 1)*meand - (theta[-J]/sigma) %*% matrix(meanbz, nrow = 1)
   tmp4            <- (meanm2d/sigma^3  - meand/sigma)*theta[-J]
   tmp5            <- cbind(tmp3, tmp4)
   tmp6            <- tmp5 %*% tmp2 %*% t(tmp5)

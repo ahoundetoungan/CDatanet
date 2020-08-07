@@ -13,4 +13,4 @@ LazyData: true
 Depends: R (>= 3.0.0), formula.tools
 Imports: Rcpp (>= 1.0.0), Formula, formula.tools, ddpcr
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1

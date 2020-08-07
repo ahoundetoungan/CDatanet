@@ -287,15 +287,15 @@ List updategparms1(const arma::vec A,
       arma::sum(0.5*(indexsigma.col(1) - indexsigma.col(0) + 2)%log(sigmau2));
   }
   
-  List posterior      = List::create(Named("beta")     = sbeta.t(),
-                                     Named("mu")       = smu.t(),
-                                     Named("uu")       = suu.t(),
-                                     Named("sigmamu2") = ssigmamu2.t(),
-                                     Named("density")  = spdis);
-  List accept         = List::create(Named("beta")     = betaallac/iteration,
-                                     Named("mu")       = muaccept/iteration);
-  return List::create(Named("posterior")       = posterior, 
-                      Named("acceptance.rate") = accept);
+  List posterior      = List::create(Named("beta")        = sbeta.t(),
+                                     Named("mu")          = smu.t(),
+                                     Named("uu")          = suu.t(),
+                                     Named("sigmamu2")    = ssigmamu2.t(),
+                                     Named("log.density") = spdis);
+  List accept         = List::create(Named("beta")        = betaallac/iteration,
+                                     Named("mu")          = muaccept/iteration);
+  return List::create(Named("posterior")                  = posterior, 
+                      Named("acceptance.rate")            = accept);
   
 }
 
@@ -401,14 +401,14 @@ List updategparms2(const arma::vec A,
       arma::sum(0.5*(indexsigma.col(1) - indexsigma.col(0) + 2)%log(sigmau2));
   }
   
-  List posterior      = List::create(Named("beta")     = sbeta.t(),
-                                     Named("mu")       = smu.t(),
-                                     Named("uu")       = suu.t(),
-                                     Named("sigmamu2") = ssigmamu2.t(),
-                                     Named("density")  = spdis);
-  List accept         = List::create(Named("beta")     = betaallac/iteration,
-                                     Named("mu")       = muaccept/iteration);
-  return List::create(Named("posterior")       = posterior, 
-                      Named("acceptance.rate") = accept);
+  List posterior      = List::create(Named("beta")        = sbeta.t(),
+                                     Named("mu")          = smu.t(),
+                                     Named("uu")          = suu.t(),
+                                     Named("sigmamu2")    = ssigmamu2.t(),
+                                     Named("log.density") = spdis);
+  List accept         = List::create(Named("beta")        = betaallac/iteration,
+                                     Named("mu")          = muaccept/iteration);
+  return List::create(Named("posterior")                  = posterior, 
+                      Named("acceptance.rate")            = accept);
   
 }
