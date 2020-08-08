@@ -353,8 +353,6 @@ CDnetNPL    <- function(formula,
                             "codedata"  = codedata,
                             "..."       = ...)) 
   
-  rm(list = ls(envir = env.formula)[!(ls(envir = env.formula) %in% c("Glist", "out"))], envir = env.formula)
-  
   class(out)      <- "summary.CDnetNPL"
   out
 }
