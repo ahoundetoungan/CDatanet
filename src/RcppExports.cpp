@@ -84,8 +84,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // fL
-arma::vec fL(const arma::vec& um, const double& lambda, const double& sigma, const arma::vec& psim, const arma::mat& Gm, const double& tol, const int& nm);
-RcppExport SEXP _CDatanet_fL(SEXP umSEXP, SEXP lambdaSEXP, SEXP sigmaSEXP, SEXP psimSEXP, SEXP GmSEXP, SEXP tolSEXP, SEXP nmSEXP) {
+arma::vec fL(const arma::vec& um, const double& lambda, const double& sigma, const arma::vec& psim, const arma::mat& Gm, const int& nm);
+RcppExport SEXP _CDatanet_fL(SEXP umSEXP, SEXP lambdaSEXP, SEXP sigmaSEXP, SEXP psimSEXP, SEXP GmSEXP, SEXP nmSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -94,9 +94,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double& >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type psim(psimSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type Gm(GmSEXP);
-    Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
     Rcpp::traits::input_parameter< const int& >::type nm(nmSEXP);
-    rcpp_result_gen = Rcpp::wrap(fL(um, lambda, sigma, psim, Gm, tol, nm));
+    rcpp_result_gen = Rcpp::wrap(fL(um, lambda, sigma, psim, Gm, nm));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -166,8 +165,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // fL_NPL
-void fL_NPL(arma::vec& u, arma::vec& Gu, List& G, const arma::mat& igroup, const int& ngroup, const arma::mat& X, const arma::vec& theta, const int& K, const int& n, const double& tol, const int& maxit);
-RcppExport SEXP _CDatanet_fL_NPL(SEXP uSEXP, SEXP GuSEXP, SEXP GSEXP, SEXP igroupSEXP, SEXP ngroupSEXP, SEXP XSEXP, SEXP thetaSEXP, SEXP KSEXP, SEXP nSEXP, SEXP tolSEXP, SEXP maxitSEXP) {
+void fL_NPL(arma::vec& u, arma::vec& Gu, List& G, const arma::mat& igroup, const int& ngroup, const arma::mat& X, const arma::vec& theta, const int& K, const int& n);
+RcppExport SEXP _CDatanet_fL_NPL(SEXP uSEXP, SEXP GuSEXP, SEXP GSEXP, SEXP igroupSEXP, SEXP ngroupSEXP, SEXP XSEXP, SEXP thetaSEXP, SEXP KSEXP, SEXP nSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::vec& >::type u(uSEXP);
@@ -179,9 +178,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type theta(thetaSEXP);
     Rcpp::traits::input_parameter< const int& >::type K(KSEXP);
     Rcpp::traits::input_parameter< const int& >::type n(nSEXP);
-    Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
-    Rcpp::traits::input_parameter< const int& >::type maxit(maxitSEXP);
-    fL_NPL(u, Gu, G, igroup, ngroup, X, theta, K, n, tol, maxit);
+    fL_NPL(u, Gu, G, igroup, ngroup, X, theta, K, n);
     return R_NilValue;
 END_RCPP
 }
@@ -316,11 +313,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CDatanet_fmusum", (DL_FUNC) &_CDatanet_fmusum, 5},
     {"_CDatanet_updategparms1", (DL_FUNC) &_CDatanet_updategparms1, 21},
     {"_CDatanet_updategparms2", (DL_FUNC) &_CDatanet_updategparms2, 21},
-    {"_CDatanet_fL", (DL_FUNC) &_CDatanet_fL, 7},
+    {"_CDatanet_fL", (DL_FUNC) &_CDatanet_fL, 6},
     {"_CDatanet_fyb", (DL_FUNC) &_CDatanet_fyb, 11},
     {"_CDatanet_foptimREM", (DL_FUNC) &_CDatanet_foptimREM, 13},
     {"_CDatanet_foptimREM_NPL", (DL_FUNC) &_CDatanet_foptimREM_NPL, 11},
-    {"_CDatanet_fL_NPL", (DL_FUNC) &_CDatanet_fL_NPL, 11},
+    {"_CDatanet_fL_NPL", (DL_FUNC) &_CDatanet_fL_NPL, 9},
     {"_CDatanet_foptimTobit", (DL_FUNC) &_CDatanet_foptimTobit, 13},
     {"_CDatanet_foptimTobit0", (DL_FUNC) &_CDatanet_foptimTobit0, 13},
     {"_CDatanet_fgradvecTobit", (DL_FUNC) &_CDatanet_fgradvecTobit, 13},

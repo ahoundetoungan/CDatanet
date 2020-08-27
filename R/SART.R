@@ -123,10 +123,8 @@ SARTML <- function(formula,
   
   names(theta)       <- c(coln, "sigma")
   
-  env.formula     <- environment(formula)
   sdata           <- list(
     "formula"       = formula,
-    "env.formula"   = env.formula,
     "Glist"         = deparse(substitute(Glist))
   )
   if (!missing(data)) {
@@ -180,7 +178,7 @@ SARTML <- function(formula,
   llh                  <- x$likelihood
 
   if (missing(Glist)) {
-    Glist              <- get(x$codedata$Glist) 
+    Glist              <- get(x$codedata$Glist, envir = .GlobalEnv) 
   } else {
     if(!is.list(Glist)) {
       Glist            <- list(Glist)

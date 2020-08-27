@@ -17,23 +17,23 @@ SARML(
 )
 }
 \arguments{
-\item{formula}{an object of class \link[stats]{formula}: a symbolic description of the model. The `formula` should be as for example \code{y ~ x1 + x2 | x1 + x2}
-where `y` is the endogenous vector, the listed variables before the pipe, `x1`, `x2` are the individual exogenous variables and
-the listed variables after the pipe, `x1`, `x2` are the contextual observable variables. Other formulas may be
+\item{formula}{an object of class \link[stats]{formula}: a symbolic description of the model. The \code{formula} should be as for example \code{y ~ x1 + x2 | x1 + x2}
+where \code{y} is the endogenous vector, the listed variables before the pipe, \code{x1}, \code{x2} are the individual exogenous variables and
+the listed variables after the pipe, \code{x1}, \code{x2} are the contextual observable variables. Other formulas may be
 \code{y ~ x1 + x2} for the model without contextual effects, \code{y ~ -1 + x1 + x2 | x1 + x2} for the model
 without intercept or \code{ y ~ x1 + x2 | x2 + x3} to allow the contextual variable to be different from the individual variables.}
 
 \item{contextual}{(optional) logical; if true, this means that all individual variables will be set as contextual variables. Set the
-the `formula` as `y ~ x1 + x2` and `contextual` as `TRUE` is equivalent to set the formula as `y ~ x1 + x2 | x1 + x2`.}
+the \code{formula} as \code{y ~ x1 + x2} and \code{contextual} as \code{TRUE} is equivalent to set the formula as \code{y ~ x1 + x2 | x1 + x2}.}
 
 \item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `mcmcARD` is called.}
+in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{mcmcARD} is called.}
 }
 \value{
 A list consisting of:
-    \item{theta0}{starting values.}
-    \item{formula}{input value of `formula`.}
-    \item{contextual}{input value of `contextual`.}
+\item{theta0}{starting values.}
+\item{formula}{input value of \code{formula}.}
+\item{contextual}{input value of \code{contextual}.}
 }
 \description{
 Estimate SAR model

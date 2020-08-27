@@ -13,11 +13,11 @@ updategparms2 <- function(A, dX, beta0, mu0, sigmau20, uu0, jsbeta, jsmu, index,
     .Call(`_CDatanet_updategparms2`, A, dX, beta0, mu0, sigmau20, uu0, jsbeta, jsmu, index, indexgr, indexsigma, possigma, N, M, K, Msigma, nvec, iteration1, iteration2, tbeta, tmu)
 }
 
-fL <- function(um, lambda, sigma, psim, Gm, tol, nm) {
-    .Call(`_CDatanet_fL`, um, lambda, sigma, psim, Gm, tol, nm)
+fL <- function(um, lambda, sigma, psim, Gm, nm) {
+    .Call(`_CDatanet_fL`, um, lambda, sigma, psim, Gm, nm)
 }
 
-fyb <- function(yb, Gyb, G, igroup, ngroup, psi, lambda, sigma, n, tol = 1e-13, maxit = 1e3L) {
+fyb <- function(yb, Gyb, G, igroup, ngroup, psi, lambda, sigma, n, tol, maxit) {
     .Call(`_CDatanet_fyb`, yb, Gyb, G, igroup, ngroup, psi, lambda, sigma, n, tol, maxit)
 }
 
@@ -29,8 +29,8 @@ foptimREM_NPL <- function(yb, Gyb, theta, X, G, igroup, ngroup, h1, K, n, y) {
     .Call(`_CDatanet_foptimREM_NPL`, yb, Gyb, theta, X, G, igroup, ngroup, h1, K, n, y)
 }
 
-fL_NPL <- function(u, Gu, G, igroup, ngroup, X, theta, K, n, tol = 1e-13, maxit = 1e3L) {
-    invisible(.Call(`_CDatanet_fL_NPL`, u, Gu, G, igroup, ngroup, X, theta, K, n, tol, maxit))
+fL_NPL <- function(u, Gu, G, igroup, ngroup, X, theta, K, n) {
+    invisible(.Call(`_CDatanet_fL_NPL`, u, Gu, G, igroup, ngroup, X, theta, K, n))
 }
 
 foptimTobit <- function(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup) {

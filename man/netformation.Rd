@@ -15,12 +15,12 @@ netformation(
 )
 }
 \arguments{
-\item{formula}{an object of class \link[stats]{formula}: a symbolic description of the model. The `formula` should be as for example \code{~ x1 + x2}
-where `x1`, `x2` are explanatory variable of links formation
-the listed variables after the pipe, `x1`, `x2` are the contextual observable variables. Other formulas may be}
+\item{formula}{an object of class \link[stats]{formula}: a symbolic description of the model. The \code{formula} should be as for example \code{~ x1 + x2}
+where \code{x1}, \code{x2} are explanatory variable of links formation
+the listed variables after the pipe, \code{x1}, \code{x2} are the contextual observable variables. Other formulas may be}
 
 \item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `netformation` is called.}
+in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{netformation} is called.}
 }
 \value{
 A list consisting of:

@@ -46,7 +46,6 @@ arma::vec fL(const arma::vec& um,
              const double& sigma,
              const arma::vec& psim,
              const arma::mat& Gm,
-             const double& tol,
              const int& nm) {
   double lF0, lFr, lu2, tmpi;
   int r;
@@ -86,8 +85,8 @@ arma::vec fyb(arma::vec& yb,
               const double& lambda,
               const double& sigma,
               const int& n,
-              const double& tol = 1e-13,
-              const int& maxit = 1e3) {
+              const double& tol,
+              const int& maxit) {
   int tm, nm;
   arma::vec Gybm, ybm, psim, t(ngroup); 
   //loop over group
@@ -98,7 +97,7 @@ arma::vec fyb(arma::vec& yb,
     arma::mat Gm                         = G[m];
     psim                                 = psi.subvec(igroup(m,0), igroup(m,1));
     
-    newstep: arma::vec tmp1 = fL(ybm, lambda, sigma, psim, Gm, tol, nm);
+    newstep: arma::vec tmp1 = fL(ybm, lambda, sigma, psim, Gm, nm);
     
     double tmp2                          = arma::accu(arma::abs(tmp1 - ybm));
     
@@ -108,11 +107,7 @@ arma::vec fyb(arma::vec& yb,
     
     yb.rows(igroup(m,0), igroup(m,1))    = ybm;
     Gyb.rows(igroup(m,0), igroup(m,1))   = Gm * ybm;
-    //if (tmp4 > tol) goto newP;
-    //cout<<t<<endl;
-    //if (tmp3.max() > tol && t < 1000) goto newP;
-    //Rcpp::Rcout<<"          iteration: "<<t<<endl;
-    //Rcpp::Rcout<<"****** stop  updating P ******"<<endl;
+
     t(m)                                 = tm;
   }
   return t;  // the number of iteration if needed
@@ -211,9 +206,7 @@ void fL_NPL(arma::vec& u,
             const arma::mat& X,
             const arma::vec& theta,
             const int& K,
-            const int& n,
-            const double& tol = 1e-13,
-            const int& maxit = 1e3) {
+            const int& n) {
   int nm;
   arma::mat Gm;
   arma::vec xbm, um;
@@ -229,7 +222,7 @@ void fL_NPL(arma::vec& u,
     arma::mat Gm                         = G[m];
     xbm                                  = xb.subvec(igroup(m,0), igroup(m,1));
     
-    um = fL(um, lambda, sigma, xbm, Gm, tol, nm);
+    um = fL(um, lambda, sigma, xbm, Gm, nm);
     
     u.rows(igroup(m,0), igroup(m,1))    = um;
     Gu.rows(igroup(m,0), igroup(m,1))   = Gm * um;

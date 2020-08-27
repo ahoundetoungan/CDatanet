@@ -2,7 +2,7 @@
 % Please edit documentation in R/NPL.R
 \name{CDnetNPL}
 \alias{CDnetNPL}
-\title{Estimate Count Data Model With Social Interactions}
+\title{Estimate Count Data Model With Social Interactions using NPL Method}
 \usage{
 CDnetNPL(
   formula,
@@ -11,31 +11,149 @@ CDnetNPL(
   theta0 = NULL,
   yb0 = NULL,
   optimizer = "optim",
-  fix.ctr = list(),
   npl.ctr = list(),
   opt.ctr = list(),
   data
 )
 }
 \arguments{
-\item{formula}{an object of class \link[stats]{formula}: a symbolic description of the model. The `formula` should be as for example \code{y ~ x1 + x2 | x1 + x2}
-where `y` is the endogenous vector, the listed variables before the pipe, `x1`, `x2` are the individual exogenous variables and
-the listed variables after the pipe, `x1`, `x2` are the contextual observable variables. Other formulas may be
+\item{formula}{an object of class \link[stats]{formula}: a symbolic description of the model. The \code{formula} should be as for example \code{y ~ x1 + x2 | x1 + x2}
+where \code{y} is the endogenous vector, the listed variables before the pipe, \code{x1}, \code{x2} are the individual exogenous variables and
+the listed variables after the pipe, \code{x1}, \code{x2} are the contextual observable variables. Other formulas may be
 \code{y ~ x1 + x2} for the model without contextual effects, \code{y ~ -1 + x1 + x2 | x1 + x2} for the model
 without intercept or \code{ y ~ x1 + x2 | x2 + x3} to allow the contextual variable to be different from the individual variables.}
 
 \item{contextual}{(optional) logical; if true, this means that all individual variables will be set as contextual variables. Set the
-the `formula` as `y ~ x1 + x2` and `contextual` as `TRUE` is equivalent to set the formula as `y ~ x1 + x2 | x1 + x2`.}
+the \code{formula} as \code{y ~ x1 + x2} and \code{contextual} as \code{TRUE} is equivalent to set the formula as \code{y ~ x1 + x2 | x1 + x2}.}
+
+\item{Glist}{the adjacency matrix or list sub-adjacency matrix.}
+
+\item{theta0}{(optional) starting value of \eqn{\theta = (\lambda, \beta, \gamma, \sigma)}. The parameter \eqn{\gamma} should be removed if the model
+does not contain contextual effects (see details).}
+
+\item{yb0}{(optional) expectation of y.}
+
+\item{optimizer}{is either \code{nlm} (refering to the function \link[stats]{nlm}) or \code{optim} (refering to the function \link[stats]{optim}).
+At every step of the NPL method, the estimation is performed using \link[stats]{nlm} or \link[stats]{optim}. Other arguments
+of these functions such as, the control values and the method can be defined through the argument \code{opt.ctr}.}
+
+\item{npl.ctr}{list of controls for the NPL method (see details).}
+
+\item{opt.ctr}{list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in \code{optimizer}) such as control, method, ...}
 
 \item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `CDnetNPL` is called.}
+in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{CDnetNPL} is called.}
 }
 \value{
 A list consisting of:
-    \item{theta0}{starting values.}
-    \item{formula}{input value of `formula`.}
-    \item{contextual}{input value of `contextual`.}
+\item{M}{number of sub-networks.}
+\item{n}{number of individuals in each network.}
+\item{iteration}{number of iterations performed by the NLP algorithm.}
+\item{estimate}{NPL estimator.}
+\item{likelihood}{pseudo likelihood.}
+\item{yb}{ybar (see details), expectation of y.}
+\item{Gyb}{average of the expectation fo y among friends.}
+\item{steps}{step-by-step output as returned by the optimizer.}
+\item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
 }
 \description{
-Estimate Count Data Model With Social Interactions
+Estimate Count Data Model With Social Interactions using NPL Method
+}
+\details{
+\subsection{Model}{
+
+Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} are generated from a latent variable \eqn{\mathbf{y}^*}{ys}.
+The latent variable is given for all i as
+\deqn{y_i^* = \lambda \mathbf{g}_i \Bar{\mathbf{y}} + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*ybar + x_i'\beta + g_i*X\gamma + \epsilon_i,}
+where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.\cr
+The count variable \eqn{y_i} is then define by the next (greater or equal) non negative integer to
+\eqn{y_i^*}{ys_i}; that is \eqn{y_i = 0} if
+\eqn{y_i^* \leq 0}{ys_i \le 0} and \eqn{y_i = q + 1} if
+\eqn{q < y_i^* \leq q + 1}{q < ys_i \le q + 1}, where \eqn{q} is a non-negative integer.
+}
+
+\subsection{\code{npl.ctr}}{
+
+The model parameters is estimated using the Nested Partial Likelihood (NPL) method. This approach
+starts with a gess of \eqn{\theta} and \eqn{\Bar{y}}{yb} and construct ivetarively a sequence
+of \eqn{\theta} and \eqn{\Bar{y}}{yb}. The solution converges when the \eqn{L_1}{L} distance
+between two consecutive \eqn{\theta} and \eqn{\Bar{y}}{yb} is less than a tolerance. \cr
+The argument \code{npl.ctr} is an optional list which contain
+\itemize{
+\item{tol}{the tolerance of the NPL algorithm (defaul 1e-4),}
+\item{maxit}{the maximal number of iterations allowed (default 500),}
+\item{print}{a boolean indication if the estimate shoul be print a each step.}
+}
+}
+
+\subsection{\code{codedata}}{
+
+The \link[base]{class} of the output of this function is \code{CDnetNPL}. This class has a \link[base]{summary}
+and \link[base]{print} \link[utils]{methods} to summarize and print the results.
+The adjacency matrix and the data are needed to compute the results. To save
+memory, the function does not return these objects. Instead, it returns in \code{codedata} the \code{formula}
+and the names of these objects passed through the argument \code{Glist} and \code{data} (if provided).
+\code{codedata} will be used to get access to the adjacency matrix and the data. Therefore, it is
+important to have the adjacency matrix and the data (or the variables) available in \code{.GlobalEnv}
+in order to print and summarize the results. In case where these objects are not available in \code{.GlobalEnv},
+it will be necessary to provide them to the \link[base]{summary}
+and \link[base]{print} functions.
+}
+}
+\examples{
+\dontrun{
+# Groups' size
+M      <- 5 # Number of sub-groups
+nvec   <- round(runif(M, 100, 1000))
+n      <- sum(nvec)
+
+# Parameters
+lambda <- 0.4
+beta   <- c(2, -1.9, 0.8)
+gamma  <- c(1.5, -1.2)
+sigma  <- 1.5
+theta  <- c(lambda, beta, gamma, sigma)
+
+# X
+X      <- cbind(rnorm(n, 1, 1), rexp(n, 0.4))
+
+# Network
+Glist  <- list()
+
+for (m in 1:M) {
+  nm           <- nvec[m]
+  Gm           <- matrix(0, nm, nm)
+  max_d        <- 30
+  for (i in 1:nm) {
+    tmp        <- sample((1:nm)[-i], sample(0:max_d, 1))
+    Gm[i, tmp] <- 1
+  }
+  rs           <- rowSums(Gm); rs[rs == 0] <- 1
+  Gm           <- Gm/rs
+  Glist[[m]]   <- Gm
+}
+
+
+# data
+data    <- data.frame(x1 = X[,1], x2 =  X[,2])
+
+rm(list = ls()[!(ls() \%in\% c("Glist", "data", "theta"))])
+
+ytmp    <- simCDnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, theta = theta, data = data)
+
+y       <- ytmp$y
+
+# plot histogram
+hist(y, breaks = max(y))
+
+opt.ctr <- list(method  = "Nelder-Mead", control = list(abstol = 1e-16, abstol = 1e-11, maxit = 5e3))
+data    <- data.frame(yt = y, x1 = data$x1, x2 = data$x2)
+rm(list = ls()[!(ls() \%in\% c("Glist", "data"))])
+
+out   <- CDnetNPL(formula = yt ~ x1 + x2, contextual = TRUE, Glist = Glist, data = data)
+summary(out)
+}
+}
+\seealso{
+\code{\link{simCDnet}}, \code{\link{SARML}}, \code{\link{SARTML}}.
 }

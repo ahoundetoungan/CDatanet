@@ -16,5 +16,5 @@
 \item{...}{further arguments passed to or from other methods.}
 }
 \description{
-Summary and print methods for the class `CDnetNPL` as returned by the function \link{CDnetNPL}.
+Summary and print methods for the class \code{CDnetNPL} as returned by the function \link{CDnetNPL}.
 }

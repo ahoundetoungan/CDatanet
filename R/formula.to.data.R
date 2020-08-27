@@ -17,11 +17,11 @@ formula.to.data <- function(formula,
                             theta0 = NULL) {
   
   ## Extract data from the formula
-  cl               <- match.call()
-  formula          <- as.Formula(formula)
   if (missing(data)) {
     data           <- environment(formula)
   }
+  cl               <- match.call()
+  formula          <- as.Formula(formula)
   
   if (type == "model") {
     stopifnot(length(formula)[1] == 1L, length(formula)[2] %in% 1:2)

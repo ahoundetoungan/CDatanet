@@ -118,10 +118,8 @@ SARML <- function(formula,
   theta           <- c(lambda, beta, sqrt(sigma2))
   names(theta)    <- c(coln, "sigma")
   
-  env.formula     <- environment(formula)
   sdata           <- list(
     "formula"       = formula,
-    "env.formula"   = env.formula,
     "Glist"         = deparse(substitute(Glist))
   )
   if (!missing(data)) {
@@ -173,8 +171,8 @@ SARML <- function(formula,
   sigma                <- estimate[K]
   llh                  <- x$likelihood
   
-  if (missing(Glist)) {
-    Glist              <- get(x$codedata$Glist) 
+  if (!missing(Glist)) {
+    Glist              <- get(x$codedata$Glist, envir = .GlobalEnv) 
   } else {
     if(!is.list(Glist)) {
       Glist            <- list(Glist)

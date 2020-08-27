@@ -16,5 +16,5 @@
 \item{...}{further arguments passed to or from other methods.}
 }
 \description{
-Summary and print methods for the class `SARML` as returned by the function \link{SARML}.
+Summary and print methods for the class \code{SARML} as returned by the function \link{SARML}.
 }
