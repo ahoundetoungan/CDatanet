@@ -10,9 +10,9 @@
 #' @param theta0 (optional) starting value of \eqn{\theta = (\lambda, \beta, \gamma, \sigma)}. The parameter \eqn{\gamma} should be removed if the model
 #' does not contain contextual effects (see details).
 #' @param yb0 (optional) expectation of y.
-#' @param optimizer is either `nlm` (refering to the function \link[stats]{nlm}) or `optim` (refering to the function \link[stats]{optim}). 
+#' @param optimizer is either `nlm` (refering to the \link[stats]{nlm} function) or `optim` (refering to the \link[stats]{optim} function). 
 #' At every step of the NPL method, the estimation is performed using \link[stats]{nlm} or \link[stats]{optim}. Other arguments 
-#' of these functions such as, the control values and the method can be defined through the argument `opt.ctr`.
+#' of these functions such as, `control` and `method` can be defined through the argument `opt.ctr`.
 #' @param npl.ctr list of controls for the NPL method (see details).
 #' @param opt.ctr list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in `optimizer`) such as control, method, ...
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
@@ -39,14 +39,14 @@
 #' \eqn{q < y_i^* \leq q + 1}{q < ys_i \le q + 1}, where \eqn{q} is a non-negative integer.
 #' ## \code{npl.ctr}
 #' The model parameters is estimated using the Nested Partial Likelihood (NPL) method. This approach 
-#' starts with a gess of \eqn{\theta} and \eqn{\bar{y}}{yb} and construct ivetarively a sequence
+#' starts with a guess of \eqn{\theta} and \eqn{\bar{y}}{yb} and constructs ivetarively a sequence
 #' of \eqn{\theta} and \eqn{\bar{y}}{yb}. The solution converges when the \eqn{L_1}{L} distance
 #' between two consecutive \eqn{\theta} and \eqn{\bar{y}}{yb} is less than a tolerance. \cr
 #' The argument \code{npl.ctr} is an optional list which contain
 #' \itemize{
-#' \item{tol}{the tolerance of the NPL algorithm (defaul 1e-4),}
-#' \item{maxit}{the maximal number of iterations allowed (default 500),}
-#' \item{print}{a boolean indicating if the estimate shoul be print a each step.}
+#' \item{tol}{ the tolerance of the NPL algorithm (defaul 1e-4),}
+#' \item{maxit}{ the maximal number of iterations allowed (default 500),}
+#' \item{print}{ a boolean indicating if the estimate shoul be print a each step.}
 #' }
 #' ## `codedata`
 #' The \link[base]{class} of the output of this function is \code{CDnetNPL}. This class has a \link[base]{summary} 
