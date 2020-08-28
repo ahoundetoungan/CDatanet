@@ -33,9 +33,9 @@ does not contain contextual effects (see details).}
 
 \item{yb0}{(optional) expectation of y.}
 
-\item{optimizer}{is either \code{nlm} (refering to the function \link[stats]{nlm}) or \code{optim} (refering to the function \link[stats]{optim}).
+\item{optimizer}{is either \code{nlm} (refering to the \link[stats]{nlm} function) or \code{optim} (refering to the \link[stats]{optim} function).
 At every step of the NPL method, the estimation is performed using \link[stats]{nlm} or \link[stats]{optim}. Other arguments
-of these functions such as, the control values and the method can be defined through the argument \code{opt.ctr}.}
+of these functions such as, \code{control} and \code{method} can be defined through the argument \code{opt.ctr}.}
 
 \item{npl.ctr}{list of controls for the NPL method (see details).}
 
@@ -75,14 +75,14 @@ The count variable \eqn{y_i} is then define by the next (greater or equal) non n
 \subsection{\code{npl.ctr}}{
 
 The model parameters is estimated using the Nested Partial Likelihood (NPL) method. This approach
-starts with a gess of \eqn{\theta} and \eqn{\bar{y}}{yb} and construct ivetarively a sequence
+starts with a guess of \eqn{\theta} and \eqn{\bar{y}}{yb} and constructs ivetarively a sequence
 of \eqn{\theta} and \eqn{\bar{y}}{yb}. The solution converges when the \eqn{L_1}{L} distance
 between two consecutive \eqn{\theta} and \eqn{\bar{y}}{yb} is less than a tolerance. \cr
 The argument \code{npl.ctr} is an optional list which contain
 \itemize{
-\item{tol}{the tolerance of the NPL algorithm (defaul 1e-4),}
-\item{maxit}{the maximal number of iterations allowed (default 500),}
-\item{print}{a boolean indicating if the estimate shoul be print a each step.}
+\item{tol}{ the tolerance of the NPL algorithm (defaul 1e-4),}
+\item{maxit}{ the maximal number of iterations allowed (default 500),}
+\item{print}{ a boolean indicating if the estimate shoul be print a each step.}
 }
 }
 

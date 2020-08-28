@@ -268,7 +268,7 @@ SARML <- function(formula,
   sigma                <- estimate[K]
   llh                  <- x$likelihood
   
-  if (!missing(Glist)) {
+  if (missing(Glist)) {
     Glist              <- get(x$codedata$Glist, envir = .GlobalEnv) 
   } else {
     if(!is.list(Glist)) {
