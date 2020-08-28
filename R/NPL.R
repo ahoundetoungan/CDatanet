@@ -22,7 +22,7 @@
 #'     \item{n}{number of individuals in each network.}
 #'     \item{iteration}{number of iterations performed by the NLP algorithm.}
 #'     \item{estimate}{NPL estimator.}
-#'     \item{likelihood}{pseudo likelihood.}
+#'     \item{likelihood}{pseudo-likelihood value.}
 #'     \item{yb}{ybar (see details), expectation of y.}
 #'     \item{Gyb}{average of the expectation fo y among friends.}
 #'     \item{steps}{step-by-step output as returned by the optimizer.}
@@ -31,7 +31,7 @@
 #' ## Model
 #' Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} are generated from a latent variable \eqn{\mathbf{y}^*}{ys}. 
 #' The latent variable is given for all i as
-#' \deqn{y_i^* = \lambda \mathbf{g}_i \Bar{\mathbf{y}} + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*ybar + x_i'\beta + g_i*X\gamma + \epsilon_i,}
+#' \deqn{y_i^* = \lambda \mathbf{g}_i \bar{\mathbf{y}} + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*ybar + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 #' where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.\cr
 #' The count variable \eqn{y_i} is then define by the next (greater or equal) non negative integer to 
 #' \eqn{y_i^*}{ys_i}; that is \eqn{y_i = 0} if  
@@ -39,27 +39,26 @@
 #' \eqn{q < y_i^* \leq q + 1}{q < ys_i \le q + 1}, where \eqn{q} is a non-negative integer.
 #' ## \code{npl.ctr}
 #' The model parameters is estimated using the Nested Partial Likelihood (NPL) method. This approach 
-#' starts with a gess of \eqn{\theta} and \eqn{\Bar{y}}{yb} and construct ivetarively a sequence
-#' of \eqn{\theta} and \eqn{\Bar{y}}{yb}. The solution converges when the \eqn{L_1}{L} distance
-#' between two consecutive \eqn{\theta} and \eqn{\Bar{y}}{yb} is less than a tolerance. \cr
+#' starts with a gess of \eqn{\theta} and \eqn{\bar{y}}{yb} and construct ivetarively a sequence
+#' of \eqn{\theta} and \eqn{\bar{y}}{yb}. The solution converges when the \eqn{L_1}{L} distance
+#' between two consecutive \eqn{\theta} and \eqn{\bar{y}}{yb} is less than a tolerance. \cr
 #' The argument \code{npl.ctr} is an optional list which contain
 #' \itemize{
 #' \item{tol}{the tolerance of the NPL algorithm (defaul 1e-4),}
 #' \item{maxit}{the maximal number of iterations allowed (default 500),}
-#' \item{print}{a boolean indication if the estimate shoul be print a each step.}
+#' \item{print}{a boolean indicating if the estimate shoul be print a each step.}
 #' }
 #' ## `codedata`
 #' The \link[base]{class} of the output of this function is \code{CDnetNPL}. This class has a \link[base]{summary} 
 #' and \link[base]{print} \link[utils]{methods} to summarize and print the results. 
-#' The adjacency matrix and the data are needed to compute the results. To save 
-#' memory, the function does not return these objects. Instead, it returns in `codedata` the `formula` 
+#' The adjacency matrix and the data are needed to summarize the results. However, in order to save 
+#' memory, the function does not return these objects. Instead, it returns `codedata` which contains the `formula` 
 #' and the names of these objects passed through the argument `Glist` and `data` (if provided).
 #' `codedata` will be used to get access to the adjacency matrix and the data. Therefore, it is
-#' important to have the adjacency matrix and the data (or the variables) available in \code{.GlobalEnv}
-#' in order to print and summarize the results. In case where these objects are not available in \code{.GlobalEnv},
+#' important to have the adjacency matrix and the data (or the variables) available in \code{.GlobalEnv}. Otherwise,
 #' it will be necessary to provide them to the \link[base]{summary} 
 #' and \link[base]{print} functions.
-#' @seealso \code{\link{simCDnet}}, \code{\link{SARML}}, \code{\link{SARTML}}.
+#' @seealso \code{\link{simCDnet}}, \code{\link{SARML}} and \code{\link{SARTML}}.
 #' @examples 
 #' \dontrun{
 #' # Groups' size
@@ -106,7 +105,6 @@
 #' # plot histogram
 #' hist(y, breaks = max(y))
 #' 
-#' opt.ctr <- list(method  = "Nelder-Mead", control = list(abstol = 1e-16, abstol = 1e-11, maxit = 5e3))
 #' data    <- data.frame(yt = y, x1 = data$x1, x2 = data$x2)
 #' rm(list = ls()[!(ls() %in% c("Glist", "data"))])
 #' 
@@ -289,7 +287,36 @@ CDnetNPL    <- function(formula,
 
 #' @title Summarize Count Data Model With Social Interactions
 #' @description Summary and print methods for the class `CDnetNPL` as returned by the function \link{CDnetNPL}.
+#' @param object an object of class `CDnetNPL`, output of the function \code{\link{CDnetNPL}}.
+#' @param x an object of class `summary.CDnetNPL` or `CDnetNPL`, output of the functions \code{\link{summary.CDnetNPL}} and
+#' \code{\link{print.summary.CDnetNPL}}.
+#' @param cov.ctr list of control values for the covariance containing two inteers, `R` and `S`. The covariance summations from `0`
+#' to infinity. But, the summed elements decreases exponentially. The summations are approximated by summations from `0` to `R`.
+#' The covariance also requires computing \eqn{\Phi(x) - \Phi(x - 1)}, where \eqn{\Phi} is 
+#' the normal'  probability density funcion. This is done using important sampling, where `S` numbers are generated
+#' form the uniform distribution.
+#' @param Glist the adjacency matrix or list sub-adjacency matrix. If missing make, sure that 
+#' the object provided to the function \code{\link{CDnetNPL}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{CDnetNPL}}).
+#' @param data dataframe containing the explanatory variables. If missing make, sure that 
+#' the object provided to the function \code{\link{CDnetNPL}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{CDnetNPL}}).
 #' @param ... further arguments passed to or from other methods.
+#' @return A list consisting of:
+#'     \item{M}{number of sub-networks.}
+#'     \item{n}{number of individuals in each network.}
+#'     \item{iteration}{number of iterations performed by the NLP algorithm.}
+#'     \item{estimate}{NPL estimator.}
+#'     \item{likelihood}{pseudo-likelihood value.}
+#'     \item{yb}{ybar (see details), expectation of y.}
+#'     \item{Gyb}{average of the expectation fo y among friends.}
+#'     \item{steps}{step-by-step output as returned by the optimizer.}
+#'     \item{cov}{covariance matrix of the estimate.}
+#'     \item{meffects}{vector of marginal effects.}
+#'     \item{cov.me}{covariance matrix of the marginal effects.}
+#'     \item{cov.ctr}{returned value of the control values for the covariance.}
+#'     \item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
+#' @importFrom stats dnorm
+#' @importFrom stats pnorm
+#' @importFrom stats runif
 #' @export 
 "summary.CDnetNPL" <- function(object,
                                cov.ctr   = list(),

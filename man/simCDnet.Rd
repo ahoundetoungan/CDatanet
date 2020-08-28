@@ -43,7 +43,7 @@ Simulate data from Count Data Model With Social Interactions
 \details{
 Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} are generated from a latent variable \eqn{\mathbf{y}^*}{ys}.
 The latent variable is given for all i as
-\deqn{y_i^* = \lambda \mathbf{g}_i \Bar{\mathbf{y}} + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*ybar + x_i'\beta + g_i*X\gamma + \epsilon_i,}
+\deqn{y_i^* = \lambda \mathbf{g}_i \bar{\mathbf{y}} + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*ybar + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.\cr
 The count variable \eqn{y_i} is then define by the next (greater or equal) non negative integer to
 \eqn{y_i^*}{ys_i}; that is \eqn{y_i = 0} if

@@ -13,7 +13,25 @@
 \method{print}{SARML}(x, ...)
 }
 \arguments{
+\item{object}{an object of class \code{SARML}, output of the function \code{\link{SARML}}.}
+
 \item{...}{further arguments passed to or from other methods.}
+
+\item{x}{an object of class \code{summary.SARML} or \code{SARML}, output of the functions \code{\link{summary.SARML}} and
+\code{\link{print.summary.SARML}}.}
+
+\item{Glist}{the adjacency matrix or list sub-adjacency matrix. If missing make, sure that
+the object provided to the function \code{\link{SARML}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{SARML}}).}
+}
+\value{
+A list consisting of:
+\item{M}{number of sub-networks.}
+\item{n}{number of individuals in each network.}
+\item{estimate}{NPL estimator.}
+\item{likelihood}{likelihood value.}
+\item{cov}{covariance matrix of the estimate.}
+\item{optimization}{output as returned by the optimizer.}
+\item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
 }
 \description{
 Summary and print methods for the class \code{SARML} as returned by the function \link{SARML}.

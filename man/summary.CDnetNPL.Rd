@@ -13,7 +13,40 @@
 \method{print}{CDnetNPL}(x, ...)
 }
 \arguments{
+\item{object}{an object of class \code{CDnetNPL}, output of the function \code{\link{CDnetNPL}}.}
+
+\item{cov.ctr}{list of control values for the covariance containing two inteers, \code{R} and \code{S}. The covariance summations from \code{0}
+to infinity. But, the summed elements decreases exponentially. The summations are approximated by summations from \code{0} to \code{R}.
+The covariance also requires computing \eqn{\Phi(x) - \Phi(x - 1)}, where \eqn{\Phi} is
+the normal'  probability density funcion. This is done using important sampling, where \code{S} numbers are generated
+form the uniform distribution.}
+
+\item{Glist}{the adjacency matrix or list sub-adjacency matrix. If missing make, sure that
+the object provided to the function \code{\link{CDnetNPL}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{CDnetNPL}}).}
+
+\item{data}{dataframe containing the explanatory variables. If missing make, sure that
+the object provided to the function \code{\link{CDnetNPL}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{CDnetNPL}}).}
+
 \item{...}{further arguments passed to or from other methods.}
+
+\item{x}{an object of class \code{summary.CDnetNPL} or \code{CDnetNPL}, output of the functions \code{\link{summary.CDnetNPL}} and
+\code{\link{print.summary.CDnetNPL}}.}
+}
+\value{
+A list consisting of:
+\item{M}{number of sub-networks.}
+\item{n}{number of individuals in each network.}
+\item{iteration}{number of iterations performed by the NLP algorithm.}
+\item{estimate}{NPL estimator.}
+\item{likelihood}{pseudo-likelihood value.}
+\item{yb}{ybar (see details), expectation of y.}
+\item{Gyb}{average of the expectation fo y among friends.}
+\item{steps}{step-by-step output as returned by the optimizer.}
+\item{cov}{covariance matrix of the estimate.}
+\item{meffects}{vector of marginal effects.}
+\item{cov.me}{covariance matrix of the marginal effects.}
+\item{cov.ctr}{returned value of the control values for the covariance.}
+\item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
 }
 \description{
 Summary and print methods for the class \code{CDnetNPL} as returned by the function \link{CDnetNPL}.

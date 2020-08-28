@@ -1,19 +1,112 @@
 #' @title Estimate Network Formation Model
+#' @param network matrix or list of sub-matrix of social interactions containing 0 and 1, where links are represented by 1
 #' @param formula an object of class \link[stats]{formula}: a symbolic description of the model. The `formula` should be as for example \code{~ x1 + x2}
 #' where `x1`, `x2` are explanatory variable of links formation
-#' the listed variables after the pipe, `x1`, `x2` are the contextual observable variables. Other formulas may be
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `netformation` is called.
+#' @param fixed.effects boolean indicating if sub-netwok heterogeneity as fixed effects should ne included.
+#' @param init (optional) list of starting values containing `beta`, an K-dimensional vector of the explanatory variables parameter, `mu` an n-dimensional vector of unobserved parameters, `sigmau2`
+#' the vector of the variances of `mu` in each sub-network (or single variance if `fixed.effects = FALSE`) and `uu` the vector of the of the means of `mu` in each sub-network (or single mean if `fixed.effects = FALSE`), 
+#' where K is the number of explanatory variables and n is the number of individuals.  
+#' @param mcmc.ctr (optional) list of MCMC control (see detail). 
+#' @param print boolean indicating if the estimation progression should be printed.
+#' @details 
+#' The MCMC control `mcmc.ctr` should be a list containing
+#' \itemize{
+#'    \item{jscalebeta}{ a K-dimensional vector of `beta` jumping scales.}
+#'    \item{jscalemu}{ an n-dimensional vector of `mu` jumping scales.}
+#'    \item{burnin}{ the number of iterations in the burn-in.}
+#'    \item{iteration}{ the number of simulations.}
+#'    \item{tbeta}{ target of `beta`.}
+#'    \item{tmu}{ target of `mu`.}
+#' }
+#' The brun-in is replicated three times. The estimation is performed for each component of `beta` during the two firsts burn-in. The simulation from
+#' the second burn-in are used to compute covariance of `beta`. From the third burn-in and the remaining steps of the MCMC, all the components in `beta`are jointly simulated. \cr
+#' As `mu` dimension is large, the simulation is performed for each component.\cr
+#' The jumping scale are also updated during the MCMC following Atchadé and Rosenthal (2005).
+#' 
 #' @return A list consisting of:
+#'     \item{n}{number of individuals in each network.}
+#'     \item{n.obs}{number of observations.}
+#'     \item{n.links}{number of links.}
+#'     \item{K}{number of explanatory variables.}
+#'     \item{posterior}{list of simulations from the posterior distribution and the posteior density.}
+#'     \item{acceptance.rate}{acceptance rate of beta and mu.}
+#'     \item{mcmc.ctr}{returned list of MCMC control.}
+#'     \item{init}{returned list of starting values.}
 #' @importFrom ddpcr quiet
+#' @examples 
+#' \dontrun{
+#' M            <- 5 # Number of sub-groups
+#' nvec         <- round(runif(M, 100, 500))
+#' beta         <- c(1, -1)
+#' Glist        <- list()
+#' dX           <- matrix(0, 0, 2)
+#' mu           <- list()
+#' uu           <- runif(M, -5, 5)
+#' sigma2u      <- runif(M, 0.5, 16)
+#' for (m in 1:M) {
+#'   n          <- nvec[m]
+#'   mum        <- rnorm(n, uu[m], sqrt(sigma2u[m]))
+#'   X1         <- rnorm(n)
+#'   X2         <- rbinom(n, 1, 0.2)
+#'   Z1         <- matrix(0, n, n)  
+#'   Z2         <- matrix(0, n, n)
+#'   
+#'   for (i in 1:n) {
+#'     for (j in 1:n) {
+#'       Z1[i, j] <- abs(X1[i] - X1[j])
+#'       Z2[i, j] <- 1*(X2[i] == X2[j])
+#'     }
+#'   }
+#'   
+#'   Gm           <- 1*((Z1*beta[1] + Z2*beta[2] +
+#'                         kronecker(mum, t(mum), "+") + rlogis(n^2)) > 0)
+#'   diag(Gm)     <- 0
+#'   
+#'   diag(Z1)     <- NA
+#'   diag(Z2)     <- NA
+#'   Z1           <- Z1[!is.na(Z1)]
+#'   Z2           <- Z2[!is.na(Z2)]
+#'   
+#'   dX           <- rbind(dX, cbind(Z1, Z2))
+#'   Glist[[m]]   <- Gm
+#'   mu[[m]]      <- mum
+#' }
+#' 
+#' mu  <- unlist(mu)
+#' out <- netformation(network =  Glist, formula = ~ dX, fixed.effects = T,
+#'                     mcmc.ctr = list(burin = 1000, iteration = 5000))
+#' 
+#' 
+#' # plot simulations
+#' plot(out$posterior$beta[,1], type = "l")
+#' abline(h = beta[1], col = "red")
+#' plot(out$posterior$beta[,2], type = "l")
+#' abline(h = beta[2], col = "red")
+#' 
+#' k <- 2
+#' plot(out$posterior$sigmamu2[,2], type = "l")
+#' abline(h = sigma2u[2], col = "red")
+#' 
+#' 
+#' i <- 10
+#' plot(out$posterior$mu[,i], type = "l", 
+#'      ylim = c(min(out$posterior$mu[,i], mu[i]), max(out$posterior$mu[,i], mu[i])))
+#' abline(h = mu[i], col = "red")
+#' 
+#' plot(out$posterior$uu[,k] , type = "l", 
+#'      ylim = c(min(out$posterior$uu[,k], uu[k]), max(out$posterior$uu[,k], uu[k])))
+#' abline(h = uu[k], col = "red")
+#' }
 #' @export
 
 netformation <- function(network,
                          formula,
                          data,
+                         fixed.effects = TRUE,
                          init          = list(),
                          mcmc.ctr      = list(),
-                         fixed.effects = FALSE,
                          print         = TRUE) {
   t1              <- Sys.time()
   # Data and dimensions
@@ -149,6 +242,7 @@ netformation <- function(network,
   
   posterior                    <- estim$posterior
   accept                       <- estim$acceptance.rate
+  accept$mu                    <- c(accept$mu)
   
   colnames(posterior$beta)     <- coln
   if (Msigma == 1) {

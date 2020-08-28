@@ -5,6 +5,7 @@
 #' @importFrom stats model.response
 #' @importFrom stats model.matrix
 #' @importFrom stats delete.response
+#' @importFrom stats as.formula
 #' @importFrom Matrix rankMatrix
 #' @importFrom ddpcr quiet
 formula.to.data <- function(formula,

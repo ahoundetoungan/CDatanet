@@ -6,12 +6,95 @@
 #' without intercept or \code{ y ~ x1 + x2 | x2 + x3} to allow the contextual variable to be different from the individual variables.
 #' @param  contextual (optional) logical; if true, this means that all individual variables will be set as contextual variables. Set the
 #' the `formula` as `y ~ x1 + x2` and `contextual` as `TRUE` is equivalent to set the formula as `y ~ x1 + x2 | x1 + x2`.
+#' @param Glist the adjacency matrix or list sub-adjacency matrix.
+#' @param lambda0 (optional) starting value of \eqn{\lambda}. The parameter \eqn{\gamma} should be removed if the model
+#' does not contain contextual effects (see details).
+#' @param optimizer is either `nlm` (refering to the function \link[stats]{nlm}) or `optim` (refering to the function \link[stats]{optim}). 
+#' At every step of the NPL method, the estimation is performed using \link[stats]{nlm} or \link[stats]{optim}. Other arguments 
+#' of these functions such as, the control values and the method can be defined through the argument `opt.ctr`.
+#' @param opt.ctr list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in `optimizer`) such as control, method, ...
+#' @param print a boolean indicating if the estimate shoul be print a each step.
+#' @param cov a boolean indicating if the covariance should be computed.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `mcmcARD` is called.
+#' @details 
+#' ## Model
+#' The variable \eqn{\mathbf{y}}{y} is given for all i as
+#' \deqn{y_i = \lambda \mathbf{g}_i y + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{y_i = \lambda g_i*y + x_i'\beta + g_i*X\gamma + \epsilon_i,}
+#' where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.
+#' ## `codedata`
+#' The \link[base]{class} of the output of this function is \code{SART}. This class has a \link[base]{summary} 
+#' and \link[base]{print} \link[utils]{methods} to summarize and print the results. 
+#' The adjacency matrix is needed to summarize the results. However, in order to save 
+#' memory, the function does not return it. Instead, it returns `codedata` which contains the `formula` 
+#' and the name of the adjacency matrix passed through the argument `Glist`.
+#' `codedata` will be used to get access to the adjacency matrix. Therefore, it is
+#' important to have the adjacency matrix available in \code{.GlobalEnv}. Otherwise
+#' it will be necessary to provide the adjacency matrix to the \link[base]{summary} 
+#' and \link[base]{print} functions.
+#' @seealso \code{\link{CDnetNPL}} and \code{\link{SARTML}}.
+#' @examples 
+#' \dontrun{
+#' # Groups' size
+#' M      <- 5 # Number of sub-groups
+#' nvec   <- round(runif(M, 100, 1000))
+#' n      <- sum(nvec)
+#' 
+#' # Parameters
+#' lambda <- 0.4
+#' beta   <- c(2, -1.9, 0.8)
+#' gamma  <- c(1.5, -1.2)
+#' sigma  <- 1.5
+#' theta  <- c(lambda, beta, gamma, sigma)
+#' 
+#' # X
+#' X      <- cbind(rnorm(n, 1, 1), rexp(n, 0.4))
+#' 
+#' # Network
+#' Glist  <- list()
+#' 
+#' for (m in 1:M) {
+#'   nm           <- nvec[m]
+#'   Gm           <- matrix(0, nm, nm)
+#'   max_d        <- 30
+#'   for (i in 1:nm) {
+#'     tmp        <- sample((1:nm)[-i], sample(0:max_d, 1))
+#'     Gm[i, tmp] <- 1
+#'   }
+#'   rs           <- rowSums(Gm); rs[rs == 0] <- 1
+#'   Gm           <- Gm/rs
+#'   Glist[[m]]   <- Gm
+#' }
+#' 
+#' 
+#' # data
+#' data    <- data.frame(x1 = X[,1], x2 =  X[,2])
+#' 
+#' rm(list = ls()[!(ls() %in% c("Glist", "data", "theta"))])
+#' 
+#' ytmp    <- simCDnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist,
+#'                     theta = theta, data = data)
+#' 
+#' y       <- ytmp$y
+#' 
+#' # plot histogram
+#' hist(y, breaks = max(y))
+#' 
+#' data    <- data.frame(yt = y, x1 = data$x1, x2 = data$x2)
+#' rm(list = ls()[!(ls() %in% c("Glist", "data"))])
+#' 
+#' out     <- SARML(formula = yt ~ x1 + x2, contextual = TRUE, 
+#'                  Glist = Glist, optimizer = "optim", data = data)
+#' summary(out)
+#' }
 #' @return A list consisting of:
-#'     \item{theta0}{starting values.}
-#'     \item{formula}{input value of `formula`.}
-#'     \item{contextual}{input value of `contextual`.}
+#'     \item{M}{number of sub-networks.}
+#'     \item{n}{number of individuals in each network.}
+#'     \item{estimate}{NPL estimator.}
+#'     \item{likelihood}{likelihood value.}
+#'     \item{cov}{covariance matrix of the estimate.}
+#'     \item{optimization}{output as returned by the optimizer.}
+#'     \item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
 #' @export
 SARML <- function(formula,
                   contextual,
@@ -142,6 +225,20 @@ SARML <- function(formula,
 
 #' @title Summarize SAR Model
 #' @description Summary and print methods for the class `SARML` as returned by the function \link{SARML}.
+#' @param object an object of class `SARML`, output of the function \code{\link{SARML}}.
+#' @param x an object of class `summary.SARML` or `SARML`, output of the functions \code{\link{summary.SARML}} and
+#' \code{\link{print.summary.SARML}}.
+#' @param Glist the adjacency matrix or list sub-adjacency matrix. If missing make, sure that 
+#' the object provided to the function \code{\link{SARML}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{SARML}}).
+#' @param ... further arguments passed to or from other methods.
+#' @return A list consisting of:
+#'     \item{M}{number of sub-networks.}
+#'     \item{n}{number of individuals in each network.}
+#'     \item{estimate}{NPL estimator.}
+#'     \item{likelihood}{likelihood value.}
+#'     \item{cov}{covariance matrix of the estimate.}
+#'     \item{optimization}{output as returned by the optimizer.}
+#'     \item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
 #' @param ... further arguments passed to or from other methods.
 #' @export 
 "summary.SARML" <- function(object,

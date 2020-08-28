@@ -50,7 +50,7 @@ A list consisting of:
 \item{n}{number of individuals in each network.}
 \item{iteration}{number of iterations performed by the NLP algorithm.}
 \item{estimate}{NPL estimator.}
-\item{likelihood}{pseudo likelihood.}
+\item{likelihood}{pseudo-likelihood value.}
 \item{yb}{ybar (see details), expectation of y.}
 \item{Gyb}{average of the expectation fo y among friends.}
 \item{steps}{step-by-step output as returned by the optimizer.}
@@ -64,7 +64,7 @@ Estimate Count Data Model With Social Interactions using NPL Method
 
 Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} are generated from a latent variable \eqn{\mathbf{y}^*}{ys}.
 The latent variable is given for all i as
-\deqn{y_i^* = \lambda \mathbf{g}_i \Bar{\mathbf{y}} + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*ybar + x_i'\beta + g_i*X\gamma + \epsilon_i,}
+\deqn{y_i^* = \lambda \mathbf{g}_i \bar{\mathbf{y}} + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*ybar + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.\cr
 The count variable \eqn{y_i} is then define by the next (greater or equal) non negative integer to
 \eqn{y_i^*}{ys_i}; that is \eqn{y_i = 0} if
@@ -75,14 +75,14 @@ The count variable \eqn{y_i} is then define by the next (greater or equal) non n
 \subsection{\code{npl.ctr}}{
 
 The model parameters is estimated using the Nested Partial Likelihood (NPL) method. This approach
-starts with a gess of \eqn{\theta} and \eqn{\Bar{y}}{yb} and construct ivetarively a sequence
-of \eqn{\theta} and \eqn{\Bar{y}}{yb}. The solution converges when the \eqn{L_1}{L} distance
-between two consecutive \eqn{\theta} and \eqn{\Bar{y}}{yb} is less than a tolerance. \cr
+starts with a gess of \eqn{\theta} and \eqn{\bar{y}}{yb} and construct ivetarively a sequence
+of \eqn{\theta} and \eqn{\bar{y}}{yb}. The solution converges when the \eqn{L_1}{L} distance
+between two consecutive \eqn{\theta} and \eqn{\bar{y}}{yb} is less than a tolerance. \cr
 The argument \code{npl.ctr} is an optional list which contain
 \itemize{
 \item{tol}{the tolerance of the NPL algorithm (defaul 1e-4),}
 \item{maxit}{the maximal number of iterations allowed (default 500),}
-\item{print}{a boolean indication if the estimate shoul be print a each step.}
+\item{print}{a boolean indicating if the estimate shoul be print a each step.}
 }
 }
 
@@ -90,12 +90,11 @@ The argument \code{npl.ctr} is an optional list which contain
 
 The \link[base]{class} of the output of this function is \code{CDnetNPL}. This class has a \link[base]{summary}
 and \link[base]{print} \link[utils]{methods} to summarize and print the results.
-The adjacency matrix and the data are needed to compute the results. To save
-memory, the function does not return these objects. Instead, it returns in \code{codedata} the \code{formula}
+The adjacency matrix and the data are needed to summarize the results. However, in order to save
+memory, the function does not return these objects. Instead, it returns \code{codedata} which contains the \code{formula}
 and the names of these objects passed through the argument \code{Glist} and \code{data} (if provided).
 \code{codedata} will be used to get access to the adjacency matrix and the data. Therefore, it is
-important to have the adjacency matrix and the data (or the variables) available in \code{.GlobalEnv}
-in order to print and summarize the results. In case where these objects are not available in \code{.GlobalEnv},
+important to have the adjacency matrix and the data (or the variables) available in \code{.GlobalEnv}. Otherwise,
 it will be necessary to provide them to the \link[base]{summary}
 and \link[base]{print} functions.
 }
@@ -146,7 +145,6 @@ y       <- ytmp$y
 # plot histogram
 hist(y, breaks = max(y))
 
-opt.ctr <- list(method  = "Nelder-Mead", control = list(abstol = 1e-16, abstol = 1e-11, maxit = 5e3))
 data    <- data.frame(yt = y, x1 = data$x1, x2 = data$x2)
 rm(list = ls()[!(ls() \%in\% c("Glist", "data"))])
 
@@ -155,5 +153,5 @@ summary(out)
 }
 }
 \seealso{
-\code{\link{simCDnet}}, \code{\link{SARML}}, \code{\link{SARTML}}.
+\code{\link{simCDnet}}, \code{\link{SARML}} and \code{\link{SARTML}}.
 }

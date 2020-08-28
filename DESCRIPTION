@@ -5,13 +5,13 @@ Version: 0.1
 Date: 2020-08-01
 Authors@R: person("Elysée Aristide", "Houndetoungan", role = c("cre","aut"), email =  "ariel92and@gmail.com")
 Description: Estimating a count data model with social interactions.
-License: GPL (>= 2)
+License: GPL (>= 2) + file LICENSE
 Encoding: UTF-8
 BugReports: https://github.com/ahoundetoungan/CDatanet/issues
 URL: https://github.com/ahoundetoungan/CDatanet
 LazyData: true
-Depends: R (>= 3.0.0), formula.tools
-Imports: Rcpp (>= 1.0.0), Formula, formula.tools, ddpcr
+Depends: R (>= 3.0.0)
+Imports: Rcpp (>= 1.0.0), Formula, formula.tools, ddpcr, Matrix
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress
 RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE)
