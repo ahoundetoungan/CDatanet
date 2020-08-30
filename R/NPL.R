@@ -267,7 +267,7 @@ CDnetNPL    <- function(formula,
     sdata         <- c(sdata, list("data" = deparse(substitute(data))))
   }
   
-
+  
   if (npl.maxit == t) {
     warning("The maximum number of iterations of the NPL algorithm has been reached.")
   }
@@ -288,8 +288,10 @@ CDnetNPL    <- function(formula,
 #' @title Summarize Count Data Model With Social Interactions
 #' @description Summary and print methods for the class `CDnetNPL` as returned by the function \link{CDnetNPL}.
 #' @param object an object of class `CDnetNPL`, output of the function \code{\link{CDnetNPL}}.
-#' @param x an object of class `summary.CDnetNPL` or `CDnetNPL`, output of the functions \code{\link{summary.CDnetNPL}} and
-#' \code{\link{print.summary.CDnetNPL}}.
+#' @param x an object of class `summary.CDnetNPL`, output of the function \code{\link{summary.CDnetNPL}},
+#' class `summary.CDnetNPLs`, list of outputs of the function \code{\link{summary.CDnetNPL}} 
+#' (when the model is estimated many times to control for the endogeneity) 
+#' or class `CDnetNPL` of the function \code{\link{CDnetNPL}}.
 #' @param cov.ctr list of control values for the covariance containing two inteers, `R` and `S`. The covariance summations from `0`
 #' to infinity. But, the summed elements decreases exponentially. The summations are approximated by summations from `0` to `R`.
 #' The covariance also requires computing \eqn{\Phi(x) - \Phi(x - 1)}, where \eqn{\Phi} is 
@@ -347,7 +349,7 @@ CDnetNPL    <- function(formula,
   b             <- theta[2:(J - 1)]
   sigma         <- theta[J]
   
-
+  
   M             <- length(Glist)
   nvec          <- unlist(lapply(Glist, nrow))
   n             <- sum(nvec)
@@ -461,12 +463,12 @@ CDnetNPL    <- function(formula,
   cov.ctr           <- list("R0" = R0, "S0" = S0)
   
   out               <- c(object[-9], 
-                       list("cov"       = covout, 
-                            "meffects"  = meff,
-                            "cov.me"    = covmeff,
-                            "cov.ctr"   = cov.ctr, 
-                            "codedata"  = codedata,
-                            "..."       = ...)) 
+                         list("cov"       = covout, 
+                              "meffects"  = meff,
+                              "cov.me"    = covmeff,
+                              "cov.ctr"   = cov.ctr, 
+                              "codedata"  = codedata,
+                              "..."       = ...)) 
   
   class(out)      <- "summary.CDnetNPL"
   out
@@ -489,7 +491,7 @@ CDnetNPL    <- function(formula,
   std.meff             <- sqrt(diag(x$cov.me))
   sigma                <- estimate[K]
   llh                  <- x$likelihood
-
+  
   if (missing(Glist)) {
     Glist              <- get(x$codedata$Glist, envir = .GlobalEnv) 
   } else {
@@ -501,13 +503,13 @@ CDnetNPL    <- function(formula,
   tmp                  <- fcoefficients(coef, std)
   out_print            <- tmp$out_print
   out                  <- tmp$out
-  out_print            <- c(list(out_print), x[-(1:13)])
+  out_print            <- c(list(out_print), x[-(1:13)], list(...))
   
   
   tmp.meff             <- fcoefficients(meff, std.meff)
   out_print.meff       <- tmp.meff$out_print
   out.meff             <- tmp.meff$out
-  out_print.meff       <- c(list(out_print.meff), x[-(1:13)])
+  out_print.meff       <- c(list(out_print.meff), x[-(1:13)], list(...))
   
   if (!is.list(Glist)) {
     Glist  <- list(Glist)
@@ -540,3 +542,78 @@ CDnetNPL    <- function(formula,
   stopifnot(class(x) == "CDnetNPL")
   print(summary(x, ...))
 }
+
+
+#' @rdname summary.CDnetNPL
+#' @export
+"print.summary.CDnetNPLs" <- function(x, ...) {
+  stopifnot(class(x) %in% c("list", "summary.CDnetNPLs")) 
+  
+  lclass              <- unique(unlist(lapply(x, class)))
+  if (!all(lclass %in% "summary.CDnetNPL")) {
+    stop("All the components in `x` should be from `summary.CDnetNPL` class")
+  }
+  
+  nsim                 <- length(x)
+  coef                 <- do.call("rbind", lapply(x, function(z) t(z$estimate)))
+  meff                 <- do.call("rbind", lapply(x, function(z) t(z$meffects)))
+  estimate             <- colSums(coef)/nsim
+  meffects             <- colSums(meff)/nsim
+  
+  vcoef2               <- Reduce("+", lapply(x, function(z) z$cov))/nsim
+  vmeff2               <- Reduce("+", lapply(x, function(z) z$cov.me))/nsim
+  
+  vcoef1               <- cov(coef)
+  vmeff1               <- cov(meff)
+  
+  vcoef                <- vcoef1 + vcoef2
+  vmeff                <- vmeff1 + vmeff2
+  
+  
+  llh                  <- unlist(lapply(x, function(z) z$likelihood))
+  llh                  <- c("min" = min(llh), "mean" = mean(llh), "max" = max(llh))
+  
+  M                    <- x[[1]]$M
+  n                    <- x[[1]]$n
+  
+  K                    <- length(estimate)
+  coef                 <- estimate[-K]
+  std                  <- sqrt(diag(vcoef)[-K])
+  std.meff             <- sqrt(diag(vmeff))
+  sigma                <- estimate[K]
+  
+  tmp                  <- fcoefficients(coef, std)
+  out_print            <- tmp$out_print
+  out                  <- tmp$out
+  out_print            <- c(list(out_print), x[[1]][-(1:13)], list(...))
+  
+  
+  tmp.meff             <- fcoefficients(meffects, std.meff)
+  out_print.meff       <- tmp.meff$out_print
+  out.meff             <- tmp.meff$out
+  out_print.meff       <- c(list(out_print.meff), x[[1]][-(1:13)], list(...))
+  
+  
+  cat("Count data Model with Social Interactions\n\n")
+  cat("Method: Replication of Nested pseudo-likelihood (NPL) \nReplication: ", nsim, "\n\n")
+  
+  cat("Coefficients:\n")
+  do.call("print", out_print)
+  
+  cat("\nMarginal Effects:\n")
+  do.call("print", out_print.meff)
+  cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
+  cat("sigma: ", sigma, "\n")
+  cat("log pseudo-likelihood: ", "\n")
+  print(llh)
+  
+  out                  <- list("M"          = M,
+                               "n"          = n,
+                               "estimate"   = estimate, 
+                               "likelihood" = llh, 
+                               "cov"        = vcoef, 
+                               "meffects"   = meffects,
+                               "cov.me"     = vmeff)
+  class(out)           <- "print.summary.CDnetNPLs"
+  invisible(out)
+} 

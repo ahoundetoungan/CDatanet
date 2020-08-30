@@ -226,8 +226,8 @@ SARML <- function(formula,
 #' @title Summarize SAR Model
 #' @description Summary and print methods for the class `SARML` as returned by the function \link{SARML}.
 #' @param object an object of class `SARML`, output of the function \code{\link{SARML}}.
-#' @param x an object of class `summary.SARML` or `SARML`, output of the functions \code{\link{summary.SARML}} and
-#' \code{\link{print.summary.SARML}}.
+#' @param x an object of class `summary.SARML`, output of the function \code{\link{summary.SARML}} or 
+#' class `SARML`, output of the function \code{\link{SARML}}.
 #' @param Glist the adjacency matrix or list sub-adjacency matrix. If missing make, sure that 
 #' the object provided to the function \code{\link{SARML}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{SARML}}).
 #' @param ... further arguments passed to or from other methods.
@@ -279,7 +279,7 @@ SARML <- function(formula,
   tmp                  <- fcoefficients(coef, std)
   out_print            <- tmp$out_print
   out                  <- tmp$out
-  out_print            <- c(list(out_print), x[-(1:7)])
+  out_print            <- c(list(out_print), x[-(1:7)], list(...))
   
   if (!is.list(Glist)) {
     Glist  <- list(Glist)

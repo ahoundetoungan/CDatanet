@@ -17,8 +17,8 @@
 
 \item{...}{further arguments passed to or from other methods.}
 
-\item{x}{an object of class \code{summary.SARML} or \code{SARML}, output of the functions \code{\link{summary.SARML}} and
-\code{\link{print.summary.SARML}}.}
+\item{x}{an object of class \code{summary.SARML}, output of the function \code{\link{summary.SARML}} or
+class \code{SARML}, output of the function \code{\link{SARML}}.}
 
 \item{Glist}{the adjacency matrix or list sub-adjacency matrix. If missing make, sure that
 the object provided to the function \code{\link{SARML}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{SARML}}).}

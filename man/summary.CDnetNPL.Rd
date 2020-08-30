@@ -4,6 +4,7 @@
 \alias{summary.CDnetNPL}
 \alias{print.summary.CDnetNPL}
 \alias{print.CDnetNPL}
+\alias{print.summary.CDnetNPLs}
 \title{Summarize Count Data Model With Social Interactions}
 \usage{
 \method{summary}{CDnetNPL}(object, cov.ctr = list(), Glist, data, ...)
@@ -11,6 +12,8 @@
 \method{print}{summary.CDnetNPL}(x, Glist, ...)
 
 \method{print}{CDnetNPL}(x, ...)
+
+\method{print}{summary.CDnetNPLs}(x, ...)
 }
 \arguments{
 \item{object}{an object of class \code{CDnetNPL}, output of the function \code{\link{CDnetNPL}}.}
@@ -29,8 +32,10 @@ the object provided to the function \code{\link{CDnetNPL}} is available in \code
 
 \item{...}{further arguments passed to or from other methods.}
 
-\item{x}{an object of class \code{summary.CDnetNPL} or \code{CDnetNPL}, output of the functions \code{\link{summary.CDnetNPL}} and
-\code{\link{print.summary.CDnetNPL}}.}
+\item{x}{an object of class \code{summary.CDnetNPL}, output of the function \code{\link{summary.CDnetNPL}},
+class \code{summary.CDnetNPLs}, list of outputs of the function \code{\link{summary.CDnetNPL}}
+(when the model is estimated many times to control for the endogeneity)
+or class \code{CDnetNPL} of the function \code{\link{CDnetNPL}}.}
 }
 \value{
 A list consisting of:

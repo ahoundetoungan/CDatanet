@@ -236,8 +236,8 @@ SARTML <- function(formula,
 #' @title Summarize SART Model
 #' @description Summary and print methods for the class `SARTML` as returned by the function \link{SARTML}.
 #' @param object an object of class `SARTML`, output of the function \code{\link{SARTML}}.
-#' @param x an object of class `summary.SARTML` or `SARTML`, output of the functions \code{\link{summary.SARTML}} and
-#' \code{\link{print.summary.SARTML}}.
+#' @param x an object of class `summary.SARTML`, output of the function \code{\link{summary.SARTML}} 
+#' or class `SARTML`, output of the the function \code{\link{SARTML}}.
 #' @param Glist the adjacency matrix or list sub-adjacency matrix. If missing make, sure that 
 #' the object provided to the function \code{\link{SARTML}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{SARTML}}).
 #' @param ... further arguments passed to or from other methods.
@@ -291,7 +291,7 @@ SARTML <- function(formula,
   tmp                  <- fcoefficients(coef, std)
   out_print            <- tmp$out_print
   out                  <- tmp$out
-  out_print            <- c(list(out_print), x[-(1:7)])
+  out_print            <- c(list(out_print), x[-(1:7)], list(...))
   
   if (!is.list(Glist)) {
     Glist  <- list(Glist)
