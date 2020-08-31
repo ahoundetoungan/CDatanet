@@ -2,7 +2,7 @@
 % Please edit documentation in R/simCDnet.R
 \name{simCDnet}
 \alias{simCDnet}
-\title{Simulate data from Count Data Model With Social Interactions}
+\title{Simulate data from Count Data Model with Social Interactions}
 \usage{
 simCDnet(formula, contextual, Glist, theta, tol = 1e-15, maxit = 500, data)
 }
@@ -14,7 +14,7 @@ the listed variables after the pipe, \code{x1}, \code{x2} are the contextual obs
 without intercept or \code{y ~ x1 + x2 | x2 + x3} to allow the contextual variable to be different from the individual variables.}
 
 \item{contextual}{(optional) logical; if true, this means that all individual variables will be set as contextual variables. Set the
-the \code{formula} as \code{y ~ x1 + x2} and \code{contextual} as \code{TRUE} is equivalent to set the formula as \code{y ~ x1 + x2 | x1 + x2}.}
+\code{formula} as \code{y ~ x1 + x2} and \code{contextual} as \code{TRUE} is equivalent to set the formula as \code{y ~ x1 + x2 | x1 + x2}.}
 
 \item{Glist}{the adjacency matrix or list sub-adjacency matrix.}
 
@@ -34,14 +34,14 @@ A list consisting of:
 \item{yst}{ys (see details), the latent variable.}
 \item{y}{the observed count data.}
 \item{yb}{ybar (see details), the expectation of y.}
-\item{Gyb}{the average of the expectation fo y among friends.}
+\item{Gyb}{the average of the expectation of y among friends.}
 \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 }
 \description{
-Simulate data from Count Data Model With Social Interactions
+Simulate data from Count Data Model with Social Interactions
 }
 \details{
-Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} are generated from a latent variable \eqn{\mathbf{y}^*}{ys}.
+Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}.
 The latent variable is given for all i as
 \deqn{y_i^* = \lambda \mathbf{g}_i \bar{\mathbf{y}} + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*ybar + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.\cr

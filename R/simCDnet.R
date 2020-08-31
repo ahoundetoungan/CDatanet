@@ -1,11 +1,11 @@
-#' @title Simulate data from Count Data Model With Social Interactions
+#' @title Simulate data from Count Data Model with Social Interactions
 #' @param formula an object of class \link[stats]{formula}: a symbolic description of the model. The `formula` should be as for example \code{y ~ x1 + x2 | x1 + x2}
 #' where `y` is the endogenous vector, the listed variables before the pipe, `x1`, `x2` are the individual exogenous variables and
 #' the listed variables after the pipe, `x1`, `x2` are the contextual observable variables. Other formulas may be
 #' \code{y ~ x1 + x2} for the model without contextual effects, \code{y ~ -1 + x1 + x2 | x1 + x2} for the model
 #' without intercept or \code{y ~ x1 + x2 | x2 + x3} to allow the contextual variable to be different from the individual variables.
 #' @param  contextual (optional) logical; if true, this means that all individual variables will be set as contextual variables. Set the
-#' the `formula` as `y ~ x1 + x2` and `contextual` as `TRUE` is equivalent to set the formula as `y ~ x1 + x2 | x1 + x2`.
+#' `formula` as `y ~ x1 + x2` and `contextual` as `TRUE` is equivalent to set the formula as `y ~ x1 + x2 | x1 + x2`.
 #' @param Glist the adjacency matrix or list sub-adjacency matrix.
 #' @param theta the parameter value as \eqn{\theta = (\lambda, \beta, \gamma, \sigma)}. The parameter \eqn{\gamma} should be removed if the model
 #' does not contain contextual effects (see details).
@@ -15,7 +15,7 @@
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `mcmcARD` is called.
 #' @details 
-#' Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} are generated from a latent variable \eqn{\mathbf{y}^*}{ys}. 
+#' Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}. 
 #' The latent variable is given for all i as
 #' \deqn{y_i^* = \lambda \mathbf{g}_i \bar{\mathbf{y}} + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*ybar + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 #' where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.\cr
@@ -28,7 +28,7 @@
 #'     \item{yst}{ys (see details), the latent variable.}
 #'     \item{y}{the observed count data.}
 #'     \item{yb}{ybar (see details), the expectation of y.}
-#'     \item{Gyb}{the average of the expectation fo y among friends.}
+#'     \item{Gyb}{the average of the expectation of y among friends.}
 #'     \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 #' @examples 
 #' # Groups' size

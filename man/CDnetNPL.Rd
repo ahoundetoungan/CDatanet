@@ -2,7 +2,7 @@
 % Please edit documentation in R/NPL.R
 \name{CDnetNPL}
 \alias{CDnetNPL}
-\title{Estimate Count Data Model With Social Interactions using NPL Method}
+\title{Estimate Count Data Model with Social Interactions using NPL Method}
 \usage{
 CDnetNPL(
   formula,
@@ -33,7 +33,7 @@ does not contain contextual effects (see details).}
 
 \item{yb0}{(optional) expectation of y.}
 
-\item{optimizer}{is either \code{nlm} (refering to the \link[stats]{nlm} function) or \code{optim} (refering to the \link[stats]{optim} function).
+\item{optimizer}{is either \code{nlm} (referring to the \link[stats]{nlm} function) or \code{optim} (referring to the \link[stats]{optim} function).
 At every step of the NPL method, the estimation is performed using \link[stats]{nlm} or \link[stats]{optim}. Other arguments
 of these functions such as, \code{control} and \code{method} can be defined through the argument \code{opt.ctr}.}
 
@@ -52,17 +52,17 @@ A list consisting of:
 \item{estimate}{NPL estimator.}
 \item{likelihood}{pseudo-likelihood value.}
 \item{yb}{ybar (see details), expectation of y.}
-\item{Gyb}{average of the expectation fo y among friends.}
+\item{Gyb}{average of the expectation of y among friends.}
 \item{steps}{step-by-step output as returned by the optimizer.}
 \item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
 }
 \description{
-Estimate Count Data Model With Social Interactions using NPL Method
+Estimate Count Data Model with Social Interactions using NPL Method
 }
 \details{
 \subsection{Model}{
 
-Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} are generated from a latent variable \eqn{\mathbf{y}^*}{ys}.
+Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}.
 The latent variable is given for all i as
 \deqn{y_i^* = \lambda \mathbf{g}_i \bar{\mathbf{y}} + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*ybar + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.\cr
@@ -75,14 +75,14 @@ The count variable \eqn{y_i} is then define by the next (greater or equal) non n
 \subsection{\code{npl.ctr}}{
 
 The model parameters is estimated using the Nested Partial Likelihood (NPL) method. This approach
-starts with a guess of \eqn{\theta} and \eqn{\bar{y}}{yb} and constructs ivetarively a sequence
+starts with a guess of \eqn{\theta} and \eqn{\bar{y}}{yb} and constructs iteratively a sequence
 of \eqn{\theta} and \eqn{\bar{y}}{yb}. The solution converges when the \eqn{L_1}{L} distance
 between two consecutive \eqn{\theta} and \eqn{\bar{y}}{yb} is less than a tolerance. \cr
 The argument \code{npl.ctr} is an optional list which contain
 \itemize{
-\item{tol}{ the tolerance of the NPL algorithm (defaul 1e-4),}
+\item{tol}{ the tolerance of the NPL algorithm (default 1e-4),}
 \item{maxit}{ the maximal number of iterations allowed (default 500),}
-\item{print}{ a boolean indicating if the estimate shoul be print a each step.}
+\item{print}{ a boolean indicating if the estimate should be printed at each step.}
 }
 }
 

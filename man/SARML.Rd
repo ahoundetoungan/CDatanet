@@ -24,20 +24,20 @@ the listed variables after the pipe, \code{x1}, \code{x2} are the contextual obs
 without intercept or \code{ y ~ x1 + x2 | x2 + x3} to allow the contextual variable to be different from the individual variables.}
 
 \item{contextual}{(optional) logical; if true, this means that all individual variables will be set as contextual variables. Set the
-the \code{formula} as \code{y ~ x1 + x2} and \code{contextual} as \code{TRUE} is equivalent to set the formula as \code{y ~ x1 + x2 | x1 + x2}.}
+\code{formula} as \code{y ~ x1 + x2} and \code{contextual} as \code{TRUE} is equivalent to set the formula as \code{y ~ x1 + x2 | x1 + x2}.}
 
 \item{Glist}{the adjacency matrix or list sub-adjacency matrix.}
 
 \item{lambda0}{(optional) starting value of \eqn{\lambda}. The parameter \eqn{\gamma} should be removed if the model
 does not contain contextual effects (see details).}
 
-\item{optimizer}{is either \code{nlm} (refering to the function \link[stats]{nlm}) or \code{optim} (refering to the function \link[stats]{optim}).
+\item{optimizer}{is either \code{nlm} (referring to the function \link[stats]{nlm}) or \code{optim} (referring to the function \link[stats]{optim}).
 At every step of the NPL method, the estimation is performed using \link[stats]{nlm} or \link[stats]{optim}. Other arguments
 of these functions such as, the control values and the method can be defined through the argument \code{opt.ctr}.}
 
 \item{opt.ctr}{list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in \code{optimizer}) such as control, method, ...}
 
-\item{print}{a boolean indicating if the estimate shoul be print a each step.}
+\item{print}{a boolean indicating if the estimate should be printed at each step.}
 
 \item{cov}{a boolean indicating if the covariance should be computed.}
 

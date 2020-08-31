@@ -5,15 +5,15 @@
 #' \code{y ~ x1 + x2} for the model without contextual effects, \code{y ~ -1 + x1 + x2 | x1 + x2} for the model
 #' without intercept or \code{ y ~ x1 + x2 | x2 + x3} to allow the contextual variable to be different from the individual variables.
 #' @param  contextual (optional) logical; if true, this means that all individual variables will be set as contextual variables. Set the
-#' the `formula` as `y ~ x1 + x2` and `contextual` as `TRUE` is equivalent to set the formula as `y ~ x1 + x2 | x1 + x2`.
+#' `formula` as `y ~ x1 + x2` and `contextual` as `TRUE` is equivalent to set the formula as `y ~ x1 + x2 | x1 + x2`.
 #' @param Glist the adjacency matrix or list sub-adjacency matrix.
 #' @param theta0 (optional) starting value of \eqn{\theta = (\lambda, \beta, \gamma, \sigma)}. The parameter \eqn{\gamma} should be removed if the model
 #' does not contain contextual effects (see details).
-#' @param optimizer is either `nlm` (refering to the function \link[stats]{nlm}) or `optim` (refering to the function \link[stats]{optim}). 
+#' @param optimizer is either `nlm` (referring to the function \link[stats]{nlm}) or `optim` (referring to the function \link[stats]{optim}). 
 #' At every step of the NPL method, the estimation is performed using \link[stats]{nlm} or \link[stats]{optim}. Other arguments 
 #' of these functions such as, the control values and the method can be defined through the argument `opt.ctr`.
 #' @param opt.ctr list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in `optimizer`) such as control, method, ...
-#' @param print a boolean indicating if the estimate shoul be print a each step.
+#' @param print a boolean indicating if the estimate should be printed at each step.
 #' @param cov a boolean indicating if the covariance should be computed.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `CDnetNPL` is called.
@@ -27,7 +27,7 @@
 #'     \item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
 #' @details 
 #' ## Model
-#' The left-censored variable \eqn{\mathbf{y}}{y} are generated from a latent variable \eqn{\mathbf{y}^*}{ys}. 
+#' The left-censored variable \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}. 
 #' The latent variable is given for all i as
 #' \deqn{y_i^* = \lambda \mathbf{g}_i y + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*y + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 #' where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.\cr
@@ -237,7 +237,7 @@ SARTML <- function(formula,
 #' @description Summary and print methods for the class `SARTML` as returned by the function \link{SARTML}.
 #' @param object an object of class `SARTML`, output of the function \code{\link{SARTML}}.
 #' @param x an object of class `summary.SARTML`, output of the function \code{\link{summary.SARTML}} 
-#' or class `SARTML`, output of the the function \code{\link{SARTML}}.
+#' or class `SARTML`, output of the function \code{\link{SARTML}}.
 #' @param Glist the adjacency matrix or list sub-adjacency matrix. If missing make, sure that 
 #' the object provided to the function \code{\link{SARTML}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{SARTML}}).
 #' @param ... further arguments passed to or from other methods.

@@ -5,7 +5,7 @@
 \alias{print.summary.CDnetNPL}
 \alias{print.CDnetNPL}
 \alias{print.summary.CDnetNPLs}
-\title{Summarize Count Data Model With Social Interactions}
+\title{Summarize Count Data Model with Social Interactions}
 \usage{
 \method{summary}{CDnetNPL}(object, cov.ctr = list(), Glist, data, ...)
 
@@ -18,10 +18,10 @@
 \arguments{
 \item{object}{an object of class \code{CDnetNPL}, output of the function \code{\link{CDnetNPL}}.}
 
-\item{cov.ctr}{list of control values for the covariance containing two inteers, \code{R} and \code{S}. The covariance summations from \code{0}
-to infinity. But, the summed elements decreases exponentially. The summations are approximated by summations from \code{0} to \code{R}.
+\item{cov.ctr}{list of control values for the covariance containing two integers, \code{R} and \code{S}. The covariance summations from \code{0}
+to infinity. But the summed elements decreases exponentially. The summations are approximated by summations from \code{0} to \code{R}.
 The covariance also requires computing \eqn{\Phi(x) - \Phi(x - 1)}, where \eqn{\Phi} is
-the normal'  probability density funcion. This is done using important sampling, where \code{S} numbers are generated
+the normal'  probability density function. This is done using important sampling, where \code{S} numbers are generated
 form the uniform distribution.}
 
 \item{Glist}{the adjacency matrix or list sub-adjacency matrix. If missing make, sure that
@@ -45,7 +45,7 @@ A list consisting of:
 \item{estimate}{NPL estimator.}
 \item{likelihood}{pseudo-likelihood value.}
 \item{yb}{ybar (see details), expectation of y.}
-\item{Gyb}{average of the expectation fo y among friends.}
+\item{Gyb}{average of the expectation of y among friends.}
 \item{steps}{step-by-step output as returned by the optimizer.}
 \item{cov}{covariance matrix of the estimate.}
 \item{meffects}{vector of marginal effects.}

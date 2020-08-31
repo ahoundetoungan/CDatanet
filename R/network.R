@@ -4,7 +4,7 @@
 #' where `x1`, `x2` are explanatory variable of links formation
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `netformation` is called.
-#' @param fixed.effects boolean indicating if sub-netwok heterogeneity as fixed effects should ne included.
+#' @param fixed.effects boolean indicating if sub-network heterogeneity as fixed effects should be included.
 #' @param init (optional) list of starting values containing `beta`, an K-dimensional vector of the explanatory variables parameter, `mu` an n-dimensional vector of unobserved parameters, `sigmau2`
 #' the vector of the variances of `mu` in each sub-network (or single variance if `fixed.effects = FALSE`) and `uu` the vector of the of the means of `mu` in each sub-network (or single mean if `fixed.effects = FALSE`), 
 #' where K is the number of explanatory variables and n is the number of individuals.  
@@ -20,8 +20,8 @@
 #'    \item{tbeta}{ target of `beta`.}
 #'    \item{tmu}{ target of `mu`.}
 #' }
-#' The brun-in is replicated three times. The estimation is performed for each component of `beta` during the two firsts burn-in. The simulation from
-#' the second burn-in are used to compute covariance of `beta`. From the third burn-in and the remaining steps of the MCMC, all the components in `beta`are jointly simulated. \cr
+#' The burn-in is replicated three times. The estimation is performed for each component of `beta` during the two firsts burn-in. The simulation from
+#' the second burn-in are used to compute covariance of `beta`. From the third burn-in and the remaining steps of the MCMC, all the components in `beta` are jointly simulated. \cr
 #' As `mu` dimension is large, the simulation is performed for each component.\cr
 #' The jumping scale are also updated during the MCMC following Atchadé and Rosenthal (2005).
 #' 
@@ -30,7 +30,7 @@
 #'     \item{n.obs}{number of observations.}
 #'     \item{n.links}{number of links.}
 #'     \item{K}{number of explanatory variables.}
-#'     \item{posterior}{list of simulations from the posterior distribution and the posteior density.}
+#'     \item{posterior}{list of simulations from the posterior distribution and the posterior density.}
 #'     \item{acceptance.rate}{acceptance rate of beta and mu.}
 #'     \item{mcmc.ctr}{returned list of MCMC control.}
 #'     \item{init}{returned list of starting values.}
