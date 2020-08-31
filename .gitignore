@@ -1,5 +1,4 @@
-doc/*.R
-doc/*.Rmd
+doc
 Meta
 
 # History files
