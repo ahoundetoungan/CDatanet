@@ -18,5 +18,6 @@ Once the installation is done, **CDatanet** can be loaded as a common package in
 ```R
 library(CDatanet)
 ```
-### Function
+### How to use
 Use help pages provided in the package.
+https://nbviewer.jupyter.org/github/ahoundetoungan/CDatanet/blob/master/doc/CDatanet_docx.pdf
