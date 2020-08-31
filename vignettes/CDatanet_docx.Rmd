@@ -1,7 +1,7 @@
 ---
 title: "CDatanet: An  R package to simulate and estimate a Count Data Model with Social Interactions"
 author: "Elysée Aristide Houndetoungan"
-date: "`r Sys.Date()`"
+date: "8/28/2020"
 output:
   pdf_document:
     citation_package: natbib
@@ -13,7 +13,7 @@ biblio-style: "apalike"
 link-citations: true
 urlcolor: blue
 vignette: >
-  %\VignetteIndexEntry{CDatanet: An  R package to simulate and estimate a Count Data Model with Social Interactions}
+  %\VignetteIndexEntry{CDatanet Documentation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -88,7 +88,7 @@ theta  <- c(lambda, beta, gamma, sigma)
 data   <- data.frame(x1 = rnorm(n, 1, 1), x2 =  rexp(n, 0.4))
 ```
 
-To simulate the network matrix, I assume that the number of friends of each individual is randomly chosen between 0 et 30.
+To simulate the network matrix, I assume that the number of friends of each individual is randomly chosen between 0 and 30.
 
 ```{r netexo, echo = TRUE, eval = TRUE}
 # Network
@@ -148,7 +148,7 @@ summary(SAR)
 Using the count data model, the peer effect is estimated at 0.38, which is close to the true value, 0.4. By replicating this experience several times, the average of the estimates is likely to be almost equal to the true value (see next section). Note that this parameter is not interpretable. Instead, one should interpret the marginal effect: *increasing of the expected $y_j$ of the peers by one implies an increasing of the expected $y_i$ of the individual by 0.28*. However, estimating the SART model using data simulated from the count data model underestimates the peer effect (0.27). The package does not implement the marginal effect under the SART model. This latter should be much lower. Lastly, the SAR model more underestimates the peer effect (0.16). In addition, this is directly the marginal effect because the SAR model does not assume a limited dependent variable.
 
 ## Monte Carlo Simulations
-In this section, I conduct Monte Carlo simulations to assess the performance of the estimator. I use the same settings as in Section [4.1](#exo.data) exepted that the number of individuals in each sub-network is set to 500. Let's build the following Monte Carlo function that simulates the data, estimates the three models and returns their estimators.
+In this section, I conduct Monte Carlo simulations to assess the performance of the estimator. I use the same settings as in Section [4.1](#exo.data) except that the number of individuals in each sub-network is set to 500. Let's build the following Monte Carlo function that simulates the data, estimates the three models and returns their estimators.
 
 ```{r mcfun, echo = TRUE, eval = TRUE}
 fMC <- function(s) {
@@ -428,7 +428,7 @@ The stardard errors are slightly greater than the previous estimate.
 ## Monte Carlo Simulations
 One simulation is not sufficient to confirm that the method used to correct the endogeneity performs well. In this section, I use Monte Carlo simulations to assess the performance of this method. I compare the estimates when the network is assumed exogenous to these when I control for the endogeneity.
 
-I build the following Monte Carlo function which simulates data based on endegenous netwok, and estimates the model by assuming that the network is exogenous and then endogenous.
+I build the following Monte Carlo function which simulates data based on endogenous network, and estimates the model by assuming that the network is exogenous and then endogenous.
 ```{r mcfunendo, echo = TRUE, eval = TRUE}
 fMCendo <- function(s) {
   # parameters
