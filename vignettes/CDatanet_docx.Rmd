@@ -1,7 +1,7 @@
 ---
 title: "CDatanet: An  R package to simulate and estimate a Count Data Model with Social Interactions"
 author: "Elysée Aristide Houndetoungan"
-date: "8/28/2020"
+date: "`r Sys.Date()`"
 output:
   pdf_document:
     citation_package: natbib
