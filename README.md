@@ -20,4 +20,4 @@ Once the installation is done, **CDatanet** can be loaded as a common package in
 library(CDatanet)
 ```
 ### How to use CDatanet
-I provide a [vignette](https://nbviewer.jupyter.org/github/ahoundetoungan/CDatanet/blob/master/doc/CDatanet_docx.pdf) that fully documents the package through simple and practical examples. Moreover, each function of the package has a help page that may be accessed using `?name-of-the-function`. 
+I provide a [vignette](https://nbviewer.jupyter.org/github/ahoundetoungan/CDatanet/blob/master/doc/CDatanet_docx.pdf) that fully documents the package through simple and practical examples. Moreover, each function of the package has a help page accessible using `?name-of-the-function`. 
