@@ -48,7 +48,7 @@ in the model. If not found in data, the variables are taken from \code{environme
 A list consisting of:
 \item{M}{number of sub-networks.}
 \item{n}{number of individuals in each network.}
-\item{iteration}{number of iterations performed by the NLP algorithm.}
+\item{iteration}{number of iterations performed by the NPL algorithm.}
 \item{estimate}{NPL estimator.}
 \item{likelihood}{pseudo-likelihood value.}
 \item{yb}{ybar (see details), expectation of y.}

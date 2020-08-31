@@ -423,7 +423,7 @@ print(out.endo)
 load("out.endo.Rdata")
 CDatanet:::print.summary.CDnetNPLs(out.endo)
 ```
-The stardard errors are slightly greater than the previous estimate. 
+The standard errors are slightly greater than the previous estimate. 
 
 ## Monte Carlo Simulations
 One simulation is not sufficient to confirm that the method used to correct the endogeneity performs well. In this section, I use Monte Carlo simulations to assess the performance of this method. I compare the estimates when the network is assumed exogenous to these when I control for the endogeneity.

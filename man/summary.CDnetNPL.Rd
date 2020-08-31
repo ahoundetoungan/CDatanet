@@ -41,7 +41,7 @@ or class \code{CDnetNPL} of the function \code{\link{CDnetNPL}}.}
 A list consisting of:
 \item{M}{number of sub-networks.}
 \item{n}{number of individuals in each network.}
-\item{iteration}{number of iterations performed by the NLP algorithm.}
+\item{iteration}{number of iterations performed by the NPL algorithm.}
 \item{estimate}{NPL estimator.}
 \item{likelihood}{pseudo-likelihood value.}
 \item{yb}{ybar (see details), expectation of y.}
