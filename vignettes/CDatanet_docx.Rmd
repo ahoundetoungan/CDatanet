@@ -531,7 +531,6 @@ out.endo              <- cbind(thetanet, c(out.mcendo[c(1:4, NA, 5:6, NA, 7)]),
 rownames(out.endo)    <- names(out.mcendo[8:16])
 colnames(out.endo)    <- c("TrueValue", "Endo-Not-Controlled", "Endo-Controlled")
 print(out.endo)
-save(out.endo, file = "out.mcendo.Rdata")
 ```
 ```{r mcprintendo, echo = FALSE, eval = TRUE}
 load("out.mcendo.Rdata")
