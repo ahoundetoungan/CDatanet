@@ -329,15 +329,15 @@ summary(CDexo)
 To correct the endogeneity, $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ should be included in the model as additional explanatory variables. However, these variables are not observed.
 
 I use Markov Chain Monte Carlo (MCMC) to estimate the parameters of the dyadic linking model (these include the unobserved individual-level attributes $\mu_i$). The estimation can be done using the function `netformation`. 
-```{r estendo2, echo = TRUE, eval = F}
+```{r estendo2, echo = TRUE, eval = TRUE}
 # Dyadic linking model
 net <- netformation(network =  Network, formula = ~ dX, fixed.effects = TRUE,
                     mcmc.ctr = list(burnin = 1000, iteration = 5000))
 ```
 
-I randomly choose some parameters and present their posterior distribution. It stands out that the MCMC converges quickly and the simulations are pretty close to the true values.
+I randomly choose some parameters and present their posterior distribution. 
 
-```{r estendo2a, echo = TRUE, eval = F}
+```{r estendo2a, echo = TRUE, eval = TRUE}
 # plot simulations
 par(mfrow = c(4,2), mar = c(2, 2, 2, 1.9))
 plot(net$posterior$beta[,1], type = "l", ylim = c(-2.9, -2.6), col = "blue",
@@ -356,10 +356,6 @@ plot(net$posterior$mu[,542], type = "l", col = "blue",
      main = bquote(mu[542]), ylab = "")
 abline(h = mu[542], col = "red")
 
-plot(net$posterior$mu[,10], type = "l", col = "blue",
-     main = bquote(mu[10]), ylab = "")
-abline(h = mu[10], col = "red")
-
 plot(net$posterior$mu[,849], type = "l", col = "blue",
      main = bquote(mu[849]), ylab = "")
 abline(h = mu[849], col = "red")
@@ -368,13 +364,19 @@ plot(net$posterior$mu[,752], type = "l", col = "blue",
      main = bquote(mu[752]), ylab = "")
 abline(h = mu[752], col = "red")
 
+plot(net$posterior$uu[,1], type = "l", col = "blue",
+     main = bquote(u[mu][1]), ylab = "")
+abline(h = uu[1], col = "red")
+
 plot(net$posterior$sigmamu2[,3], type = "l", col = "blue",
      main =  bquote(sigma[mu][3]^2), ylab = "")
 abline(h = sigma2u[3], col = "red")
 ```
 
+It stands out that the MCMC converges quickly and the simulations (plotted in blue) are pretty close to the true values (red line).
+
 Using simulations from the posterior distribution, I can construct good estimators for $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ and use them as additional supplementary explanatory variables. In the next example, I use the simulation with the highest posterior density to estimate $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$.
-```{r estendo3, echo = TRUE, eval = F}
+```{r estendo3, echo = TRUE, eval = TRUE}
 t           <- which.max(net$posterior$log.density)
 print(t)
 muest       <- net$posterior$mu[t,]
@@ -520,21 +522,24 @@ fMCendo <- function(s) {
 I now run the function `fMCendo` 1000 times and compute the average of both estimators. 
 
 ```{r mcendoout, echo = TRUE, eval = FALSE, message = FALSE}
-n.cores              <- 5
-replic               <- 1000 #Number of replications
-out.mcendo           <- mclapply(1:replic, fMCendo, mc.cores = n.cores)
-out.mcendo           <- apply(t(do.call(cbind, out.mcendo)), 2, mean)
-out.mcendo           <- cbind(thetanet, c(out.mcendo[c(1:4, NA, 5:6, NA, 7)]), 
-                              out.mcendo[8:16])
-colnames(out.mcendo) <- c("TrueValue", "EndoNotControlled", "EndoControlled")
-print(out.mcendo)
+n.cores               <- 5
+replic                <- 1000 #Number of replications
+out.mcendo            <- mclapply(1:replic, fMCendo, mc.cores = n.cores)
+out.mcendo            <- apply(t(do.call(cbind, out.mcendo)), 2, mean)
+out.endo              <- cbind(thetanet, c(out.mcendo[c(1:4, NA, 5:6, NA, 7)]),
+                               out.mcendo[8:16])
+rownames(out.endo)    <- names(out.mcendo[8:16])
+colnames(out.endo)    <- c("TrueValue", "Endo-Not-Controlled", "Endo-Controlled")
+print(out.endo)
+save(out.endo, file = "out.mcendo.Rdata")
 ```
-```{r mcprintendo, echo = FALSE, eval = FALSE}
+```{r mcprintendo, echo = FALSE, eval = TRUE}
 load("out.mcendo.Rdata")
-print(out.mcendo)
+print(out.endo)
 ```
+The results prove that the method used to correct the endogeneity performs fairly well. The average of the estimates is 0.42 while the true value is 0.40. There is still a small bias. This is certainly due to the number of iterations of the MCMC which is low. Indeed, I use the iteration with the highest posterior density to estimate $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$. Since the number of iterations is low, the estimates may not be very good. The more the number of iterations, the better the simulation with highest posterior density for approximating $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$.
 
-The results confirm that the method used to correct the endogeneity performs well. The average of the estimates is -- whereas the true value is --. In contrast, the peer effect is overestimated when the network is assumed exogenous. The average of the estimates is --. 
+In contrast, the peer effect is overestimated when the network is assumed exogenous. The average of the estimates is 0.52. 
 
 # Conclusion {#con}
 This paper provides technical details on the package **CDatanet**. It shows with simple and practical examples how to use the package. It provides comparison of the model with the SART and the SAR models. It also shows with Monte Carlo simulations how the model performs when the network matrix is exogenous and endogenous. Simulation results prove that the peer effect is overestimated when the network is endogenous.  Lastly, it presents a way to control for the endogeneity of the network. 
