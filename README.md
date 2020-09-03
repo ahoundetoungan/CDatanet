@@ -13,7 +13,7 @@ The **CDatanet** package implements a count data model with social interactions 
 library(devtools)
 install_github("ahoundetoungan/CDatanet")
 ```
-The option `build_vignettes = TRUE` can be added if one desires to install the vignettes (this will take several minutes)
+The option `build_vignettes = TRUE` can be added if one desires to install the vignettes (this will take several minutes).
 ### Load CDatanet
 Once the installation is done, **CDatanet** can be loaded as a common package in [**R**](https://cran.r-project.org/).
 ```R
