@@ -16,7 +16,7 @@
 #' @param print a boolean indicating if the estimate should be printed at each step.
 #' @param cov a boolean indicating if the covariance should be computed.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `CDnetNPL` is called.
+#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `SARTML` is called.
 #' @return A list consisting of:
 #'     \item{M}{number of sub-networks.}
 #'     \item{n}{number of individuals in each network.}
@@ -127,7 +127,7 @@ SARTML <- function(formula,
   formula    <- f.t.data$formula
   y          <- f.t.data$y
   X          <- f.t.data$X
-  coln       <- c("lambda", colnames(X))
+  coln       <- c("lambda", colnames(X), "sigma")
   
   K          <- ncol(X)
   
@@ -201,22 +201,22 @@ SARTML <- function(formula,
   
   covout             <- NULL
   if (cov) {
-    covtmp           <- solve(resTO$hessian)[-(K + 2), -(K + 2)]
-    Rmat             <- diag(K + 1)
+    covtmp           <- solve(resTO$hessian)
+    Rmat             <- diag(K + 2)
     Rmat[1,1]        <- theta[1]*(1 - theta[1])
     covout           <- Rmat %*% covtmp %*% t(Rmat)
     colnames(covout) <- coln
     rownames(covout) <- coln
   }
   
-  names(theta)       <- c(coln, "sigma")
+  names(theta)       <- coln
   
-  sdata           <- list(
+  sdata              <- list(
     "formula"       = formula,
     "Glist"         = deparse(substitute(Glist))
   )
   if (!missing(data)) {
-    sdata         <- c(sdata, list("data" = deparse(substitute(data))))
+    sdata            <- c(sdata, list("data" = deparse(substitute(data))))
   } 
   
   out                <- list("M"             = M,
@@ -240,6 +240,8 @@ SARTML <- function(formula,
 #' or class `SARTML`, output of the function \code{\link{SARTML}}.
 #' @param Glist the adjacency matrix or list sub-adjacency matrix. If missing make, sure that 
 #' the object provided to the function \code{\link{SARTML}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{SARTML}}).
+#' @param data dataframe containing the explanatory variables. If missing make, sure that 
+#' the object provided to the function \code{\link{SARTML}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{SARTML}}).
 #' @param ... further arguments passed to or from other methods.
 #' @return A list consisting of:
 #'     \item{M}{number of sub-networks.}
@@ -253,13 +255,88 @@ SARTML <- function(formula,
 #' @param ... further arguments passed to or from other methods.
 #' @export 
 "summary.SARTML" <- function(object,
-                            ...) {
+                             Glist,
+                             data,
+                             ...) {
   stopifnot(class(object) == "SARTML")
-  out           <- c(object, list("..."       = ...)) 
+  
+  if ((missing(Glist) & !missing(data)) | (!missing(Glist) & missing(data))) {
+    stop("Glist is missing while data is provided or vice versa")
+  }
   
   if(is.null(object$cov)){
     stop("Covariance was not computed")
   }
+  
+  # Glist and data
+  codedata      <- object$codedata
+  formula       <- as.formula(codedata$formula)
+  
+  if (missing(Glist)) {
+    Glist       <- get(codedata$Glist, envir = .GlobalEnv)
+  } else {
+    if(!is.list(Glist)) {
+      Glist     <- list(Glist)
+    }
+  }
+  
+  
+  # data 
+  theta         <- object$estimate
+  cov           <- object$cov
+  
+  J             <- length(theta)
+  
+  lambda        <- theta[1]
+  b             <- theta[2:(J - 1)]
+  sigma         <- theta[J]
+  
+  
+  M             <- length(Glist)
+  nvec          <- unlist(lapply(Glist, nrow))
+  n             <- sum(nvec)
+  igr           <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
+  
+  
+  if(missing(data)) {
+    if (is.null(codedata$data)) {
+      data      <- environment(formula)
+    } else {
+      data      <- get(codedata$data, envir = .GlobalEnv)
+    }
+  } 
+  
+  f.t.data      <- formula.to.data(formula, FALSE, Glist, M, igr, data)
+  
+  y             <- f.t.data$y
+  X             <- f.t.data$X
+  Gy            <- f.t.data$Gy
+  coln          <- c("lambda", colnames(X))
+  
+  Z             <- cbind(Gy, X)
+  Zdst          <- c((Z %*% theta[-J])/sigma)
+  
+  phiZdst       <- dnorm(Zdst)
+  PhiZdst       <- pnorm(Zdst)
+  meanPhiZdst   <- mean(PhiZdst)
+  meanphiZdstz  <- colSums(phiZdst*Z)/n
+  
+  # marginal effect
+  meff              <- theta[-J]*meanPhiZdst
+  tmp1              <- diag(J - 1)*meanPhiZdst + theta[-J] %*% matrix(meanphiZdstz, nrow = 1)/sigma
+  tmp2              <- - mean(Zdst*phiZdst)*theta[-J]/sigma
+  tmp3              <- cbind(tmp1, tmp2)
+  
+  covmeff           <- tmp3 %*% cov %*% t(tmp3)
+  
+  colnames(covmeff) <- coln
+  rownames(covmeff) <- coln
+  
+  out           <- c(object[1:5], 
+                     list("meffects" = meff,
+                          "cov.me"   = covmeff),
+                     object[-(1:5)],
+                     list("..."       = ...)) 
   
   class(out)    <- "summary.SARTML"
   out
@@ -276,10 +353,12 @@ SARTML <- function(formula,
   estimate             <- x$estimate
   K                    <- length(estimate)
   coef                 <- estimate[-K]
-  std                  <- sqrt(diag(x$cov))
+  meff                 <- x$meffects
+  std                  <- sqrt(diag(x$cov)[-K])
+  std.meff             <- sqrt(diag(x$cov.me))
   sigma                <- estimate[K]
   llh                  <- x$likelihood
-
+  
   if (missing(Glist)) {
     Glist              <- get(x$codedata$Glist, envir = .GlobalEnv) 
   } else {
@@ -291,7 +370,13 @@ SARTML <- function(formula,
   tmp                  <- fcoefficients(coef, std)
   out_print            <- tmp$out_print
   out                  <- tmp$out
-  out_print            <- c(list(out_print), x[-(1:7)], list(...))
+  out_print            <- c(list(out_print), x[-(1:9)], list(...))
+  
+  
+  tmp.meff             <- fcoefficients(meff, std.meff)
+  out_print.meff       <- tmp.meff$out_print
+  out.meff             <- tmp.meff$out
+  out_print.meff       <- c(list(out_print.meff), x[-(1:9)], list(...))
   
   if (!is.list(Glist)) {
     Glist  <- list(Glist)
@@ -307,6 +392,9 @@ SARTML <- function(formula,
   
   cat("Coefficients:\n")
   do.call("print", out_print)
+  
+  cat("\nMarginal Effects:\n")
+  do.call("print", out_print.meff)
   cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
   cat("sigma: ", sigma, "\n")
   cat("log likelihood: ", llh, "\n")

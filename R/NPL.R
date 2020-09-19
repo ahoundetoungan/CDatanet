@@ -365,7 +365,7 @@ CDnetNPL    <- function(formula,
   } 
   
   f.t.data      <- formula.to.data(formula, FALSE, Glist, M, igr, data, theta0 = 0)
-  X           <- f.t.data$X
+  X             <- f.t.data$X
   coln          <- c("lambda", colnames(X))
   
   Z             <- cbind(Gyb, X)

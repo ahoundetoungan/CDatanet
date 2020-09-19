@@ -126,7 +126,7 @@ print(ggplot(data = data.frame(y = y), aes(x = y)) +
         theme_bw() + xlab("") + ylab("Frequency"))
 ```
 ## Estimation
-Using the simulated data, I estimate the count data model as well as the SART and SAR models. The output of these models has a `summary class` to summarize the results. In addition, the `summary` function computes marginal effects for the count data model.
+Using the simulated data, I estimate the count data model as well as the SART and SAR models. The output of these models has a `summary class` to summarize the results. In addition, the `summary` function computes marginal effects for the count data and the SART models.
 ```{r estexo, echo = TRUE, eval = TRUE}
 #  Count data
 CD   <- CDnetNPL(formula = y ~ x1 + x2, contextual = TRUE, Glist = Glist,

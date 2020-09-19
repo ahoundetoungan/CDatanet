@@ -6,7 +6,7 @@
 \alias{print.SARTML}
 \title{Summarize SART Model}
 \usage{
-\method{summary}{SARTML}(object, ...)
+\method{summary}{SARTML}(object, Glist, data, ...)
 
 \method{print}{summary.SARTML}(x, Glist, ...)
 
@@ -15,13 +15,16 @@
 \arguments{
 \item{object}{an object of class \code{SARTML}, output of the function \code{\link{SARTML}}.}
 
+\item{Glist}{the adjacency matrix or list sub-adjacency matrix. If missing make, sure that
+the object provided to the function \code{\link{SARTML}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{SARTML}}).}
+
+\item{data}{dataframe containing the explanatory variables. If missing make, sure that
+the object provided to the function \code{\link{SARTML}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{SARTML}}).}
+
 \item{...}{further arguments passed to or from other methods.}
 
 \item{x}{an object of class \code{summary.SARTML}, output of the function \code{\link{summary.SARTML}}
 or class \code{SARTML}, output of the function \code{\link{SARTML}}.}
-
-\item{Glist}{the adjacency matrix or list sub-adjacency matrix. If missing make, sure that
-the object provided to the function \code{\link{SARTML}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{SARTML}}).}
 }
 \value{
 A list consisting of:
