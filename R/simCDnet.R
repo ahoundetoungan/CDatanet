@@ -10,7 +10,7 @@
 #' @param theta the parameter value as \eqn{\theta = (\lambda, \beta, \gamma, \sigma)}. The parameter \eqn{\gamma} should be removed if the model
 #' does not contain contextual effects (see details).
 #' @param tol the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of `y`. The process stops if the \eqn{L_1}{L} distance 
-#' between two consecutive values of `y` is less than `tol`.
+#' between two consecutive values of the expectancy of `y` is less than `tol`.
 #' @param maxit the maximal number of iterations in the Fixed Point Iteration Method.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `mcmcARD` is called.
@@ -68,7 +68,8 @@
 #' 
 #' rm(list = ls()[!(ls() %in% c("Glist", "data", "theta"))])
 #' 
-#' ytmp    <- simCDnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, theta = theta, data = data)
+#' ytmp    <- simCDnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, 
+#'                     theta = theta, data = data)
 #' 
 #' y       <- ytmp$y
 #' 

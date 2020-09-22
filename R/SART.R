@@ -83,13 +83,13 @@
 #' 
 #' rm(list = ls()[!(ls() %in% c("Glist", "data", "theta"))])
 #' 
-#' ytmp    <- simCDnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist,
-#'                     theta = theta, data = data)
+#' ytmp    <- simTobitnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist,
+#'                        theta = theta, data = data)
 #' 
 #' y       <- ytmp$y
 #' 
 #' # plot histogram
-#' hist(y, breaks = max(y))
+#' hist(y)
 #' 
 #' opt.ctr <- list(method  = "Nelder-Mead", 
 #'                 control = list(abstol = 1e-16, abstol = 1e-11, maxit = 5e3))
@@ -135,19 +135,19 @@ SARTML <- function(formula,
   
   ylist      <- lapply(1:M, function(x) y[(igr[x,1]:igr[x,2]) + 1])
   
-  idpos      <- which(y > 0) - 1
-  idzero     <- which(!(y > 0)) - 1
-  
+  indpos        <- (y > 1e-323)
+  indzero       <- !indpos
+  idpos         <- which(indpos) - 1
+  idzero        <- which(indzero) - 1
+
   idposlis   <- lapply(ylist, function(w) which(w > 0))
   Npos       <- unlist(lapply(idposlis, length))
   
   G2list     <- lapply(1:M, function(w) Glist[[w]][idposlis[[w]], idposlis[[w]]])
   Gy         <- unlist(lapply(1:M, function(w) Glist[[w]] %*% ylist[[w]]))
-  I2list     <- lapply(Npos, function(w) diag(w))
-  
-  
-  alphatde   <- Inf
-  logdetA2   <- 0
+  I2list     <- lapply(Npos, diag)
+  Ilist      <- lapply(nvec, diag)  
+  Wlist      <- lapply(1:M, function(x) (indpos[(igr[x,1]:igr[x,2]) + 1] %*% t(indpos[(igr[x,1]:igr[x,2]) + 1]))*Glist[[x]])
   
   
   theta     <- NULL
@@ -163,15 +163,19 @@ SARTML <- function(formula,
     theta    <- c(log(max(b[1]/(1 - b[1]), 0.01)), b[-1], log(s))
   }
   
-  alphatilde <- theta[1]
+  if(exists("alphatde")) rm("alphatde")
+  if(exists("logdetA2")) rm("logdetA2")
+  alphatde   <- Inf
   logdetA2   <- 0
   
   
   # arguments
-  ctr        <- c(list(X = X, G2 = G2list, I2 = I2list, K = K, y = y, Gy = Gy,
-                       idpos = idpos, idzero = idzero, Npos = Npos, ngroup = M,
-                       alphatilde = alphatde, logdetA2 = logdetA2,
-                       hessian = cov), opt.ctr)
+  ctr        <- c(list("X" = X, "G2" = G2list, "I2" = I2list, "K" = K, "y" = y, "Gy" = Gy,
+                       "idpos" = idpos, "idzero" = idzero, "Npos" = Npos, "ngroup" = M,
+                       "alphatilde" = alphatde, "logdetA2" = logdetA2, "N" = n, 
+                       "I" = Ilist,  "W" = Wlist, "igroup" = igr, "indzero" = indzero,
+                       "indpos" = indpos), opt.ctr)
+  
   if (optimizer == "optim") {
     ctr    <- c(ctr, list(par = theta))
     par1   <- "par"
@@ -186,9 +190,42 @@ SARTML <- function(formula,
     par1   <- "estimate"
     like   <- "minimum"
     if (print) {
-      ctr    <- c(ctr, list(f = foptimTobit))  
+      # fgoptimTobit <- function(theta, X, G2, I2, K, y, Gy, idpos, idzero, Npos,
+      #                          ngroup, alphatilde, logdetA2, N, I,  W, igroup,
+      #                          indzero, indpos) {
+      #   res                   <- foptimTobit(theta = theta, X = X, logdetA2 = logdetA2,
+      #                                        alphatilde = alphatilde, G2 = G2, I2 = I2,
+      #                                        K = K, y = y, Gy = Gy, idpos = idpos,
+      #                                        idzero = idzero, Npos = Npos, ngroup = ngroup,
+      #                                        I = I, W = W, N = N, igroup = igroup,
+      #                                        indzero = indzero, indpos = indpos)
+      #   attr(res, "gradient") <- fgradvecTobit(theta = theta, X = X,logdetA2 = logdetA2,
+      #                                          alphatilde = alphatilde, G2 = G2, I2 = I2,
+      #                                          K = K, y = y, Gy = Gy, idpos = idpos,
+      #                                          idzero = idzero, Npos = Npos, ngroup = ngroup,
+      #                                          I = I, W = W, N = N, igroup = igroup,
+      #                                          indzero = indzero, indpos = indpos)
+      #   res
+      # }
+      ctr         <- c(ctr, list(f = foptimTobit)) 
     } else {
-      ctr    <- c(ctr, list(f = foptimTobit0))  
+      # fgoptimTobit <- function(theta, X, G2, I2, K, y, Gy, idpos, idzero, Npos,
+      #                          ngroup, alphatilde, logdetA2, N, I,  W, igroup) {
+      #   res                   <- foptimTobit0(theta = theta, X = X, logdetA2 = logdetA2,
+      #                                         alphatilde = alphatilde, G2 = G2, I2 = I2,
+      #                                         K = K, y = y, Gy = Gy, idpos = idpos,
+      #                                         idzero = idzero, Npos = Npos, ngroup = ngroup,
+      #                                         I = I, W = W, N = N, igroup = igroup,
+      #                                         indzero = indzero, indpos = indpos)
+      #   attr(res, "gradient") <- c(fgradvecTobit(theta = theta, X = X, logdetA2 = logdetA2,
+      #                                            alphatilde = alphatilde, G2 = G2, I2 = I2,
+      #                                            K = K, y = y, Gy = Gy, idpos = idpos,
+      #                                            idzero = idzero, Npos = Npos, ngroup = ngroup,
+      #                                            I = I, W = W, N = N, igroup = igroup,
+      #                                            indzero = indzero, indpos = indpos))
+      #   res
+      # }
+      ctr    <- c(ctr, list(f = foptimTobit0)) 
     }
   }
   
@@ -200,11 +237,11 @@ SARTML <- function(formula,
   llh      <- -resTO[[like]]
   
   covout             <- NULL
+  rm(list = c("alphatde", "logdetA2"))
   if (cov) {
-    covtmp           <- solve(resTO$hessian)
-    Rmat             <- diag(K + 2)
-    Rmat[1,1]        <- theta[1]*(1 - theta[1])
-    covout           <- Rmat %*% covtmp %*% t(Rmat)
+    covtmp           <- fqTobit(theta, X, G2list, Ilist, Wlist, K, n, y, Gy,  indzero,
+                                indpos, igr, M)
+    covout           <- solve(stats::cov(covtmp))/n
     colnames(covout) <- coln
     rownames(covout) <- coln
   }
@@ -213,7 +250,8 @@ SARTML <- function(formula,
   
   sdata              <- list(
     "formula"       = formula,
-    "Glist"         = deparse(substitute(Glist))
+    "Glist"         = deparse(substitute(Glist)),
+    "pzeros"        = sum(indzero)/n
   )
   if (!missing(data)) {
     sdata            <- c(sdata, list("data" = deparse(substitute(data))))
@@ -225,7 +263,8 @@ SARTML <- function(formula,
                              "likelihood"    = llh, 
                              "cov"           = covout,
                              "optimization"  = resTO,
-                             "codedata"      = sdata)
+                             "codedata"      = sdata,
+                            "y"              = y)
   class(out)         <- "SARTML"
   out
   
@@ -388,7 +427,9 @@ SARTML <- function(formula,
   cat("Network:\n")
   cat("Number of groups         : ", M, "\n")
   cat("Sample size              : ", n, "\n")
-  cat("Average number of friends: ", sum(nfr)/n, "\n\n")
+  cat("Average number of friends: ", sum(nfr)/n, "\n")
+  
+  cat("Proportion of zeros      : ", x$codedata$pzeros, "\n\n")
   
   cat("Coefficients:\n")
   do.call("print", out_print)

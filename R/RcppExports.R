@@ -33,16 +33,28 @@ fL_NPL <- function(u, Gu, G, igroup, ngroup, X, theta, K, n) {
     invisible(.Call(`_CDatanet_fL_NPL`, u, Gu, G, igroup, ngroup, X, theta, K, n))
 }
 
-foptimTobit <- function(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup) {
-    .Call(`_CDatanet_foptimTobit`, theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup)
+fyTobit <- function(yst, y, Gy, G, eps, igroup, ngroup, psi, lambda, tol, maxit) {
+    .Call(`_CDatanet_fyTobit`, yst, y, Gy, G, eps, igroup, ngroup, psi, lambda, tol, maxit)
 }
 
-foptimTobit0 <- function(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup) {
-    .Call(`_CDatanet_foptimTobit0`, theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup)
+foptimTobit <- function(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup, I, W, N, indzero, indpos, igroup) {
+    .Call(`_CDatanet_foptimTobit`, theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup, I, W, N, indzero, indpos, igroup)
 }
 
-fgradvecTobit <- function(theta, X, G2, I, W, K, N, y, Gy, indzero, indpos, igroup, ngroup) {
-    .Call(`_CDatanet_fgradvecTobit`, theta, X, G2, I, W, K, N, y, Gy, indzero, indpos, igroup, ngroup)
+foptimTobit0 <- function(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup, I, W, N, indzero, indpos, igroup) {
+    .Call(`_CDatanet_foptimTobit0`, theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup, I, W, N, indzero, indpos, igroup)
+}
+
+fgradvecTobit <- function(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup, I, W, N, indzero, indpos, igroup) {
+    .Call(`_CDatanet_fgradvecTobit`, theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup, I, W, N, indzero, indpos, igroup)
+}
+
+fqTobit <- function(theta, X, G2, I, W, K, N, y, Gy, indzero, indpos, igroup, ngroup) {
+    .Call(`_CDatanet_fqTobit`, theta, X, G2, I, W, K, N, y, Gy, indzero, indpos, igroup, ngroup)
+}
+
+fySar <- function(y, Gy, G, eps, igroup, ngroup, psi, lambda) {
+    invisible(.Call(`_CDatanet_fySar`, y, Gy, G, eps, igroup, ngroup, psi, lambda))
 }
 
 foptimSAR <- function(alphatilde, X, invXX, G, I, N, y, Gy, ngroup) {
@@ -51,6 +63,10 @@ foptimSAR <- function(alphatilde, X, invXX, G, I, N, y, Gy, ngroup) {
 
 foptimSAR0 <- function(alphatilde, X, invXX, G, I, N, y, Gy, ngroup) {
     .Call(`_CDatanet_foptimSAR0`, alphatilde, X, invXX, G, I, N, y, Gy, ngroup)
+}
+
+fSARjac <- function(alpha, s2, X, XX, Xbeta, G, I, igroup, ngroup, N, K) {
+    .Call(`_CDatanet_fSARjac`, alpha, s2, X, XX, Xbeta, G, I, igroup, ngroup, N, K)
 }
 
 cABC <- function(n, miq, sigma, R, S, tu, tutu, cpdf, ccdf) {

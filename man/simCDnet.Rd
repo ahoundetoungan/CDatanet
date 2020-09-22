@@ -22,7 +22,7 @@ without intercept or \code{y ~ x1 + x2 | x2 + x3} to allow the contextual variab
 does not contain contextual effects (see details).}
 
 \item{tol}{the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of \code{y}. The process stops if the \eqn{L_1}{L} distance
-between two consecutive values of \code{y} is less than \code{tol}.}
+between two consecutive values of the expectancy of \code{y} is less than \code{tol}.}
 
 \item{maxit}{the maximal number of iterations in the Fixed Point Iteration Method.}
 
@@ -88,7 +88,8 @@ data    <- data.frame(x1 = X[,1], x2 =  X[,2])
 
 rm(list = ls()[!(ls() \%in\% c("Glist", "data", "theta"))])
 
-ytmp    <- simCDnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, theta = theta, data = data)
+ytmp    <- simCDnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, 
+                    theta = theta, data = data)
 
 y       <- ytmp$y
 

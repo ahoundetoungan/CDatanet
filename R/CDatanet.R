@@ -16,7 +16,9 @@
 #' Lee, L. F., 2004, Asymptotic distributions of quasi‐maximum likelihood estimators for spatial autoregressive models. Econometrica, 72(6), 1899-1925, \url{https://doi.org/10.1111/j.1468-0262.2004.00558.x}
 #' @references  
 #' LeSage, J. P., 2000, Bayesian estimation of limited dependent variable spatial autoregressive models, \emph{Geographical Analysis}, 32(1), 19-35, \url{https://doi.org/10.1111/j.1538-4632.2000.tb00413.x}
-#' @references Xu, X., & Lee, L. F., 2015, Maximum likelihood estimation of a spatial autoregressive Tobit model, Journal of Econometrics, 188(1), 264-280, \url{https://doi.org/10.1016/j.jeconom.2015.05.004}
+#' @references 
+#' Xu, X., & Lee, L. F., 2015, Maximum likelihood estimation of a spatial autoregressive Tobit model, Journal of Econometrics, 188(1), 264-280, \url{https://doi.org/10.1016/j.jeconom.2015.05.004}
+#' 
 #' @useDynLib CDatanet, .registration = TRUE
 "_PACKAGE"
 NULL

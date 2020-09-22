@@ -120,13 +120,13 @@ data    <- data.frame(x1 = X[,1], x2 =  X[,2])
 
 rm(list = ls()[!(ls() \%in\% c("Glist", "data", "theta"))])
 
-ytmp    <- simCDnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist,
-                    theta = theta, data = data)
+ytmp    <- simTobitnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist,
+                       theta = theta, data = data)
 
 y       <- ytmp$y
 
 # plot histogram
-hist(y, breaks = max(y))
+hist(y)
 
 opt.ctr <- list(method  = "Nelder-Mead", 
                 control = list(abstol = 1e-16, abstol = 1e-11, maxit = 5e3))

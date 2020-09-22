@@ -182,9 +182,30 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// fyTobit
+arma::vec fyTobit(arma::vec& yst, arma::vec& y, arma::vec& Gy, List& G, const arma::vec& eps, const arma::mat& igroup, const int& ngroup, const arma::vec& psi, const double& lambda, const double& tol, const int& maxit);
+RcppExport SEXP _CDatanet_fyTobit(SEXP ystSEXP, SEXP ySEXP, SEXP GySEXP, SEXP GSEXP, SEXP epsSEXP, SEXP igroupSEXP, SEXP ngroupSEXP, SEXP psiSEXP, SEXP lambdaSEXP, SEXP tolSEXP, SEXP maxitSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type yst(ystSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type Gy(GySEXP);
+    Rcpp::traits::input_parameter< List& >::type G(GSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type igroup(igroupSEXP);
+    Rcpp::traits::input_parameter< const int& >::type ngroup(ngroupSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< const double& >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< const int& >::type maxit(maxitSEXP);
+    rcpp_result_gen = Rcpp::wrap(fyTobit(yst, y, Gy, G, eps, igroup, ngroup, psi, lambda, tol, maxit));
+    return rcpp_result_gen;
+END_RCPP
+}
 // foptimTobit
-double foptimTobit(const arma::vec& theta, const arma::mat& X, arma::vec& logdetA2, arma::vec& alphatilde, List& G2, List& I2, const int& K, const arma::vec& y, const arma::vec& Gy, const arma::uvec& idpos, const arma::uvec& idzero, const arma::vec& Npos, const int& ngroup);
-RcppExport SEXP _CDatanet_foptimTobit(SEXP thetaSEXP, SEXP XSEXP, SEXP logdetA2SEXP, SEXP alphatildeSEXP, SEXP G2SEXP, SEXP I2SEXP, SEXP KSEXP, SEXP ySEXP, SEXP GySEXP, SEXP idposSEXP, SEXP idzeroSEXP, SEXP NposSEXP, SEXP ngroupSEXP) {
+double foptimTobit(const arma::vec& theta, const arma::mat& X, arma::vec& logdetA2, arma::vec& alphatilde, List& G2, List& I2, const int& K, const arma::vec& y, const arma::vec& Gy, const arma::uvec& idpos, const arma::uvec& idzero, const arma::vec& Npos, const int& ngroup, List& I, List& W, const int& N, const arma::vec& indzero, const arma::vec& indpos, const arma::mat igroup);
+RcppExport SEXP _CDatanet_foptimTobit(SEXP thetaSEXP, SEXP XSEXP, SEXP logdetA2SEXP, SEXP alphatildeSEXP, SEXP G2SEXP, SEXP I2SEXP, SEXP KSEXP, SEXP ySEXP, SEXP GySEXP, SEXP idposSEXP, SEXP idzeroSEXP, SEXP NposSEXP, SEXP ngroupSEXP, SEXP ISEXP, SEXP WSEXP, SEXP NSEXP, SEXP indzeroSEXP, SEXP indposSEXP, SEXP igroupSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -201,13 +222,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::uvec& >::type idzero(idzeroSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type Npos(NposSEXP);
     Rcpp::traits::input_parameter< const int& >::type ngroup(ngroupSEXP);
-    rcpp_result_gen = Rcpp::wrap(foptimTobit(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup));
+    Rcpp::traits::input_parameter< List& >::type I(ISEXP);
+    Rcpp::traits::input_parameter< List& >::type W(WSEXP);
+    Rcpp::traits::input_parameter< const int& >::type N(NSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type indzero(indzeroSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type indpos(indposSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type igroup(igroupSEXP);
+    rcpp_result_gen = Rcpp::wrap(foptimTobit(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup, I, W, N, indzero, indpos, igroup));
     return rcpp_result_gen;
 END_RCPP
 }
 // foptimTobit0
-double foptimTobit0(const arma::vec& theta, const arma::mat& X, arma::vec& logdetA2, arma::vec& alphatilde, List& G2, List& I2, const int& K, const arma::vec& y, const arma::vec& Gy, const arma::uvec& idpos, const arma::uvec& idzero, const arma::vec& Npos, const int& ngroup);
-RcppExport SEXP _CDatanet_foptimTobit0(SEXP thetaSEXP, SEXP XSEXP, SEXP logdetA2SEXP, SEXP alphatildeSEXP, SEXP G2SEXP, SEXP I2SEXP, SEXP KSEXP, SEXP ySEXP, SEXP GySEXP, SEXP idposSEXP, SEXP idzeroSEXP, SEXP NposSEXP, SEXP ngroupSEXP) {
+double foptimTobit0(const arma::vec& theta, const arma::mat& X, arma::vec& logdetA2, arma::vec& alphatilde, List& G2, List& I2, const int& K, const arma::vec& y, const arma::vec& Gy, const arma::uvec& idpos, const arma::uvec& idzero, const arma::vec& Npos, const int& ngroup, List& I, List& W, const int& N, const arma::vec& indzero, const arma::vec& indpos, const arma::mat igroup);
+RcppExport SEXP _CDatanet_foptimTobit0(SEXP thetaSEXP, SEXP XSEXP, SEXP logdetA2SEXP, SEXP alphatildeSEXP, SEXP G2SEXP, SEXP I2SEXP, SEXP KSEXP, SEXP ySEXP, SEXP GySEXP, SEXP idposSEXP, SEXP idzeroSEXP, SEXP NposSEXP, SEXP ngroupSEXP, SEXP ISEXP, SEXP WSEXP, SEXP NSEXP, SEXP indzeroSEXP, SEXP indposSEXP, SEXP igroupSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -224,13 +251,48 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::uvec& >::type idzero(idzeroSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type Npos(NposSEXP);
     Rcpp::traits::input_parameter< const int& >::type ngroup(ngroupSEXP);
-    rcpp_result_gen = Rcpp::wrap(foptimTobit0(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup));
+    Rcpp::traits::input_parameter< List& >::type I(ISEXP);
+    Rcpp::traits::input_parameter< List& >::type W(WSEXP);
+    Rcpp::traits::input_parameter< const int& >::type N(NSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type indzero(indzeroSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type indpos(indposSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type igroup(igroupSEXP);
+    rcpp_result_gen = Rcpp::wrap(foptimTobit0(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup, I, W, N, indzero, indpos, igroup));
     return rcpp_result_gen;
 END_RCPP
 }
 // fgradvecTobit
-arma::mat fgradvecTobit(const arma::vec& theta, const arma::mat& X, List& G2, List& I, List& W, const int& K, const int& N, const arma::vec& y, const arma::vec& Gy, const arma::vec& indzero, const arma::vec& indpos, const arma::mat igroup, const int& ngroup);
-RcppExport SEXP _CDatanet_fgradvecTobit(SEXP thetaSEXP, SEXP XSEXP, SEXP G2SEXP, SEXP ISEXP, SEXP WSEXP, SEXP KSEXP, SEXP NSEXP, SEXP ySEXP, SEXP GySEXP, SEXP indzeroSEXP, SEXP indposSEXP, SEXP igroupSEXP, SEXP ngroupSEXP) {
+arma::vec fgradvecTobit(arma::vec& theta, arma::mat& X, const arma::vec& logdetA2, const arma::vec& alphatilde, List& G2, List& I2, const int& K, const arma::vec& y, const arma::vec& Gy, const arma::uvec& idpos, const arma::uvec& idzero, const arma::vec& Npos, const int& ngroup, List& I, List& W, const int& N, const arma::vec& indzero, const arma::vec& indpos, const arma::mat igroup);
+RcppExport SEXP _CDatanet_fgradvecTobit(SEXP thetaSEXP, SEXP XSEXP, SEXP logdetA2SEXP, SEXP alphatildeSEXP, SEXP G2SEXP, SEXP I2SEXP, SEXP KSEXP, SEXP ySEXP, SEXP GySEXP, SEXP idposSEXP, SEXP idzeroSEXP, SEXP NposSEXP, SEXP ngroupSEXP, SEXP ISEXP, SEXP WSEXP, SEXP NSEXP, SEXP indzeroSEXP, SEXP indposSEXP, SEXP igroupSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type logdetA2(logdetA2SEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type alphatilde(alphatildeSEXP);
+    Rcpp::traits::input_parameter< List& >::type G2(G2SEXP);
+    Rcpp::traits::input_parameter< List& >::type I2(I2SEXP);
+    Rcpp::traits::input_parameter< const int& >::type K(KSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type Gy(GySEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type idpos(idposSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type idzero(idzeroSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type Npos(NposSEXP);
+    Rcpp::traits::input_parameter< const int& >::type ngroup(ngroupSEXP);
+    Rcpp::traits::input_parameter< List& >::type I(ISEXP);
+    Rcpp::traits::input_parameter< List& >::type W(WSEXP);
+    Rcpp::traits::input_parameter< const int& >::type N(NSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type indzero(indzeroSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type indpos(indposSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type igroup(igroupSEXP);
+    rcpp_result_gen = Rcpp::wrap(fgradvecTobit(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, Npos, ngroup, I, W, N, indzero, indpos, igroup));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fqTobit
+arma::mat fqTobit(const arma::vec& theta, const arma::mat& X, List& G2, List& I, List& W, const int& K, const int& N, const arma::vec& y, const arma::vec& Gy, const arma::vec& indzero, const arma::vec& indpos, const arma::mat igroup, const int& ngroup);
+RcppExport SEXP _CDatanet_fqTobit(SEXP thetaSEXP, SEXP XSEXP, SEXP G2SEXP, SEXP ISEXP, SEXP WSEXP, SEXP KSEXP, SEXP NSEXP, SEXP ySEXP, SEXP GySEXP, SEXP indzeroSEXP, SEXP indposSEXP, SEXP igroupSEXP, SEXP ngroupSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -247,8 +309,25 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type indpos(indposSEXP);
     Rcpp::traits::input_parameter< const arma::mat >::type igroup(igroupSEXP);
     Rcpp::traits::input_parameter< const int& >::type ngroup(ngroupSEXP);
-    rcpp_result_gen = Rcpp::wrap(fgradvecTobit(theta, X, G2, I, W, K, N, y, Gy, indzero, indpos, igroup, ngroup));
+    rcpp_result_gen = Rcpp::wrap(fqTobit(theta, X, G2, I, W, K, N, y, Gy, indzero, indpos, igroup, ngroup));
     return rcpp_result_gen;
+END_RCPP
+}
+// fySar
+void fySar(arma::vec& y, arma::vec& Gy, List& G, const arma::vec& eps, const arma::mat& igroup, const int& ngroup, const arma::vec& psi, const double& lambda);
+RcppExport SEXP _CDatanet_fySar(SEXP ySEXP, SEXP GySEXP, SEXP GSEXP, SEXP epsSEXP, SEXP igroupSEXP, SEXP ngroupSEXP, SEXP psiSEXP, SEXP lambdaSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type Gy(GySEXP);
+    Rcpp::traits::input_parameter< List& >::type G(GSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type igroup(igroupSEXP);
+    Rcpp::traits::input_parameter< const int& >::type ngroup(ngroupSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< const double& >::type lambda(lambdaSEXP);
+    fySar(y, Gy, G, eps, igroup, ngroup, psi, lambda);
+    return R_NilValue;
 END_RCPP
 }
 // foptimSAR
@@ -289,6 +368,27 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fSARjac
+arma::mat fSARjac(const double& alpha, const double& s2, const arma::mat& X, const arma::mat& XX, const arma::vec& Xbeta, List& G, List& I, const arma::mat igroup, const int& ngroup, const int& N, const int& K);
+RcppExport SEXP _CDatanet_fSARjac(SEXP alphaSEXP, SEXP s2SEXP, SEXP XSEXP, SEXP XXSEXP, SEXP XbetaSEXP, SEXP GSEXP, SEXP ISEXP, SEXP igroupSEXP, SEXP ngroupSEXP, SEXP NSEXP, SEXP KSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const double& >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< const double& >::type s2(s2SEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type XX(XXSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type Xbeta(XbetaSEXP);
+    Rcpp::traits::input_parameter< List& >::type G(GSEXP);
+    Rcpp::traits::input_parameter< List& >::type I(ISEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type igroup(igroupSEXP);
+    Rcpp::traits::input_parameter< const int& >::type ngroup(ngroupSEXP);
+    Rcpp::traits::input_parameter< const int& >::type N(NSEXP);
+    Rcpp::traits::input_parameter< const int& >::type K(KSEXP);
+    rcpp_result_gen = Rcpp::wrap(fSARjac(alpha, s2, X, XX, Xbeta, G, I, igroup, ngroup, N, K));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cABC
 List cABC(const int& n, const arma::mat& miq, const double& sigma, const int& R, const int& S, const arma::vec& tu, const arma::vec& tutu, const arma::mat& cpdf, const arma::mat& ccdf);
 RcppExport SEXP _CDatanet_cABC(SEXP nSEXP, SEXP miqSEXP, SEXP sigmaSEXP, SEXP RSEXP, SEXP SSEXP, SEXP tuSEXP, SEXP tutuSEXP, SEXP cpdfSEXP, SEXP ccdfSEXP) {
@@ -318,11 +418,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CDatanet_foptimREM", (DL_FUNC) &_CDatanet_foptimREM, 13},
     {"_CDatanet_foptimREM_NPL", (DL_FUNC) &_CDatanet_foptimREM_NPL, 11},
     {"_CDatanet_fL_NPL", (DL_FUNC) &_CDatanet_fL_NPL, 9},
-    {"_CDatanet_foptimTobit", (DL_FUNC) &_CDatanet_foptimTobit, 13},
-    {"_CDatanet_foptimTobit0", (DL_FUNC) &_CDatanet_foptimTobit0, 13},
-    {"_CDatanet_fgradvecTobit", (DL_FUNC) &_CDatanet_fgradvecTobit, 13},
+    {"_CDatanet_fyTobit", (DL_FUNC) &_CDatanet_fyTobit, 11},
+    {"_CDatanet_foptimTobit", (DL_FUNC) &_CDatanet_foptimTobit, 19},
+    {"_CDatanet_foptimTobit0", (DL_FUNC) &_CDatanet_foptimTobit0, 19},
+    {"_CDatanet_fgradvecTobit", (DL_FUNC) &_CDatanet_fgradvecTobit, 19},
+    {"_CDatanet_fqTobit", (DL_FUNC) &_CDatanet_fqTobit, 13},
+    {"_CDatanet_fySar", (DL_FUNC) &_CDatanet_fySar, 8},
     {"_CDatanet_foptimSAR", (DL_FUNC) &_CDatanet_foptimSAR, 9},
     {"_CDatanet_foptimSAR0", (DL_FUNC) &_CDatanet_foptimSAR0, 9},
+    {"_CDatanet_fSARjac", (DL_FUNC) &_CDatanet_fSARjac, 11},
     {"_CDatanet_cABC", (DL_FUNC) &_CDatanet_cABC, 9},
     {NULL, NULL, 0}
 };

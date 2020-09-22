@@ -72,8 +72,8 @@
 #' 
 #' rm(list = ls()[!(ls() %in% c("Glist", "data", "theta"))])
 #' 
-#' ytmp    <- simCDnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist,
-#'                     theta = theta, data = data)
+#' ytmp    <- simSARnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist,
+#'                      theta = theta, data = data) 
 #' 
 #' y       <- ytmp$y
 #' 
@@ -122,7 +122,7 @@ SARML <- function(formula,
   formula    <- f.t.data$formula
   y          <- f.t.data$y
   X          <- f.t.data$X
-  coln       <- c("lambda", colnames(X))
+  coln       <- c("lambda", colnames(X), "sigma")
   
   K          <- ncol(X)
   
@@ -193,13 +193,13 @@ SARML <- function(formula,
   
   covout    <- NULL
   if(cov) {
-    covout           <- solve(hessian$hessian)
+    covout           <- hessian$cov
     colnames(covout) <- coln
     rownames(covout) <- coln
   }
   
   theta           <- c(lambda, beta, sqrt(sigma2))
-  names(theta)    <- c(coln, "sigma")
+  names(theta)    <- coln
   
   sdata           <- list(
     "formula"       = formula,
@@ -264,7 +264,7 @@ SARML <- function(formula,
   estimate             <- x$estimate
   K                    <- length(estimate)
   coef                 <- estimate[-K]
-  std                  <- sqrt(diag(x$cov))
+  std                  <- sqrt(diag(x$cov[-K, -K, drop = FALSE]))
   sigma                <- estimate[K]
   llh                  <- x$likelihood
   
