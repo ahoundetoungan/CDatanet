@@ -26,7 +26,7 @@
 #'     \item{yb}{ybar (see details), expectation of y.}
 #'     \item{Gyb}{average of the expectation of y among friends.}
 #'     \item{steps}{step-by-step output as returned by the optimizer.}
-#'     \item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
+#'     \item{codedata}{list of formula, name of the object `Glist`, number of friends in the network and name of the object `data` (see details).}
 #' @details 
 #' ## Model
 #' Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}. 
@@ -52,12 +52,11 @@
 #' The \link[base]{class} of the output of this function is \code{CDnetNPL}. This class has a \link[base]{summary} 
 #' and \link[base]{print} \link[utils]{methods} to summarize and print the results. 
 #' The adjacency matrix and the data are needed to summarize the results. However, in order to save 
-#' memory, the function does not return these objects. Instead, it returns `codedata` which contains the `formula` 
+#' memory, the function does not return these objects. Instead, it returns `codedata` which contains among others, the `formula` 
 #' and the names of these objects passed through the argument `Glist` and `data` (if provided).
 #' `codedata` will be used to get access to the adjacency matrix and the data. Therefore, it is
 #' important to have the adjacency matrix and the data (or the variables) available in \code{.GlobalEnv}. Otherwise,
-#' it will be necessary to provide them to the \link[base]{summary} 
-#' and \link[base]{print} functions.
+#' it will be necessary to provide them to the \link[base]{summary} function.
 #' @seealso \code{\link{simCDnet}}, \code{\link{SARML}} and \code{\link{SARTML}}.
 #' @examples 
 #' \dontrun{
@@ -123,6 +122,7 @@ CDnetNPL    <- function(formula,
                         data) {
   
   stopifnot(optimizer %in% c("optim", "nlm"))
+  env.formula <- environment(formula)
   # controls
   npl.print   <- npl.ctr$print
   npl.tol     <- npl.ctr$tol
@@ -258,20 +258,21 @@ CDnetNPL    <- function(formula,
   names(theta)    <- c(coln, "sigma")
   
   
-  env.formula     <- environment(formula)
-  sdata           <- list(
+ environment(formula) <- env.formula
+  sdata               <- list(
     "formula"       = formula,
-    "Glist"         = deparse(substitute(Glist))
+    "Glist"         = deparse(substitute(Glist)),
+    "nfriends"      = unlist(lapply(Glist, function(u) sum(u > 0))) 
   )
   if (!missing(data)) {
-    sdata         <- c(sdata, list("data" = deparse(substitute(data))))
+    sdata             <- c(sdata, list("data" = deparse(substitute(data))))
   }
   
   
   if (npl.maxit == t) {
     warning("The maximum number of iterations of the NPL algorithm has been reached.")
   }
-  out             <- list("M"          = M,
+  out                 <- list("M"          = M,
                           "n"          = n,
                           "iteration"  = t, 
                           "estimate"   = theta, 
@@ -280,7 +281,7 @@ CDnetNPL    <- function(formula,
                           "Gyb"        = Gybt,
                           "steps"      = steps,
                           "codedata"   = sdata)
-  class(out)      <- "CDnetNPL"
+  class(out)           <- "CDnetNPL"
   out
 }
 
@@ -315,7 +316,7 @@ CDnetNPL    <- function(formula,
 #'     \item{meffects}{vector of marginal effects.}
 #'     \item{cov.me}{covariance matrix of the marginal effects.}
 #'     \item{cov.ctr}{returned value of the control values for the covariance.}
-#'     \item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
+#'     \item{codedata}{list of formula, name of the object `Glist`, number of friends in the network and name of the object `data`.}
 #' @importFrom stats dnorm
 #' @importFrom stats pnorm
 #' @importFrom stats runif
@@ -329,38 +330,38 @@ CDnetNPL    <- function(formula,
   if ((missing(Glist) & !missing(data)) | (!missing(Glist) & missing(data))) {
     stop("Glist is missing while data is provided or vice versa")
   }
-  codedata      <- object$codedata
-  formula       <- as.formula(codedata$formula)
+  codedata         <- object$codedata
+  formula          <- as.formula(codedata$formula)
   
   if (missing(Glist)) {
-    Glist       <- get(codedata$Glist, envir = .GlobalEnv)
+    Glist           <- get(codedata$Glist, envir = .GlobalEnv)
   } else {
     if(!is.list(Glist)) {
-      Glist     <- list(Glist)
+      Glist         <- list(Glist)
     }
   }
   
-  theta         <- object$estimate
-  Gyb           <- object$Gyb
+  theta             <- object$estimate
+  Gyb               <- object$Gyb
   
-  J             <- length(theta)
+  J                 <- length(theta)
   
-  lambda        <- theta[1]
-  b             <- theta[2:(J - 1)]
-  sigma         <- theta[J]
+  lambda            <- theta[1]
+  b                 <- theta[2:(J - 1)]
+  sigma             <- theta[J]
   
   
-  M             <- length(Glist)
-  nvec          <- unlist(lapply(Glist, nrow))
-  n             <- sum(nvec)
-  igr           <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
+  M                 <- length(Glist)
+  nvec              <- unlist(lapply(Glist, nrow))
+  n                 <- sum(nvec)
+  igr               <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
   
   
   if(missing(data)) {
     if (is.null(codedata$data)) {
-      data      <- environment(formula)
+      data          <- environment(formula)
     } else {
-      data      <- get(codedata$data, envir = .GlobalEnv)
+      data          <- get(codedata$data, envir = .GlobalEnv)
     }
   } 
   
@@ -470,14 +471,14 @@ CDnetNPL    <- function(formula,
                               "codedata"  = codedata,
                               "..."       = ...)) 
   
-  class(out)      <- "summary.CDnetNPL"
+  class(out)        <- "summary.CDnetNPL"
   out
 }
 
 
 #' @rdname summary.CDnetNPL
 #' @export
-"print.summary.CDnetNPL"  <- function(x, Glist, ...) {
+"print.summary.CDnetNPL"  <- function(x, ...) {
   stopifnot(class(x) == "summary.CDnetNPL")
   
   M                    <- x$M
@@ -492,13 +493,6 @@ CDnetNPL    <- function(formula,
   sigma                <- estimate[K]
   llh                  <- x$likelihood
   
-  if (missing(Glist)) {
-    Glist              <- get(x$codedata$Glist, envir = .GlobalEnv) 
-  } else {
-    if(!is.list(Glist)) {
-      Glist            <- list(Glist)
-    }
-  }
   
   tmp                  <- fcoefficients(coef, std)
   out_print            <- tmp$out_print
@@ -511,10 +505,7 @@ CDnetNPL    <- function(formula,
   out.meff             <- tmp.meff$out
   out_print.meff       <- c(list(out_print.meff), x[-(1:13)], list(...))
   
-  if (!is.list(Glist)) {
-    Glist  <- list(Glist)
-  }
-  nfr                  <- unlist(lapply(Glist, function(u) sum(u > 0)))
+  nfr                  <- x$codedata$nfriends
   cat("Count data Model with Social Interactions\n\n")
   cat("Method: Nested pseudo-likelihood (NPL) \nIteration: ", iteration, "\n\n")
   cat("Network:\n")

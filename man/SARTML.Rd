@@ -32,7 +32,7 @@ without intercept or \code{ y ~ x1 + x2 | x2 + x3} to allow the contextual varia
 does not contain contextual effects (see details).}
 
 \item{optimizer}{is either \code{nlm} (referring to the function \link[stats]{nlm}) or \code{optim} (referring to the function \link[stats]{optim}).
-At every step of the NPL method, the estimation is performed using \link[stats]{nlm} or \link[stats]{optim}. Other arguments
+Other arguments
 of these functions such as, the control values and the method can be defined through the argument \code{opt.ctr}.}
 
 \item{opt.ctr}{list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in \code{optimizer}) such as control, method, ...}
@@ -48,11 +48,12 @@ in the model. If not found in data, the variables are taken from \code{environme
 A list consisting of:
 \item{M}{number of sub-networks.}
 \item{n}{number of individuals in each network.}
-\item{estimate}{NPL estimator.}
+\item{estimate}{Maximum Likelihood (ML) estimator.}
 \item{likelihood}{likelihood value.}
 \item{cov}{covariance matrix of the estimate.}
 \item{optimization}{output as returned by the optimizer.}
-\item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
+\item{codedata}{list of formula, name of the object \code{Glist}, number of friends in the network, name of the object \code{data},
+and number of zeros in \code{y} (see details).}
 }
 \description{
 Estimate SART model

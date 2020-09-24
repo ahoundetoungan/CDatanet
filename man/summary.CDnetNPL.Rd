@@ -9,7 +9,7 @@
 \usage{
 \method{summary}{CDnetNPL}(object, cov.ctr = list(), Glist, data, ...)
 
-\method{print}{summary.CDnetNPL}(x, Glist, ...)
+\method{print}{summary.CDnetNPL}(x, ...)
 
 \method{print}{CDnetNPL}(x, ...)
 
@@ -51,7 +51,7 @@ A list consisting of:
 \item{meffects}{vector of marginal effects.}
 \item{cov.me}{covariance matrix of the marginal effects.}
 \item{cov.ctr}{returned value of the control values for the covariance.}
-\item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
+\item{codedata}{list of formula, name of the object \code{Glist}, number of friends in the network and name of the object \code{data}.}
 }
 \description{
 Summary and print methods for the class \code{CDnetNPL} as returned by the function \link{CDnetNPL}.

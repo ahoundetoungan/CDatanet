@@ -54,7 +54,7 @@ A list consisting of:
 \item{yb}{ybar (see details), expectation of y.}
 \item{Gyb}{average of the expectation of y among friends.}
 \item{steps}{step-by-step output as returned by the optimizer.}
-\item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
+\item{codedata}{list of formula, name of the object \code{Glist}, number of friends in the network and name of the object \code{data} (see details).}
 }
 \description{
 Estimate Count Data Model with Social Interactions using NPL Method
@@ -91,12 +91,11 @@ The argument \code{npl.ctr} is an optional list which contain
 The \link[base]{class} of the output of this function is \code{CDnetNPL}. This class has a \link[base]{summary}
 and \link[base]{print} \link[utils]{methods} to summarize and print the results.
 The adjacency matrix and the data are needed to summarize the results. However, in order to save
-memory, the function does not return these objects. Instead, it returns \code{codedata} which contains the \code{formula}
+memory, the function does not return these objects. Instead, it returns \code{codedata} which contains among others, the \code{formula}
 and the names of these objects passed through the argument \code{Glist} and \code{data} (if provided).
 \code{codedata} will be used to get access to the adjacency matrix and the data. Therefore, it is
 important to have the adjacency matrix and the data (or the variables) available in \code{.GlobalEnv}. Otherwise,
-it will be necessary to provide them to the \link[base]{summary}
-and \link[base]{print} functions.
+it will be necessary to provide them to the \link[base]{summary} function.
 }
 }
 \examples{

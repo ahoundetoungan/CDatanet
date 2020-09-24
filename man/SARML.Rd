@@ -32,7 +32,7 @@ without intercept or \code{ y ~ x1 + x2 | x2 + x3} to allow the contextual varia
 does not contain contextual effects (see details).}
 
 \item{optimizer}{is either \code{nlm} (referring to the function \link[stats]{nlm}) or \code{optim} (referring to the function \link[stats]{optim}).
-At every step of the NPL method, the estimation is performed using \link[stats]{nlm} or \link[stats]{optim}. Other arguments
+Other arguments
 of these functions such as, the control values and the method can be defined through the argument \code{opt.ctr}.}
 
 \item{opt.ctr}{list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in \code{optimizer}) such as control, method, ...}
@@ -48,11 +48,11 @@ in the model. If not found in data, the variables are taken from \code{environme
 A list consisting of:
 \item{M}{number of sub-networks.}
 \item{n}{number of individuals in each network.}
-\item{estimate}{NPL estimator.}
+\item{estimate}{Maximum Likelihood (ML) estimator.}
 \item{likelihood}{likelihood value.}
 \item{cov}{covariance matrix of the estimate.}
 \item{optimization}{output as returned by the optimizer.}
-\item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
+\item{codedata}{list of formula, name of the object \code{Glist}, number of friends in the network and name of the object \code{data} (see details).}
 }
 \description{
 Estimate SAR model
@@ -67,15 +67,11 @@ where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.
 
 \subsection{\code{codedata}}{
 
-The \link[base]{class} of the output of this function is \code{SART}. This class has a \link[base]{summary}
+The \link[base]{class} of the output of this function is \code{SAR}. This class has a \link[base]{summary}
 and \link[base]{print} \link[utils]{methods} to summarize and print the results.
-The adjacency matrix is needed to summarize the results. However, in order to save
-memory, the function does not return it. Instead, it returns \code{codedata} which contains the \code{formula}
+In order to save
+memory, the function does not return neither the adjacency matrix nor the data. Instead, it returns \code{codedata} which contains among others, the \code{formula}
 and the name of the adjacency matrix passed through the argument \code{Glist}.
-\code{codedata} will be used to get access to the adjacency matrix. Therefore, it is
-important to have the adjacency matrix available in \code{.GlobalEnv}. Otherwise
-it will be necessary to provide the adjacency matrix to the \link[base]{summary}
-and \link[base]{print} functions.
 }
 }
 \examples{

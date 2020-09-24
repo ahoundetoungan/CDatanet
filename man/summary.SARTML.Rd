@@ -4,13 +4,16 @@
 \alias{summary.SARTML}
 \alias{print.summary.SARTML}
 \alias{print.SARTML}
+\alias{print.summary.SARTMLs}
 \title{Summarize SART Model}
 \usage{
 \method{summary}{SARTML}(object, Glist, data, ...)
 
-\method{print}{summary.SARTML}(x, Glist, ...)
+\method{print}{summary.SARTML}(x, ...)
 
 \method{print}{SARTML}(x, ...)
+
+\method{print}{summary.SARTMLs}(x, ...)
 }
 \arguments{
 \item{object}{an object of class \code{SARTML}, output of the function \code{\link{SARTML}}.}
@@ -30,11 +33,12 @@ or class \code{SARTML}, output of the function \code{\link{SARTML}}.}
 A list consisting of:
 \item{M}{number of sub-networks.}
 \item{n}{number of individuals in each network.}
-\item{estimate}{NPL estimator.}
+\item{estimate}{Maximum Likelihood (ML) estimator.}
 \item{likelihood}{likelihood value.}
 \item{cov}{covariance matrix of the estimate.}
 \item{optimization}{output as returned by the optimizer.}
-\item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
+\item{codedata}{list of formula, name of the object \code{Glist}, number of friends in the network, name of the object \code{data},
+and number of zeros in \code{y}.}
 }
 \description{
 Summary and print methods for the class \code{SARTML} as returned by the function \link{SARTML}.

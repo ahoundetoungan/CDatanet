@@ -10,7 +10,7 @@
 #' @param theta0 (optional) starting value of \eqn{\theta = (\lambda, \beta, \gamma, \sigma)}. The parameter \eqn{\gamma} should be removed if the model
 #' does not contain contextual effects (see details).
 #' @param optimizer is either `nlm` (referring to the function \link[stats]{nlm}) or `optim` (referring to the function \link[stats]{optim}). 
-#' At every step of the NPL method, the estimation is performed using \link[stats]{nlm} or \link[stats]{optim}. Other arguments 
+#' Other arguments 
 #' of these functions such as, the control values and the method can be defined through the argument `opt.ctr`.
 #' @param opt.ctr list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in `optimizer`) such as control, method, ...
 #' @param print a boolean indicating if the estimate should be printed at each step.
@@ -20,11 +20,12 @@
 #' @return A list consisting of:
 #'     \item{M}{number of sub-networks.}
 #'     \item{n}{number of individuals in each network.}
-#'     \item{estimate}{NPL estimator.}
+#'     \item{estimate}{Maximum Likelihood (ML) estimator.}
 #'     \item{likelihood}{likelihood value.}
 #'     \item{cov}{covariance matrix of the estimate.}
 #'     \item{optimization}{output as returned by the optimizer.}
-#'     \item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
+#'     \item{codedata}{list of formula, name of the object `Glist`, number of friends in the network, name of the object `data`,
+#'      and number of zeros in `y` (see details).}
 #' @details 
 #' ## Model
 #' The left-censored variable \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}. 
@@ -111,6 +112,7 @@ SARTML <- function(formula,
                    cov = TRUE,
                    data) {
   stopifnot(optimizer %in% c("optim", "nlm"))
+  env.formula <- environment(formula)
   #size
   if (missing(contextual)) {
     contextual <- FALSE
@@ -248,16 +250,19 @@ SARTML <- function(formula,
   
   names(theta)       <- coln
   
-  sdata              <- list(
+  # sdata
+  environment(formula) <- env.formula
+  sdata                <- list(
     "formula"       = formula,
     "Glist"         = deparse(substitute(Glist)),
-    "pzeros"        = sum(indzero)/n
+    "nfriends"      = unlist(lapply(Glist, function(u) sum(u > 0)))  
   )
   if (!missing(data)) {
-    sdata            <- c(sdata, list("data" = deparse(substitute(data))))
+    sdata              <- c(sdata, list("data" = deparse(substitute(data))))
   } 
+  sdata                <- c(sdata, list("pzeros" = sum(indzero)/n))
   
-  out                <- list("M"             = M,
+  out                  <- list("M"             = M,
                              "n"             = n,
                              "estimate"      = theta, 
                              "likelihood"    = llh, 
@@ -265,7 +270,7 @@ SARTML <- function(formula,
                              "optimization"  = resTO,
                              "codedata"      = sdata,
                             "y"              = y)
-  class(out)         <- "SARTML"
+  class(out)            <- "SARTML"
   out
   
 }
@@ -285,11 +290,12 @@ SARTML <- function(formula,
 #' @return A list consisting of:
 #'     \item{M}{number of sub-networks.}
 #'     \item{n}{number of individuals in each network.}
-#'     \item{estimate}{NPL estimator.}
+#'     \item{estimate}{Maximum Likelihood (ML) estimator.}
 #'     \item{likelihood}{likelihood value.}
 #'     \item{cov}{covariance matrix of the estimate.}
 #'     \item{optimization}{output as returned by the optimizer.}
-#'     \item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
+#'     \item{codedata}{list of formula, name of the object `Glist`, number of friends in the network, name of the object `data`, 
+#'     and number of zeros in `y`.}
 #' @export 
 #' @param ... further arguments passed to or from other methods.
 #' @export 
@@ -384,7 +390,7 @@ SARTML <- function(formula,
 
 #' @rdname summary.SARTML
 #' @export
-"print.summary.SARTML"  <- function(x,  Glist, ...) {
+"print.summary.SARTML"  <- function(x, ...) {
   stopifnot(class(x) == "summary.SARTML")
   
   M                    <- x$M
@@ -398,13 +404,6 @@ SARTML <- function(formula,
   sigma                <- estimate[K]
   llh                  <- x$likelihood
   
-  if (missing(Glist)) {
-    Glist              <- get(x$codedata$Glist, envir = .GlobalEnv) 
-  } else {
-    if(!is.list(Glist)) {
-      Glist            <- list(Glist)
-    }
-  }
   
   tmp                  <- fcoefficients(coef, std)
   out_print            <- tmp$out_print
@@ -417,10 +416,8 @@ SARTML <- function(formula,
   out.meff             <- tmp.meff$out
   out_print.meff       <- c(list(out_print.meff), x[-(1:9)], list(...))
   
-  if (!is.list(Glist)) {
-    Glist  <- list(Glist)
-  }
-  nfr                  <- unlist(lapply(Glist, function(u) sum(u > 0)))
+
+  nfr                  <- x$codedata$nfriends
   cat("SART Model\n\n")
   cat("Method: Maximum Likelihood (ML)", "\n\n")
   
@@ -451,3 +448,108 @@ SARTML <- function(formula,
   stopifnot(class(x) == "SARTML")
   print(summary(x, ...))
 }
+
+
+#' @rdname summary.SARTML
+#' @export
+"print.summary.SARTMLs" <- function(x, ...) {
+  stopifnot(class(x) %in% c("list", "summary.SARTMLs", "print.summary.SARTMLs")) 
+  
+  type2               <- (class(x) == "print.summary.SARTMLs")
+  nsim                <- NULL
+  estimate            <- NULL
+  meffects            <- NULL
+  vcoef               <- NULL
+  vmeff               <- NULL
+  llh                 <- NULL
+  n                   <- NULL
+  M                   <- NULL
+  
+  if (type2) {
+    nsim              <- x$simulation
+    estimate          <- x$estimate
+    meffects          <- x$meffects
+    vcoef             <- x$cov
+    vmeff             <- x$cov.me
+    llh               <- x$likelihood
+    n                 <- x$n
+    M                 <- x$M
+  } else {
+    lclass            <- unique(unlist(lapply(x, class)))
+    if (!all(lclass %in% "summary.SARTML")) {
+      stop("All the components in `x` should be from `summary.SARTML` class")
+    }
+    
+    nsim              <- length(x)
+    coef              <- do.call("rbind", lapply(x, function(z) t(z$estimate)))
+    meff              <- do.call("rbind", lapply(x, function(z) t(z$meffects)))
+    estimate          <- colSums(coef)/nsim
+    meffects          <- colSums(meff)/nsim
+    
+    vcoef2            <- Reduce("+", lapply(x, function(z) z$cov))/nsim
+    vmeff2            <- Reduce("+", lapply(x, function(z) z$cov.me))/nsim
+    
+    vcoef1            <- cov(coef)
+    vmeff1            <- cov(meff)
+    
+    vcoef             <- vcoef1 + vcoef2
+    vmeff             <- vmeff1 + vmeff2
+    
+    
+    llh               <- unlist(lapply(x, function(z) z$likelihood))
+    llh               <- c("min" = min(llh), "mean" = mean(llh), "max" = max(llh))
+    
+    M                 <- x[[1]]$M
+    n                 <- x[[1]]$n
+  }
+  
+  
+  
+  K                   <- length(estimate)
+  coef                <- estimate[-K]
+  std                 <- sqrt(diag(vcoef)[-K])
+  std.meff            <- sqrt(diag(vmeff))
+  sigma               <- estimate[K]
+  
+  tmp                 <- fcoefficients(coef, std)
+  out_print           <- tmp$out_print
+  out                 <- tmp$out
+  
+  tmp.meff            <- fcoefficients(meffects, std.meff)
+  out_print.meff      <- tmp.meff$out_print
+  out.meff            <- tmp.meff$out
+  
+  
+  if (type2) {
+    out_print         <- c(list(out_print), x[-(1:8)], list(...))
+    out_print.meff    <- c(list(out_print.meff), x[-(1:8)], list(...))
+  } else {
+    out_print         <- c(list(out_print), x[[1]][-(1:7)], list(...))
+    out_print.meff    <- c(list(out_print.meff), x[[1]][-(1:7)], list(...))
+  }
+  
+  cat("Count data Model with Social Interactions\n\n")
+  cat("Method: Replication of SART-ML \nReplication: ", nsim, "\n\n")
+  
+  cat("Coefficients:\n")
+  do.call("print", out_print)
+  
+  cat("\nMarginal Effects:\n")
+  do.call("print", out_print.meff)
+  cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
+  cat("sigma: ", sigma, "\n")
+  cat("log pseudo-likelihood: ", "\n")
+  print(llh)
+  
+  out                  <- list("M"          = M,
+                               "n"          = n,
+                               "simulation" = nsim, 
+                               "estimate"   = estimate, 
+                               "likelihood" = llh, 
+                               "cov"        = vcoef, 
+                               "meffects"   = meffects,
+                               "cov.me"     = vmeff,
+                               ...          = ...)
+  class(out)           <- "print.summary.SARTMLs"
+  invisible(out)
+} 

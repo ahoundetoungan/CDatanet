@@ -4,13 +4,16 @@
 \alias{summary.SARML}
 \alias{print.summary.SARML}
 \alias{print.SARML}
+\alias{print.summary.SARMLs}
 \title{Summarize SAR Model}
 \usage{
 \method{summary}{SARML}(object, ...)
 
-\method{print}{summary.SARML}(x, Glist, ...)
+\method{print}{summary.SARML}(x, ...)
 
 \method{print}{SARML}(x, ...)
+
+\method{print}{summary.SARMLs}(x, ...)
 }
 \arguments{
 \item{object}{an object of class \code{SARML}, output of the function \code{\link{SARML}}.}
@@ -19,19 +22,16 @@
 
 \item{x}{an object of class \code{summary.SARML}, output of the function \code{\link{summary.SARML}} or
 class \code{SARML}, output of the function \code{\link{SARML}}.}
-
-\item{Glist}{the adjacency matrix or list sub-adjacency matrix. If missing make, sure that
-the object provided to the function \code{\link{SARML}} is available in \code{.GlobalEnv} (see detail - codedata section of \code{\link{SARML}}).}
 }
 \value{
 A list consisting of:
 \item{M}{number of sub-networks.}
 \item{n}{number of individuals in each network.}
-\item{estimate}{NPL estimator.}
+\item{estimate}{Maximum Likelihood (ML) estimator.}
 \item{likelihood}{likelihood value.}
 \item{cov}{covariance matrix of the estimate.}
 \item{optimization}{output as returned by the optimizer.}
-\item{codedata}{list of formula, formula's environment, names of the objects Glist and data (this is useful for summarizing the results, see details).}
+\item{codedata}{list of formula, name of the object \code{Glist}, number of friends in the network and name of the object \code{data}.}
 }
 \description{
 Summary and print methods for the class \code{SARML} as returned by the function \link{SARML}.
