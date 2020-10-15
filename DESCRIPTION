@@ -1,6 +1,6 @@
 Package: CDatanet
 Type: Package
-Title: Count Data Model with Social Interactions
+Title: Modeling Count Data with Peer Effects
 Version: 0.0.1
 Date: 2020-08-01
 Authors@R: person("Elysée Aristide", "Houndetoungan", role = c("cre","aut"), email =  "ariel92and@gmail.com")

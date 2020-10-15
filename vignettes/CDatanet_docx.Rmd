@@ -24,21 +24,22 @@ knitr::opts_chunk$set(echo = FALSE)
 
 # Introduction
 
-There is a large and growing literature on peer effects in economics.^[For recent reviews, see @boucher2016some, @de2017econometrics and @bramoulle2019peer.] Recent contributions include among other, models for discrete data such as binary [e.g., @lee2014binary; @liu2019simultaneous], ordered [e.g., @boucher2018peer] and multinomial [e.g., @guerra2017multinomial]. However, there are hardly any models dealing with count data (e.g., data collected by asking respondents: "*How many times do you smoke daily?*"). 
+There is a large and growing literature on peer effects in economics.^[For recent reviews, see @boucher2016some, @de2017econometrics and @bramoulle2019peer.] Recent contributions include, among others, models for discrete data, including binary [e.g., @lee2014binary; @liu2019simultaneous], ordered [e.g., @boucher2018peer], and multinomial [e.g., @guerra2017multinomial]. To my knowledge, however, there
+are no existing models for count variables with microeconomic foundations, despite these variables being prevalent in survey data (e.g., number of times teenagers have taken drugs, number of times teenagers have drunk alcohol, frequency of participation in sport activities, frequency of participation in extracurricular activities, frequency of restaurant visits, number of physician visits). 
 
 
-I present a model in which the outcome takes count values (0, 1, 2, \dots). In this model, individuals interact through a directed network and their peers' decision may influence their own decision. Moreover, they do not observe their peers' outcome and form rational belief about that.  
+I present an incomplete information game with social interactions in which the outcome takes unbounded integer values. I show that it is important to account for the counting nature of the dependent variable. Assuming that this variable is continuous significantly underestimates the peer effects.  
 
 I also present an easy-to-use R package---named  **CDatanet**---for implementing the model. This note is a supplement for the package manual. I provide examples with simulated data to show how to use the package. The package is located on GitHub at [github.com/ahoundetoungan/CDatanet](https://github.com/ahoundetoungan/CDatanet). All the results of the note can be replicated following the code provided.
 
-The rest of this note is organized as follow. Section [2](#model) briefly introduces the model. Section [3](#package) explains how to install the package. Sections [4](#exo) and [5](#endo) provide examples in which the network matrix is assumed exogenous and endogenous respectively. They present Monte Carlo experiments to assess the performance of the estimator of the model parameters. They also discuss how to control for the endogeneity of the network. Section [6](#con) concludes.
+The remainder of the paper is organized as follows. Section [2](#model) briefly introduces the model. Sections [3](#exo) and [4](#endo) provide examples in which the network matrix is exogenous and endogenous respectively. They present a Monte Carlo study to assess the performance of the estimator of the model parameters. They also discuss how to control for the endogeneity of the network. Section [5](#con) concludes.
 
 # Model{#model}
 Let $\mathcal{V} = \{1, \dots, n\}$ be a set of $n$ players indexed by $i$ and $y_i$ the observed integer outcome of player $i$ (e.g., the number of cigarettes smoked per day or per week). I denote by $\boldsymbol{G}$ the adjacency matrix such that $G_{ij} = \dfrac{1}{n_i}$ if $i$ knows $j$ and $G_{ij} = 0$ otherwise, where $n_i$ the number of friends of $i$. Let also $\boldsymbol{X}$ be the matrix of explanatory variables. 
 
 As in @liu2019simultaneous, I assume that there is a latent variable $y_i^*$ which determines the observed count variable $y_i$ . This latent variable $y_i^*$ and the observed $y_i$ are linked as follow.
 
-Let be $\left(a_q\right)_{q \in \mathbb{N}}$ a sequence  given by $a_0 = -\infty$, $a_1 \in \mathbb{R}$ and $a_q = a_1 + \gamma(q-1)$ for $q \in \mathbb{N}^*$ and $\gamma \in \mathbb{R}_+^*$. If $y_i^* \in (a_{q}, a_{q + 1}]$ then $y_i = q$.
+Let $\left(a_q\right)_{q \in \mathbb{N}}$ be a sequence  given by $a_0 = -\infty$, $a_1 \in \mathbb{R}$, and $a_q = a_1 + \gamma(q-1)$ for $q \in \mathbb{N}^*$ and $\gamma \in \mathbb{R}_+^*$. If $y_i^* \in (a_{q}, a_{q + 1}]$ then $y_i = q$.
 
 The first order conditions of the game equilibrium implies that
 
@@ -49,23 +50,13 @@ The game equilibrium is given by
 $$ p_{ir} = \Phi\left(\dfrac{\lambda\sum_{i = 1}^n \sum_{r = 0}^{\infty} rG_{ij} p_{ir}  + \boldsymbol{x}_i^{\prime}\boldsymbol{\beta} - a_q}{\sigma_{\varepsilon}}\right) - \Phi\left(\dfrac{\lambda\sum_{i = 1}^n \sum_{r = 0}^{\infty} rG_{ij} p_{ir}  + \boldsymbol{x}_i^{\prime}\boldsymbol{\beta}  - a_{q+1}}{\sigma_{\varepsilon}}\right)$$
 where $\Phi$ is the probability density function of $\mathcal{N}(0, 1)$.
 
-To estimate $\boldsymbol{\theta} = (\lambda, \boldsymbol{\beta}^{\prime}, \sigma_{\varepsilon})^{\prime}$, I rely on the NPL method. I refer the reader to @houndetoungan2020cdata for more details. The estimation method is implemented in the package **CDatanet**.
-
-# **CDatanet** Installation {#package}
-The code source of the package is written in C++ with the package **Rcpp** [@R-Rcpp]. **CDatanet**  is currently available on GitHub. Its installation requires to prior install **devtools** package [@R-devtools]. Moreover, Windows users should install Rtools compatible with their R version.
-
-**CDatanet** package can be installed from this GitHub repos using the `install_github` function of **devtools**. All the dependencies will also be installed automatically.
-
-```{r install, echo = TRUE, eval = FALSE}
-library(devtools)
-install_github("ahoundetoungan/CDatanet")
-```
+To estimate $\boldsymbol{\theta} = (\lambda, \boldsymbol{\beta}^{\prime}, \sigma_{\varepsilon})^{\prime}$, I rely on the Nested Partial Likelihood (NPL) method proposed by  @aguirregabiria2007sequential. I refer the reader to @houndetoungan2020cdata for more details. The estimation method is implemented in the package **CDatanet**.
 
 # Examples with exogenous network{#exo}
-In this section, I present examples to show how to use the package. I simulate data following the model by assuming that the network matrix is exogenous. I then show how to estimate the model parameters using functions implemented in **CDatanet**. I also use Monte Carlo simulations to assess the performance of the estimator of the model parameters.
+In this section, I present examples to show how to use the package. I simulate data following the model by assuming that the network matrix is exogenous. I then show how to estimate the model parameters using functions provided by **CDatanet**. I also use Monte Carlo simulations to assess the performance of the estimator of the model parameters.
 
 ## Data simulation{#exo.data}
-Given the adjacency matrix, the explanatory variables and $\boldsymbol{\theta}$, the function `simCDnet` can used to simulate data. I assume that there are `M` sub-networks. The number of individuals in each sub-network is randomly chosen between 100 and 1000. I assume two exogenous variables (plus the intercept) and I control for the contextual effect.
+Given the adjacency matrix, the explanatory variables and $\boldsymbol{\theta}$, the function `simCDnet` can used to simulate data. I assume that there are `M` sub-networks. The number of individuals in each sub-network is randomly chosen between 100 and 1000. I assume three exogenous variables (including the intercept) and I control for the contextual effects.
 
 ```{r dataexo, echo = TRUE, eval = TRUE}
 set.seed(2020) 
@@ -78,7 +69,7 @@ n      <- sum(nvec)
 print(n)
 
 # Parameters
-lambda <- 0.4              # peer effect
+lambda <- 0.4              # peer effects
 beta   <- c(2, -1.9, 0.8)  # own effects
 gamma  <- c(1.5, -1.2)     # contextual effects
 sigma  <- 1.5              # standard deviation of epsilon
@@ -126,7 +117,7 @@ print(ggplot(data = data.frame(y = y), aes(x = y)) +
         theme_bw() + xlab("") + ylab("Frequency"))
 ```
 ## Estimation
-Using the simulated data, I estimate the count data model as well as the SART and SAR models. The output of these models has a `summary class` to summarize the results. In addition, the `summary` function computes marginal effects for the count data and the SART models.
+Using the simulated data, I estimate the count data model as well as the spatial autoregressive Tobit (SART) and the spatial autoregressive (SAR) models. The SART model assumes that the dependent variable is continuous and left-censored at 0. This model can be used to model count data when data contain many zeros. However, the SART model does not account for the integer nature of the dependent variable. This can lead to biased estimates. In addition, the SART model also does not account for the integer nature of the dependent variable and does not assume that the data are censored. One can compare the peer effects using the count data model to those when the dependent variable is assumed continuous. The outputs of the functions that implement these models have a `summary class` to summarize the results and provide marginal effects.^[Note that the estimates from the SAR model can be directly interpreted as marginal effects.]
 ```{r estexo, echo = TRUE, eval = TRUE}
 #  Count data
 CD   <- CDnetNPL(formula = y ~ x1 + x2, contextual = TRUE, Glist = Glist,
@@ -145,10 +136,10 @@ SAR  <- SARML(formula = y ~ x1 + x2, contextual = TRUE, Glist = Glist,
 summary(SAR)
 ```
 
-Using the count data model, the peer effect is estimated at 0.38, which is close to the true value, 0.4. By replicating this experience several times, the average of the estimates is likely to be almost equal to the true value (see next section). Note that this parameter is not interpretable. Instead, one should interpret the marginal effect: *increasing of the expected $y_j$ of the peers by one implies an increasing of the expected $y_i$ of the individual by 0.28*. However, estimating the SART model using data simulated from the count data model underestimates the peer effect (0.27). The package does not implement the marginal effect under the SART model. This latter should be much lower. Lastly, the SAR model more underestimates the peer effect (0.16). In addition, this is directly the marginal effect because the SAR model does not assume a limited dependent variable.
+Using the count data model, the peer effect is estimated at 0.38, which is close to the true value, 0.4. By replicating this experience several times, the average of the estimates is likely to be almost equal to the true value (see next section). Note that this parameter is not interpretable. Instead, one should interpret the marginal effect: *increasing the expected $y_j$ of the peers by one implies an increase of 0.28 in the expected $y_i$*. However, the SART and the SAR model underestimate thos impact at 0.19 and 0.16, respectively.
 
 ## Monte Carlo Simulations
-In this section, I conduct Monte Carlo simulations to assess the performance of the estimator. I use the same settings as in Section [4.1](#exo.data) except that the number of individuals in each sub-network is set to 500. Let's build the following Monte Carlo function that simulates the data, estimates the three models and returns their estimators.
+In this section, I conduct Monte Carlo simulations to assess the performance of the estimator. I use the same settings as in Section [3.1](#exo.data) except that the number of individuals in each sub-network is set to 500. I build the following Monte Carlo function that simulates the data, estimates the three models and returns the estimates.
 
 ```{r mcfun, echo = TRUE, eval = TRUE}
 fMC <- function(s) {
@@ -199,7 +190,7 @@ fMC <- function(s) {
 }
 ```
 
-I run the Monte Carlo function `fMC` 1000 times and compute the average of each estimator. To make it faster, I run the replications in parallel using **doParallel** package [@R-doParallel]. 
+I run 1000 times the Monte Carlo function `fMC` and compute the average of each estimate. To make it faster, I run the replications in parallel using **doParallel** package [@R-doParallel]. 
 
 ```{r mc, echo = TRUE, eval = FALSE, message = FALSE}
 library(doParallel)
@@ -216,10 +207,10 @@ load("out.mc.Rdata")
 print(out.mc)
 ```
 
-The estimator of the count data model seems unbiased while the SART and the SAR models underestimate the peer effect.
+The estimator of the count data model seems unbiased while the SART and the SAR models underestimate the peer effects.
 
 # Examples with endogenous network{#endo}
-Peer effect estimation is generally based on the assumption of exogeneity of the adjacency matrix. This means that the probability of link formation is not correlated to the error term in the count data model. Such an assumption is strong as the link formation probability may depend on unobserved characteristics (e.g, gregariousness) that also influence the outcome. In this section, I simulate data with endogenous network (which violates the assumption). I then show that the peer effect is overestimated when one does not control for the endogeneity of the network. I also present a method to control for the endogeneity. Finally, I use Monte Carlo simulations to prove that this method performs well.
+Peer effects estimation is generally based on the assumption of exogeneity of the adjacency matrix. This means that the probability of link formation is not correlated to the error term in the count data model. Such an assumption is strong as the link formation probability may depend on unobserved characteristics (e.g., gregariousness) that also influence the outcome. In this section, I simulate data with endogenous network (which violates the assumption). I then show that the peer effect is overestimated when one does not control for the endogeneity of the network. I also present a method to control for the endogeneity. Finally, I use Monte Carlo simulations to prove that this method performs well.
 
 ## Data simulation
 I assume three sub-networks. The number of individuals in each sub-network is randomly chosen between 100 and 500.
@@ -234,7 +225,7 @@ n      <- sum(nvec)
 print(n)
 
 # Parameters
-lambda <- 0.4               # peer effect
+lambda <- 0.4               # peer effects
 beta   <- c(2, -1.9, 0.8)   # own effects
 gamma  <- c(1.5, -1.2)      # contextual effects
 sigma  <- 1.5               # standard deviation of epsilon
@@ -243,7 +234,7 @@ theta  <- c(lambda, beta, gamma, sigma)
 # X
 data   <- data.frame(x1 = rnorm(n, 1, 1), x2 =  rexp(n, 0.4))
 ```
-The network matrix follows the dyadic linking model presented in @houndetoungan2020cdata. Let $\boldsymbol{A}$ be the matrix of links such that $A_{ij} = 1$ if $i$ knows $j$ and $A_{ij} = 0$. In other words, $A_{ij} = 1$ if $G_{ij} = \dfrac{1}{n_i}$. It is easier to work with $\boldsymbol{A}$ (binary data) in the network formation model. However, in the count data model, I use $\boldsymbol{G}$ as row-normalized equivalent of $\boldsymbol{A}$.
+The network matrix follows the dyadic linking model presented in @houndetoungan2020cdata. Let $\boldsymbol{A}$ be the matrix of links such that $A_{ij} = 1$ if $i$ knows $j$ and $A_{ij} = 0$. In other words, $A_{ij} = 1$ if $G_{ij} = \dfrac{1}{n_i}$. For he network formation model, it is easier to work with $\boldsymbol{A}$ (binary data). However, for the count data model, I use $\boldsymbol{G}$ as row-normalized equivalent of $\boldsymbol{A}$.
 
 The probability of link formation, $P_{ij}$ depends on $\Delta x_{1ij} = |x_{1i} - x_{1j}|$ and $\Delta x_{2ij} = |x_{2i} - x_{2j}|$ (observed dyad-specific variables) as well as on unobserved individual-level attributes $\mu_i$ and $\mu_j$. Typically, let $a_{ij}^*$ defined by
 $$a_{ij}^* = \Delta \boldsymbol{x}_{ij}^{\prime}\bar{\boldsymbol{\beta}} + \mu_i + \mu_j + \varepsilon_{ij}^*,$$
@@ -315,10 +306,10 @@ print(ggplot(data = data.frame(y = y), aes(x = y)) +
         theme_bw() + xlab("") + ylab("Frequency"))
 ```
 
-In real life, $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ are not observed and they are included in the error term $\varepsilon_i$. This implies that the network is endogenous.
+In real-life, $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ are not observed and they are included in the error term $\varepsilon_i$. This implies that the network is endogenous.
 
 ## Estimation
-When the endogeneity of the network is not taken into account, the peer effect is overestimated. The reason is that the peer effect also captures other effects. The model considers any common shock on $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ as peer effect. In the example below, the peer effect is estimated at 0.49 when I do not control for the endogeneity of the network.
+When the endogeneity of the network is not taken into account, the peer effects are overestimated. The reason is that the parameter $\lambda$ also captures other effects. The model considers any common shock on $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ as peer effects. In the example below, the peer effects are estimated at 0.49 when I do not control for the endogeneity of the network.
 ```{r estendo1, echo = TRUE, eval = TRUE}
 # Count data model
 CDexo <- CDnetNPL(formula = y ~ x1 + x2, contextual = TRUE, Glist = Glist,
@@ -375,7 +366,7 @@ abline(h = sigma2u[3], col = "red")
 
 It stands out that the MCMC converges quickly and the simulations (plotted in blue) are pretty close to the true values (red line).
 
-Using simulations from the posterior distribution, I can construct good estimators for $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ and use them as additional supplementary explanatory variables. In the next example, I use the simulation with the highest posterior density to estimate $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$.
+Using simulations from the posterior distribution, I can construct good estimators for $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ and use them as additional explanatory variables. In the next example, I use the simulation with the highest posterior density to estimate $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$.
 ```{r estendo3, echo = TRUE, eval = TRUE}
 t           <- which.max(net$posterior$log.density)
 print(t)
@@ -389,7 +380,7 @@ CDendo      <- CDnetNPL(formula = y ~ x1 + x2 + tmuest, contextual = TRUE,
                         npl.ctr = list(print = FALSE))
 summary(CDendo)
 ```
-The coefficients of $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ are significant. This confirms that the network is endogenous. Moreover, the peer effect is estimated at 0.40, which is much better than the previous estimate. 
+The coefficients of $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ are significant. This confirms that the network is endogenous. Moreover, the peer effects are estimated at 0.40, which is much better than the previous estimate. 
 
 The standard errors computed in this example are not valid because they assume that $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ are observed. To correct the standard error, I replicate simulations of $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ with replacement from the posterior distribution in order to take into account the variance of the MCMC. 
 
@@ -425,7 +416,7 @@ print(out.endo)
 load("out.endo.Rdata")
 CDatanet:::print.summary.CDnetNPLs(out.endo)
 ```
-The standard errors are slightly greater than the previous estimate. 
+The standard errors are slightly greater than the previous estimates. 
 
 ## Monte Carlo Simulations
 One simulation is not sufficient to confirm that the method used to correct the endogeneity performs well. In this section, I use Monte Carlo simulations to assess the performance of this method. I compare the estimates when the network is assumed exogenous to these when I control for the endogeneity.
@@ -438,7 +429,7 @@ fMCendo <- function(s) {
   nvec     <- rep(500, 3)
   n        <- sum(nvec)
   
-  lambda   <- 0.4              # peer effect
+  lambda   <- 0.4              # peer effects
   beta     <- c(2, -1.9, 0.8)  # own effects
   gamma    <- c(1.5, -1.2)     # contextual effects
   sigma    <- 1.5              # standard deviation of epsilon
@@ -519,7 +510,7 @@ fMCendo <- function(s) {
 }
 ```
 
-I now run the function `fMCendo` 1000 times and compute the average of both estimators. 
+I now run 1000 times the function `fMCendo` and compute the average of both estimators. 
 
 ```{r mcendoout, echo = TRUE, eval = FALSE, message = FALSE}
 n.cores               <- 5
@@ -536,9 +527,9 @@ print(out.endo)
 load("out.mcendo.Rdata")
 print(out.endo)
 ```
-The results prove that the method used to correct the endogeneity performs fairly well. The average of the estimates is 0.42 while the true value is 0.40. There is still a small bias. This is certainly due to the number of iterations of the MCMC which is low. Indeed, I use the iteration with the highest posterior density to estimate $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$. Since the number of iterations is low, the estimates may not be very good. The more the number of iterations, the better the simulation with highest posterior density for approximating $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$.
+The results prove that the method used to correct the endogeneity performs fairly well. The average of the estimates is 0.42 while the true value is 0.40. There is still a small bias. This is certainly due to the number of iterations of the MCMC which is low. Indeed, I use the iteration with the highest posterior density to estimate $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$. Since the number of iterations is low, the estimates may not be very good: the more the number of iterations, the better the simulation with highest posterior density for approximating $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$.
 
-In contrast, the peer effect is overestimated when the network is assumed exogenous. The average of the estimates is 0.52. 
+In contrast, the peer effects are overestimated when the network is assumed exogenous. The average of the estimates is 0.52. 
 
 # Conclusion {#con}
-This paper provides technical details on the package **CDatanet**. It shows with simple and practical examples how to use the package. It provides comparison of the model with the SART and the SAR models. It also shows with Monte Carlo simulations how the model performs when the network matrix is exogenous and endogenous. Simulation results prove that the peer effect is overestimated when the network is endogenous.  Lastly, it presents a way to control for the endogeneity of the network. 
+This paper provides technical details on the package **CDatanet**. It shows with simple and practical examples how to use the package. It provides comparison of the model with the SART and the SAR models. It also shows with Monte Carlo simulations how the model performs when the network matrix is exogenous and endogenous. Simulation results prove that the peer effects are overestimated when the network is endogenous.  Lastly, it presents a way to control for the endogeneity of the network. 

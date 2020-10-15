@@ -17,7 +17,7 @@ Eddelbuettel, D., François, R., Allaire, J., Ushey, K., Kou, Q., Russel, N., ..
 \pkg{Rcpp}: Seamless \R and \code{C++} integration, \emph{Journal of Statistical Software}, 40(8), 1-18,
 \url{https://www.jstatsoft.org/v40/i08/}
 
-Houndetoungan, A., 2020, Count Data Model with Social Interactions
+Houndetoungan, A., 2020, Count Data Model with Social Interactions, \url{https://www.crrep.ca/sites/crrep.ca/files/fichier_publications/2020-13.pdf}
 
 Lee, L. F., 2004, Asymptotic distributions of quasi‐maximum likelihood estimators for spatial autoregressive models. Econometrica, 72(6), 1899-1925, \url{https://doi.org/10.1111/j.1468-0262.2004.00558.x}
 
