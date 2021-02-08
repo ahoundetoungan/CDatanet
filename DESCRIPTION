@@ -2,7 +2,7 @@ Package: CDatanet
 Type: Package
 Title: Modeling Count Data with Peer Effects
 Version: 0.0.1
-Date: 2020-08-01
+Date: 2021-02-08
 Authors@R: person("Elysée Aristide", "Houndetoungan", role = c("cre","aut"), email =  "ariel92and@gmail.com")
 Description: Estimating a count data model with social interactions.
 License: GPL-3 + file LICENSE
