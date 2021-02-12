@@ -3,8 +3,8 @@ Type: Package
 Title: Modeling Count Data with Peer Effects
 Version: 0.0.1
 Date: 2021-02-08
-Authors@R: person("Elysée Aristide", "Houndetoungan", role = c("cre","aut"), email =  "ariel92and@gmail.com")
-Description: Estimating a count data model with social interactions.
+Authors@R: person("Elys\'ee Aristide", "Houndetoungan", role = c("cre","aut"), email =  "ariel92and@gmail.com")
+Description: Estimating count data models with social interactions.
 License: GPL-3 + file LICENSE
 Encoding: UTF-8
 BugReports: https://github.com/ahoundetoungan/CDatanet/issues
