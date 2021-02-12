@@ -13,7 +13,7 @@ To make the computations faster \pkg{CDatanet} uses \code{C++} through the \pkg{
 \references{
 Atchad\'e, Y. F., & Rosenthal, J. S. (2005). On adaptive markov chain monte carlo algorithms, \emph{Bernoulli}, 11(5), 815-828, \doi{10.3150/bj/1130077595}
 
-Eddelbuettel, D., Fran\c{c}ois, R., Allaire, J., Ushey, K., Kou, Q., Russel, N., ... & Bates, D., 2011,
+Eddelbuettel, D., Francois, R., Allaire, J., Ushey, K., Kou, Q., Russel, N., ... & Bates, D., 2011,
 \pkg{Rcpp}: Seamless \R and \code{C++} integration, \emph{Journal of Statistical Software}, 40(8), 1-18, \doi{10.18637/jss.v040.i08}
 
 Houndetoungan, E. A., 2020, A Count Data Model with Social Interactions. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}
