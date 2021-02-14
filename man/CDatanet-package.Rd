@@ -11,9 +11,9 @@ It also simulates data from the count data model and implements the Spatial Auto
 To make the computations faster \pkg{CDatanet} uses \code{C++} through the \pkg{Rcpp} package (Eddelbuettel et al., 2011).
 }
 \references{
-Atchad\'e, Y. F., & Rosenthal, J. S. (2005). On adaptive markov chain monte carlo algorithms, \emph{Bernoulli}, 11(5), 815-828, \doi{10.3150/bj/1130077595}
+Atchade, Y. F., & Rosenthal, J. S. (2005). On adaptive markov chain monte carlo algorithms, \emph{Bernoulli}, 11(5), 815-828, \doi{10.3150/bj/1130077595}
 
-Eddelbuettel, D., Francois, R., Allaire, J., Ushey, K., Kou, Q., Russel, N., ... & Bates, D., 2011,
+Eddelbuettel, D., François, R., Allaire, J., Ushey, K., Kou, Q., Russel, N., ... & Bates, D., 2011,
 \pkg{Rcpp}: Seamless \R and \code{C++} integration, \emph{Journal of Statistical Software}, 40(8), 1-18, \doi{10.18637/jss.v040.i08}
 
 Houndetoungan, E. A., 2020, A Count Data Model with Social Interactions. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}
@@ -28,6 +28,6 @@ Xu, X., & Lee, L. F., 2015, Maximum likelihood estimation of a spatial autoregre
 \code{\link{simCDnet}}, \code{\link{CDnetNPL}}, \code{\link{SARML}}, \code{\link{SARTML}} and \code{\link{netformation}}.
 }
 \author{
-\strong{Maintainer}: Elys'ee Aristide Houndetoungan \email{ariel92and@gmail.com}
+\strong{Maintainer}: Elysée Aristide Houndetoungan \email{ariel92and@gmail.com}
 
 }

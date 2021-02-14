@@ -60,7 +60,7 @@ The MCMC control \code{mcmc.ctr} should be a list containing
 The burn-in is replicated three times. The estimation is performed for each component of \code{beta} during the two firsts burn-in. The simulation from
 the second burn-in are used to compute covariance of \code{beta}. From the third burn-in and the remaining steps of the MCMC, all the components in \code{beta} are jointly simulated. \cr
 As \code{mu} dimension is large, the simulation is performed for each component.\cr
-The jumping scale are also updated during the MCMC following Atchad\'e and Rosenthal (2005).
+The jumping scale are also updated during the MCMC following Atchadé and Rosenthal (2005).
 }
 \examples{
 \dontrun{

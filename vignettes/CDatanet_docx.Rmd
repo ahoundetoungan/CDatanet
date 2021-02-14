@@ -118,21 +118,38 @@ print(ggplot(data = data.frame(y = y), aes(x = y)) +
 ```
 ## Estimation
 Using the simulated data, I estimate the count data model as well as the spatial autoregressive Tobit (SART) and the spatial autoregressive (SAR) models. The SART model assumes that the dependent variable is continuous and left-censored at 0. This model can be used to model count data when data contain many zeros. However, the SART model does not account for the integer nature of the dependent variable. This can lead to biased estimates. In addition, the SART model also does not account for the integer nature of the dependent variable and does not assume that the data are censored. One can compare the peer effects using the count data model to those when the dependent variable is assumed continuous. The outputs of the functions that implement these models have a `summary class` to summarize the results and provide marginal effects.^[Note that the estimates from the SAR model can be directly interpreted as marginal effects.]
-```{r estexo, echo = TRUE, eval = TRUE}
+
+```{r estexoload, echo = FALSE, eval = TRUE}
+#  I will not run the estimates because it takes time. I will just load the saved ouptuts. However, you will get the same results if you run the code on your computer with the seed set above.
+load("out.est.Rdata")
+```
+
+```{r estexo1, echo = TRUE, eval = FALSE}
 #  Count data
 CD   <- CDnetNPL(formula = y ~ x1 + x2, contextual = TRUE, Glist = Glist,
                   optimizer = "nlm", 
                  data = data, npl.ctr = list(print = FALSE, maxit = 5e3))
 summary(CD)
-
+```
+```{r estexo1p, echo = FALSE, eval = TRUE}
+summary(CD)
+```
+```{r estexo2, echo = TRUE, eval = FALSE}
 # SART
 SART   <- SARTML(formula = y ~ x1 + x2, contextual = TRUE, Glist = Glist,
                 optimizer = "nlm", data = data, print = FALSE)
 summary(SART)
-
+```
+```{r estexo2p, echo = FALSE, eval = TRUE}
+summary(SART)
+```
+```{r estexo3, echo = TRUE, eval = FALSE}
 #SAR
 SAR  <- SARML(formula = y ~ x1 + x2, contextual = TRUE, Glist = Glist,
               optimizer = "nlm", data = data, print = FALSE)
+summary(SAR)
+```
+```{r estexo3p, echo = FALSE, eval = TRUE}
 summary(SAR)
 ```
 
@@ -286,6 +303,7 @@ mu            <- unlist(mu)
 ```
 
 To simulate the dependent variable, I use $\boldsymbol{\mu}$, the vector of $\mu_i$ as additional explanatory variable in the count variable model. I set that $Cor(\mu_i, \varepsilon_i) = \rho$ and $Cor(\sum_{j = 1}^nG_{ij}\mu_i, \varepsilon_i) = \bar{\rho}$. In that case, $\varepsilon_{i} = \rho \sigma_{\varepsilon}\tilde{\mu}_i + \bar{\rho} \sigma_{\varepsilon}\bar{\tilde{\mu}}_i  + \tilde{\nu_i}$, where $\tilde{\mu}_i = \dfrac{\mu_i - u_{\mu s}}{\sigma_{\mu s}}$, $\bar{\tilde{\mu}}_i = \sum_{j = 1}^nG_{ij}\tilde{\mu}_j$ is the average of $\tilde{\mu}_i$ among $i$'s friends and $\tilde{\nu_i}$ is the new error term following normal distribution of variance $\bar{\sigma}^2_{\varepsilon} = \left(1 - \rho^2 - \bar{\rho}^2\right)\sigma^2_{\varepsilon}$.
+
 ```{r dataendo2, echo = TRUE, eval = TRUE, fig.height = 3, fig.align = "center"}
 tmu      <- (mu - rep(uu, nvec))/sqrt(rep(sigma2u, nvec))
 data$tmu <- tmu
@@ -320,15 +338,38 @@ summary(CDexo)
 To correct the endogeneity, $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ should be included in the model as additional explanatory variables. However, these variables are not observed.
 
 I use Markov Chain Monte Carlo (MCMC) to estimate the parameters of the dyadic linking model (these include the unobserved individual-level attributes $\mu_i$). The estimation can be done using the function `netformation`. 
-```{r estendo2, echo = TRUE, eval = TRUE}
+```{r estendo2, echo = TRUE, eval = FALSE}
 # Dyadic linking model
 net <- netformation(network =  Network, formula = ~ dX, fixed.effects = TRUE,
                     mcmc.ctr = list(burnin = 1000, iteration = 5000))
 ```
+```{r mcprintprime, echo = FALSE, eval = TRUE}
+load("out.net.Rdata")
+# I copied and pasted the output to save time. But if you run the code on your laptop with the same seed, you will get the same results
+cat("0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
 
+
+The program successfully executed 
+
+********SUMMARY******** 
+n.obs          :  314890 
+n.links        :  26325 
+K              :  2 
+Fixed effects  :  Yes 
+Burnin         :  1000 
+Iteration      :  6000 
+
+Elapsed time   :  0  HH  7  mm  56  ss 
+ 
+Average acceptance rate 
+                   beta:  0.274125 
+                     mu:  0.2697619 ")
+```
 I randomly choose some parameters and present their posterior distribution. 
 
-```{r estendo2a, echo = TRUE, eval = TRUE}
+```{r estendo2a, echo = TRUE, eval = FALSE}
 # plot simulations
 par(mfrow = c(4,2), mar = c(2, 2, 2, 1.9))
 plot(net$posterior$beta[,1], type = "l", ylim = c(-2.9, -2.6), col = "blue",
@@ -363,13 +404,53 @@ plot(net$posterior$sigmamu2[,3], type = "l", col = "blue",
      main =  bquote(sigma[mu][3]^2), ylab = "")
 abline(h = sigma2u[3], col = "red")
 ```
+```{r estendo2aa, echo = FALSE, eval = TRUE}
+# plot simulations
+par(mfrow = c(4,2), mar = c(2, 2, 2, 1.9))
+plot(snet[[1]], type = "l", ylim = c(-2.9, -2.6), col = "blue",
+     main = bquote(beta[1]), ylab = "")
+abline(h = betanet[1], col = "red")
+
+plot(snet[[2]], type = "l", ylim = c(-1.6, -1.4), col = "blue",
+     main = bquote(beta[2]), ylab = "")
+abline(h = betanet[2], col = "red")
+
+plot(snet[[3]], type = "l", col = "blue",
+     main = bquote(mu[10]), ylab = "")
+abline(h = mu[10], col = "red")
+
+plot(snet[[4]], type = "l", col = "blue",
+     main = bquote(mu[542]), ylab = "")
+abline(h = mu[542], col = "red")
+
+plot(snet[[5]], type = "l", col = "blue",
+     main = bquote(mu[849]), ylab = "")
+abline(h = mu[849], col = "red")
+
+plot(snet[[6]], type = "l", col = "blue",
+     main = bquote(mu[752]), ylab = "")
+abline(h = mu[752], col = "red")
+
+plot(snet[[7]], type = "l", col = "blue",
+     main = bquote(u[mu][1]), ylab = "")
+abline(h = uu[1], col = "red")
+
+plot(snet[[8]], type = "l", col = "blue",
+     main =  bquote(sigma[mu][3]^2), ylab = "")
+abline(h = sigma2u[3], col = "red")
+```
 
 It stands out that the MCMC converges quickly and the simulations (plotted in blue) are pretty close to the true values (red line).
 
 Using simulations from the posterior distribution, I can construct good estimators for $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ and use them as additional explanatory variables. In the next example, I use the simulation with the highest posterior density to estimate $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$.
-```{r estendo3, echo = TRUE, eval = TRUE}
+```{r estendo3, echo = TRUE, eval = FALSE}
 t           <- which.max(net$posterior$log.density)
 print(t)
+```
+```{r estendo3a, echo = FALSE, eval = TRUE}
+print(t)
+```
+```{r estendo31, echo = TRUE, eval = FALSE}
 muest       <- net$posterior$mu[t,]
 uuest       <- net$posterior$uu[t,]
 sigma2uest  <- net$posterior$sigmamu2[t,]
@@ -378,6 +459,10 @@ data$tmuest <- tmuest
 CDendo      <- CDnetNPL(formula = y ~ x1 + x2 + tmuest, contextual = TRUE, 
                         Glist = Glist, optimizer = "optim", data = data, 
                         npl.ctr = list(print = FALSE))
+summary(CDendo)
+```
+```{r estendo31a, echo = FALSE, eval = TRUE}
+data$tmuest <- tmuest
 summary(CDendo)
 ```
 The coefficients of $\tilde{\mu}_i$ and $\bar{\tilde{\mu}}_i$ are significant. This confirms that the network is endogenous. Moreover, the peer effects are estimated at 0.40, which is much better than the previous estimate. 
