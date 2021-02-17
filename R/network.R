@@ -11,6 +11,7 @@
 #' @param mcmc.ctr (optional) list of MCMC control (see detail). 
 #' @param print boolean indicating if the estimation progression should be printed.
 #' @details 
+#' The network formation model can be used to control the network endogeneity in the count data, Tobit, and SAR models (see the vignette for an example with the count data model). \cr
 #' The MCMC control `mcmc.ctr` should be a list containing
 #' \itemize{
 #'    \item{jscalebeta}{ a K-dimensional vector of `beta` jumping scales.}
@@ -36,7 +37,7 @@
 #'     \item{init}{returned list of starting values.}
 #' @importFrom ddpcr quiet
 #' @examples 
-#' \dontrun{
+#' \donttest{
 #' M            <- 5 # Number of sub-groups
 #' nvec         <- round(runif(M, 100, 500))
 #' beta         <- c(1, -1)

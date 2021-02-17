@@ -75,7 +75,7 @@ and the name of the adjacency matrix passed through the argument \code{Glist}.
 }
 }
 \examples{
-\dontrun{
+\donttest{
 # Groups' size
 M      <- 5 # Number of sub-groups
 nvec   <- round(runif(M, 100, 1000))

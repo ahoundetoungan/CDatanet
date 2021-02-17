@@ -46,7 +46,7 @@
 #' and \link[base]{print} functions.
 #' @seealso \code{\link{CDnetNPL}} and \code{\link{SARML}}.
 #' @examples 
-#' \dontrun{
+#' \donttest{
 #' # Groups' size
 #' M      <- 5 # Number of sub-groups
 #' nvec   <- round(runif(M, 100, 1000))

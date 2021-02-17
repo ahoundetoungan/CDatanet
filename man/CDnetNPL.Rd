@@ -99,7 +99,7 @@ it will be necessary to provide them to the \link[base]{summary} function.
 }
 }
 \examples{
-\dontrun{
+\donttest{
 # Groups' size
 M      <- 5 # Number of sub-groups
 nvec   <- round(runif(M, 100, 1000))

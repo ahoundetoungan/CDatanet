@@ -48,6 +48,7 @@ A list consisting of:
 Estimate Network Formation Model
 }
 \details{
+The network formation model can be used to control the network endogeneity in the count data, Tobit, and SAR models (see the vignette for an example with the count data model). \cr
 The MCMC control \code{mcmc.ctr} should be a list containing
 \itemize{
 \item{jscalebeta}{ a K-dimensional vector of \code{beta} jumping scales.}
@@ -63,7 +64,7 @@ As \code{mu} dimension is large, the simulation is performed for each component.
 The jumping scale are also updated during the MCMC following Atchadé and Rosenthal (2005).
 }
 \examples{
-\dontrun{
+\donttest{
 M            <- 5 # Number of sub-groups
 nvec         <- round(runif(M, 100, 500))
 beta         <- c(1, -1)
