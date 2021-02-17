@@ -12,3 +12,4 @@
 ^vignettes/\.gitignore$
 ^scr/*\.so$
 ^scr/*\.o$
+^\README\.md$
