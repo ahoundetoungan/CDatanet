@@ -13,7 +13,7 @@ biblio-style: "apalike"
 link-citations: true
 urlcolor: blue
 vignette: >
-  %\VignetteIndexEntry{CDatanet Documentation}
+  %\VignetteIndexEntry{CDatanet package: vignette}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -216,7 +216,7 @@ replic   <- 1000 #Number of replications
 out.mc   <- mclapply(1:replic, fMC, mc.cores = n.cores)
 out.mc   <- apply(t(do.call(cbind, out.mc)), 2, mean)
 out.mc   <- cbind(theta, out.mc[1:7], out.mc[8:14], out.mc[15:21])
-colnames(out.mc) <- c("TrueValue", "CoutData", "SART", "SAR")
+colnames(out.mc) <- c("TrueValue", "CountData", "SART", "SAR")
 print(out.mc)
 ```
 ```{r mcprint, echo = FALSE, eval = TRUE}

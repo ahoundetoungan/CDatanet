@@ -1,16 +1,15 @@
-# This code replicates the Monte Carlo Results
-
+############### THIS CODE REPLICATES THE MONTE CARLO RESULTS ############### 
 rm(list = ls())
 library(CDatanet)
 library(doParallel)
 
-# You need de define the number of cores
-# I set the number of available cores - 1
+# You need de define the number of cores to use
+# I use the number of available cores - 1
 n.cores <- parallel::detectCores(all.tests = FALSE, logical = TRUE)-1
 
-# This function does one iteration in the Monte Carlo
-# 'm' stand for the m-th iteration to perform out of 'iteration'
-# 'N' is the sample size. 'disp' is the dispersion: low or high
+# This function performs the m-th iteration of the Monte Carlo
+# 'N' is the sample size. 
+# 'disp' is the dispersion: low or high
 #  type specifies the type of data: A or B
 f      <- function(m, iteration, N, type, dispersion) {
   # parameters
@@ -18,7 +17,6 @@ f      <- function(m, iteration, N, type, dispersion) {
                    c(0.4, -1, -6.8, 2.3, -2.5, 2.5, 1.5),
                    c(0.4, 1, 0.4, 0.5, 0.5, 0.6, 1.5),
                    c(0.4, 3, -1.8, 2.3, 2.5, 2.5, 1.5))
-  
   theta          <- NULL
   
   disp           <- (1:2)[c("low", "high") == dispersion]
@@ -51,16 +49,13 @@ f      <- function(m, iteration, N, type, dispersion) {
   CDest          <- CDnetNPL(formula = y ~ X|X, Glist = Glist, npl.ctr = list(print = F), 
                              opt.ctr = list(method = "BFGS"), theta0 = theta, yb0 = yb)
   
-  
   # TOBIT
   TOest          <- SARTML(formula = y ~ X|X, Glist = Glist, print =  F, cov = F,
                            opt.ctr = list(method = "BFGS"), theta0 = theta)
   
-  
   #SAR
   SARest         <- SARML(formula = y ~ X|X, Glist = Glist, print =  F, cov = F, 
                           opt.ctr = list(method = "BFGS"), lambda0 = 0.4)
-  
   
   cat("Iteration : ", m, "/", iteration, "\n")
   cat("CDSI", "\n")
@@ -75,10 +70,8 @@ f      <- function(m, iteration, N, type, dispersion) {
   c(CDest$estimate, TOest$estimate, SARest$estimate)
 }
 
-
-# This function performs 'iteration' iteration one one model
-# defined by N, dispersion and type
-# and saves the in the working directory 
+# This function calls the previous function 'iteration' times
+# and saves the results in your working directory 
 fMC          <- function(iteration, N, type, dispersion) {
   type       <- toupper(type)
   dispersion <- tolower(dispersion)
@@ -98,7 +91,7 @@ if (dir.exists("_output")) {
 }
 dir.create("_output")
 
-## RUN THE MONTE CARLO
+## PERFORM THE MONTE CARLO
 iteration <- 1000
 
 fMC(iteration, N = 250, type = "A", dispersion = "low")
@@ -118,7 +111,7 @@ fMC(iteration, N = 1500, type = "B", dispersion = "high")
 
 
 
-# The sumary functions
+# The summary functions
 my.sum <- function(x) {
   out        <- c(mean(x, na.rm = TRUE),
                   sd(x, na.rm = TRUE))
