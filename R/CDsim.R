@@ -7,8 +7,9 @@
 #' @param  contextual (optional) logical; if true, this means that all individual variables will be set as contextual variables. Set the
 #' `formula` as `y ~ x1 + x2` and `contextual` as `TRUE` is equivalent to set the formula as `y ~ x1 + x2 | x1 + x2`.
 #' @param Glist the adjacency matrix or list sub-adjacency matrix.
-#' @param theta the parameter value as \eqn{\theta = (\lambda, \beta, \gamma, \sigma)}. The parameter \eqn{\gamma} should be removed if the model
+#' @param theta the true value of the vector \eqn{\theta = (\lambda, \beta', \gamma')'}. The parameter \eqn{\gamma} should be removed if the model
 #' does not contain contextual effects (see details).
+#' @param delta the true value of the vector \eqn{\delta = (\delta_2, ..., \delta_{\bar{R}})}{\delta = (\delta_2, ..., \delta_{Rbar})}
 #' @param tol the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of `y`. The process stops if the \eqn{L_1}{L} distance 
 #' between two consecutive values of the expectancy of `y` is less than `tol`.
 #' @param maxit the maximal number of iterations in the Fixed Point Iteration Method.
@@ -18,11 +19,10 @@
 #' Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}. 
 #' The latent variable is given for all i as
 #' \deqn{y_i^* = \lambda \mathbf{g}_i \bar{\mathbf{y}} + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*ybar + x_i'\beta + g_i*X\gamma + \epsilon_i,}
-#' where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.\cr
-#' The count variable \eqn{y_i} is then define by the next (greater or equal) non negative integer to 
-#' \eqn{y_i^*}{ys_i}; that is \eqn{y_i = 0} if  
-#' \eqn{y_i^* \leq 0}{ys_i \le 0} and \eqn{y_i = q + 1} if 
-#' \eqn{q < y_i^* \leq q + 1}{q < ys_i \le q + 1}, where \eqn{q} is a non-negative integer.
+#' where \eqn{\epsilon_i \sim N(0, 1)}{\epsilon_i --> N(0, 1)}.\cr
+#' Then, \eqn{y_i = r} iff \eqn{a_r \leq y_i^* \leq a_{r+1}}{a_r \le ys_i \le a_{r + 1}}, where
+#' \eqn{a_0 = -\inf}{a_0 = -Inf}, \eqn{a_1 = 0}, \eqn{a_r = \sum_{k = 1}^r\delta_k}{a_r = \delta_1 + ... + \delta_r} if \eqn{1 \leq r \leq \bar{R}}{1 \le r \le Rbar}, and 
+#' \eqn{a_r = (r - \bar{R})\delta_{\bar{R}} + a_{\bar{R}}}{a_r = (r - Rbar)\delta_{Rbar} + a_{Rbar}} otherwise.
 #' @seealso \code{\link{CDnetNPL}}.
 #' @return A list consisting of:
 #'     \item{yst}{ys (see details), the latent variable.}
@@ -38,10 +38,10 @@
 #' 
 #' # Parameters
 #' lambda <- 0.4
-#' beta   <- c(2, -1.9, 0.8)
+#' beta   <- c(1.5, 2.2, -0.9)
 #' gamma  <- c(1.5, -1.2)
-#' sigma  <- 1.5
-#' theta  <- c(lambda, beta, gamma, sigma)
+#' delta  <- c(1, 0.87, 0.75, 0.6, 0.4)
+#' theta  <- c(lambda, beta, gamma)
 #' 
 #' # X
 #' X      <- cbind(rnorm(n, 1, 1), rexp(n, 0.4))
@@ -68,8 +68,7 @@
 #' 
 #' rm(list = ls()[!(ls() %in% c("Glist", "data", "theta"))])
 #' 
-#' ytmp    <- simCDnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, 
-#'                     theta = theta, data = data)
+#' ytmp    <- simCDnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, theta = theta, delta = delta, data = data)
 #' 
 #' y       <- ytmp$y
 #' 
@@ -83,6 +82,7 @@ simCDnet   <- function(formula,
                        contextual,
                        Glist,
                        theta,
+                       delta,
                        tol   = 1e-15,
                        maxit = 500,
                        data) {
@@ -99,35 +99,59 @@ simCDnet   <- function(formula,
   n        <- sum(nvec)
   igr      <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
   
-  
+  Rbar     <- length(delta) + 1
   f.t.data <- formula.to.data(formula, contextual, Glist, M, igr, data, "sim", 0)
   X        <- f.t.data$X
   
   K        <- length(theta)
-  if(K != (ncol(X) + 2)) {
+  if(K != (ncol(X) + 1)) {
     stop("Length of theta is not suited.")
   }
   lambda   <- theta[1]
-  b        <- theta[2:(K - 1)]
-  sigma    <- theta[K ]
-  
-
+  b        <- theta[2:K]
   
   xb       <- c(X %*% b)
-  eps      <- rnorm(n, 0, sigma)
+  eps      <- rnorm(n, 0, 1)
   
   yb       <- rep(0, n)
-  Gyb      <- numeric(n)
-  t        <- fyb(yb, Gyb, Glist, igr, M, xb, lambda, sigma, n, tol, maxit)
+  Gyb      <- rep(0, n)
+
+  t        <- fyb(yb, Gyb, Glist, igr, M, xb, lambda, delta, n, Rbar, tol, maxit)
   
+  Ztlamda  <- lambda*Gyb + xb
+  yst      <- Ztlamda + eps
+  y        <- c(fy(yst, max(yst), delta, n, Rbar))
   
-  yst      <- lambda*Gyb + xb + eps
-  y        <- ceiling(yst)
-  y[y < 0] <- 0
+  coln      <- c("lambda", colnames(X))
+  if("(Intercept)" %in% coln) {
+    thetaWI <- theta[-2]
+    coln    <- coln[-2]
+  }
+  meffects  <- fmeffects(Ztlamda, thetaWI, delta)
+  names(meffects) <- coln
+  
   
   list("yst"       = yst,
        "y"         = y,
        "yb"        = yb,
        "Gyb"       = Gyb,
+       "meffects"  = meffects,
        "iteration" = c(t))
+}
+
+# Marginal effet
+fmeffects <- function(Ztlamda, theta, delta) {
+  # marginal effect
+  maxZTl       <- max(Ztlamda) + 10
+  avec         <- c(0, cumsum(delta))
+  deltaRB      <- tail(delta, 1)
+  cont         <- TRUE
+  Rmax         <- length(avec)
+  while (cont) {
+    Rmax       <- Rmax + 1
+    avec[Rmax] <- tail(avec, 1) + deltaRB
+    cont       <- tail(avec, 1) < maxZTl
+  }
+  fir          <- sum(apply(dnorm(kronecker(Ztlamda, t(avec), "-")), 2, mean))
+  theta*fir
 }

@@ -21,7 +21,6 @@ formula.to.data <- function(formula,
   if (missing(data)) {
     data           <- environment(formula)
   }
-  cl               <- match.call()
   formula          <- as.Formula(formula)
   
   if (type == "model") {

@@ -12,6 +12,7 @@
 #' @param tol the tolerance value used in the Fixed Point Iteration Method to compute `y`. The process stops if the \eqn{L_1}{L} distance 
 #' between two consecutive values of `y` is less than `tol`.
 #' @param maxit the maximal number of iterations in the Fixed Point Iteration Method.
+#' @param RE a boolean which indicates if the model if under rational expectation of not.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `mcmcARD` is called.
 #' @details 
@@ -25,7 +26,9 @@
 #' @return A list consisting of:
 #'     \item{yst}{ys (see details), the latent variable.}
 #'     \item{y}{the observed count data.}
+#'     \item{yb}{expectation of y under rational expectation.}
 #'     \item{Gy}{the average of y among friends.}
+#'     \item{Gyb}{Average of expectation of y among frends under rational expectation.}
 #'     \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 #' @examples 
 #' # Groups' size
@@ -76,12 +79,13 @@
 #' @importFrom Rcpp sourceCpp
 #' @export
 simTobitnet   <- function(formula,
-                       contextual,
-                       Glist,
-                       theta,
-                       tol   = 1e-15,
-                       maxit = 500,
-                       data) {
+                          contextual,
+                          Glist,
+                          theta,
+                          tol   = 1e-15,
+                          maxit = 500,
+                          RE = FALSE,
+                          data) {
   if (missing(contextual)) {
     contextual <- FALSE
   }
@@ -113,13 +117,41 @@ simTobitnet   <- function(formula,
   eps      <- rnorm(n, 0, sigma)
   
   yst      <- numeric(n)
-  y        <- rep(0, n)
-  Gy       <- numeric(n)
-  t        <- fyTobit(yst, y, Gy, Glist, eps, igr, M, xb, lambda, tol, maxit)
+  y        <- NULL
+  Gy       <- NULL
+  yb       <- NULL
+  Gyb      <- NULL
+  t        <- NULL
+  Ztl      <- rep(0, n)
+  if(RE){
+    yb     <- rep(0, n)
+    Gyb    <- rep(0, n)
+    t      <- fybtbit(yb, Gyb, Glist, igr, M, xb, lambda, sigma, n, tol, maxit)
+    Ztl    <- lambda*Gyb + xb
+    yst    <- Ztl + eps
+    y      <- yst*(yst > 0)
+  } else {
+    y      <- rep(0, n)
+    Gy     <- rep(0, n)
+    t      <- fyTobit(yst, y, Gy, Ztl, Glist, eps, igr, M, xb, n, lambda, tol, maxit)
+  }
+  
+  # marginal effects
+  coln      <- c("lambda", colnames(X))
+  thetaWI   <- head(theta, K - 1)
+  if("(Intercept)" %in% coln) {
+    thetaWI <- thetaWI[-2]
+    coln    <- coln[-2]
+  }
+  meffects  <- thetaWI*mean(pnorm(Ztl/sigma))
+  names(meffects) <- coln
   
   
   list("yst"       = yst,
        "y"         = y,
+       "yb"        = yb,
        "Gy"        = Gy,
-       "iteration" = c(t))
+       "Gyb"       = Gyb,
+       "meffects"  = meffects,
+       "iteration" = t)
 }
