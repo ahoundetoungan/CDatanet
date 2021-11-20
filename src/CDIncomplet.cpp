@@ -723,7 +723,7 @@ List fcovCDI(const int& n,
     // log of f 
     while(next) {
       ++ Rmax;
-      a                += fgamma(delta, Rmax + 1, Rbar);
+      a                += fgamma(delta, Rmax, Rbar);
       NumericVector lfr = Rcpp::dnorm4(ZtLambda - a, 0, 1, true);
       lphi    = arma::join_rows(lphi, as<arma::vec>(lfr));
       next    = ((max(lfr) > -1000) || (Rmax <= Rbar));

@@ -29,6 +29,7 @@
 #'     \item{y}{the observed count data.}
 #'     \item{yb}{ybar (see details), the expectation of y.}
 #'     \item{Gyb}{the average of the expectation of y among friends.}
+#'     \item{marg.effects}{the marginal effects.}
 #'     \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 #' @examples 
 #' # Groups' size
@@ -131,12 +132,12 @@ simCDnet   <- function(formula,
   names(meffects) <- coln
   
   
-  list("yst"       = yst,
-       "y"         = y,
-       "yb"        = yb,
-       "Gyb"       = Gyb,
-       "meffects"  = meffects,
-       "iteration" = c(t))
+  list("yst"          = yst,
+       "y"            = y,
+       "yb"           = yb,
+       "Gyb"          = Gyb,
+       "marg.effects" = meffects,
+       "iteration"    = c(t))
 }
 
 # Marginal effet

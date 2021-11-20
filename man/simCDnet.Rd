@@ -46,6 +46,7 @@ A list consisting of:
 \item{y}{the observed count data.}
 \item{yb}{ybar (see details), the expectation of y.}
 \item{Gyb}{the average of the expectation of y among friends.}
+\item{marg.effects}{the marginal effects.}
 \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 }
 \description{

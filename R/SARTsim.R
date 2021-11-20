@@ -29,6 +29,7 @@
 #'     \item{yb}{expectation of y under rational expectation.}
 #'     \item{Gy}{the average of y among friends.}
 #'     \item{Gyb}{Average of expectation of y among frends under rational expectation.}
+#'     \item{marg.effects}{the marginal effects.}
 #'     \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 #' @examples 
 #' # Groups' size
@@ -147,11 +148,11 @@ simTobitnet   <- function(formula,
   names(meffects) <- coln
   
   
-  list("yst"       = yst,
-       "y"         = y,
-       "yb"        = yb,
-       "Gy"        = Gy,
-       "Gyb"       = Gyb,
-       "meffects"  = meffects,
-       "iteration" = t)
+  list("yst"          = yst,
+       "y"            = y,
+       "yb"           = yb,
+       "Gy"           = Gy,
+       "Gyb"          = Gyb,
+       "marg.effects" = meffects,
+       "iteration"    = t)
 }

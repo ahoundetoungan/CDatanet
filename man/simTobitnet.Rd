@@ -47,6 +47,7 @@ A list consisting of:
 \item{yb}{expectation of y under rational expectation.}
 \item{Gy}{the average of y among friends.}
 \item{Gyb}{Average of expectation of y among frends under rational expectation.}
+\item{marg.effects}{the marginal effects.}
 \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 }
 \description{
