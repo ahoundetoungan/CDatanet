@@ -41,8 +41,8 @@
 #' for (m in 1:M) {
 #'   n          <- nvec[m]
 #'   tmp        <- MASS::mvrnorm(n, c(0, 0), Smunu)
-#'   mum        <- tmp[,1]
-#'   num        <- tmp[,2]
+#'   mum        <- tmp[,1] - mean(tmp[,1])
+#'   num        <- tmp[,2] - mean(tmp[,2])
 #'   X1         <- rnorm(n, 0, 1)
 #'   X2         <- rbinom(n, 1, 0.2)
 #'   Z1         <- matrix(0, n, n)  

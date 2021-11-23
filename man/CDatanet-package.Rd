@@ -23,7 +23,7 @@ Lee, L. F., 2004, Asymptotic distributions of quasi-maximum likelihood estimator
 Xu, X., & Lee, L. F., 2015, Maximum likelihood estimation of a spatial autoregressive Tobit model, Journal of Econometrics, 188(1), 264-280, \doi{10.1016/j.jeconom.2015.05.004}
 }
 \seealso{
-\code{\link{simCDnet}}, \code{\link{CDnetNPL}}, \code{\link{SARML}}, \code{\link{SARTML}} and \code{\link{netformation}}.
+\code{\link{simCDnet}}, \code{\link{CDnetNPL}}, \code{\link{SARML}}, \code{\link{SARTML}} and \code{\link{homophily}}.
 }
 \author{
 \strong{Maintainer}: Elysée Aristide Houndetoungan \email{ariel92and@gmail.com}

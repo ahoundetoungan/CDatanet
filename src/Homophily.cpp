@@ -136,7 +136,6 @@ void updateast(arma::vec& ast,
 
 void updatebeta(arma::vec& beta,
                 arma::vec& dxbeta,
-                arma::vec& astmdxbeta,
                 const arma::mat& INDEXgr,
                 const int& nfix,
                 const int& Kx,
@@ -160,7 +159,6 @@ void updatebeta(arma::vec& beta,
       dxbeta.subvec(INDEXgr(m, 0), INDEXgr(m, 1)) += beta(m);
     }
   }
-  astmdxbeta       = ast - dxbeta;
 }
 
 
@@ -168,7 +166,12 @@ void updatebeta(arma::vec& beta,
 void updatemunu(arma::vec& mu,
                 arma::vec& nu,
                 arma::vec& mupnu,
-                const arma::vec& astmdxbeta,
+                arma::vec& beta,
+                arma::vec& dxbeta,
+                const arma::mat& dx,
+                const arma::vec& ast,
+                const int& Kx,
+                const arma::mat& INDEXgr,
                 const int& M,
                 const int& N,
                 const int& n,
@@ -184,6 +187,8 @@ void updatemunu(arma::vec& mu,
   arma::vec num, mum, numj, mumj, munub, munu; 
   arma::uvec indexj;
   arma::mat indexm, smunu(2, 2), vmunu(2, 2), invvmunu;
+  // ast minus dxbeta
+  arma::vec astmdxbeta = ast - dxbeta;
   
   // prior variance
   vmunu(0, 0) = smu2;
@@ -191,7 +196,6 @@ void updatemunu(arma::vec& mu,
   vmunu(0, 1) = rho*sqrt(smu2*snu2);
   vmunu(1, 0) = vmunu(0, 1);
   invvmunu    = arma::inv(vmunu);
-  
   for (int m(0); m < M; ++ m) {
     igr1   = indexgr(m, 0); 
     igr2   = indexgr(m, 1);
@@ -231,26 +235,32 @@ void updatemunu(arma::vec& mu,
     }
   }
   
-  // if(nfix == 1){
-  //   double mub       = sum(mu)/n;
-  //   double nub       = sum(nu)/n;
-  //   mu              -= mub;
-  //   nu              -= nub;
-  //   beta.head(nfix) += (mub + nub);
-  // } else{
-  //   for(int m(0); m < M; ++ m) {
-  //     igr1             = indexgr(m, 0); 
-  //     igr2             = indexgr(m, 1);
-  //     double mub       = sum(mu.subvec(igr1, igr2))/nvec(m);
-  //     double nub       = sum(nu.subvec(igr1, igr2))/nvec(m);
-  //     mu.subvec(igr1, igr2) -= mub;
-  //     nu.subvec(igr1, igr2) -= nub;
-  //     beta(m)               += (mub + nub);
-  //   }
-  // }
-  // dxbeta           = dx*beta;
-  // astmdxbeta       = ast - dxbeta;
-  mupnu            = fmusum(mu, nu, index, indexgr, M, N);
+  // normalize mu and nu to mean zero
+  if(nfix == 1){
+    double mub       = sum(mu)/n;
+    double nub       = sum(nu)/n;
+    mu              -= mub;
+    nu              -= nub;
+    beta(0)         += (mub + nub);
+    dxbeta           = dx*beta.tail(Kx);
+  } else{
+    if(nfix > 1){
+      for(int m(0); m < M; ++ m) {
+        igr1         = indexgr(m, 0);
+        igr2         = indexgr(m, 1);
+        double mub   = sum(mu.subvec(igr1, igr2))/nvec(m);
+        double nub   = sum(nu.subvec(igr1, igr2))/nvec(m);
+        mu.subvec(igr1, igr2) -= mub;
+        nu.subvec(igr1, igr2) -= nub;
+        beta(m)     += (mub + nub);
+      }
+      dxbeta         = dx*beta.tail(Kx);
+      for(int m(0); m < nfix; ++m){
+        dxbeta.subvec(INDEXgr(m, 0), INDEXgr(m, 1)) += beta(m);
+      }
+    }
+  }
+  mupnu                       = fmusum(mu, nu, index, indexgr, M, N);
 }
 
 
@@ -306,7 +316,7 @@ List updategparms1(const arma::vec& a,
       dxbeta.subvec(INDEXgr(m, 0), INDEXgr(m, 1)) += beta(m);
     }
   }
-  arma::vec ast(N, arma::fill::zeros), astmdxbeta;
+  arma::vec ast(N, arma::fill::zeros);
   
   // output
   arma::mat Smu(n, iteration), Snu(n, iteration), Sbeta(K, iteration);
@@ -323,13 +333,14 @@ List updategparms1(const arma::vec& a,
     updateast(ast, dxbeta, mupnu, a, N);
     
     //update beta
-    updatebeta(beta, dxbeta, astmdxbeta, INDEXgr, nfix, Kx, dx, invdxdx, mupnu, ast);
+    updatebeta(beta, dxbeta, INDEXgr, nfix, Kx, dx, invdxdx, mupnu, ast);
     
     //update mu and nu
-    updatemunu(mu, nu, mupnu, astmdxbeta, M, N, n, nfix, nvec, index, indexgr, smu2, snu2, rho);
+    updatemunu(mu, nu, mupnu, beta, dxbeta, dx, ast, Kx, INDEXgr, M, N, n, nfix, nvec, index, indexgr, smu2, snu2, rho);
     
     //update sigmas
     updateusigma(smu2, snu2, rho, n, mu, nu);
+    
     //save
     Smu.col(t)    = mu;
     Snu.col(t)    = nu;
@@ -396,13 +407,14 @@ List updategparms2(const arma::vec& a,
     updateast(ast, dxbeta, mupnu, a, N);
     
     //update beta
-    updatebeta(beta, dxbeta, astmdxbeta, INDEXgr, nfix, Kx, dx, invdxdx, mupnu, ast);
+    updatebeta(beta, dxbeta, INDEXgr, nfix, Kx, dx, invdxdx, mupnu, ast);
     
     //update mu and nu
-    updatemunu(mu, nu, mupnu, astmdxbeta, M, N, n, nfix, nvec, index, indexgr, smu2, snu2, rho);
+    updatemunu(mu, nu, mupnu, beta, dxbeta, dx, ast, Kx, INDEXgr, M, N, n, nfix, nvec, index, indexgr, smu2, snu2, rho);
     
     //update sigmas
     updateusigma(smu2, snu2, rho, n, mu, nu);
+    
     //save
     Smu.col(t)    = mu;
     Snu.col(t)    = nu;
