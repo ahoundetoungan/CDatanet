@@ -267,19 +267,36 @@ void updatemunu(arma::vec& mu,
 void updateusigma(double& smu2,
                   double& snu2,
                   double& rho,
+                  arma::mat& Sigma,
                   const int& n,
                   const arma::vec& mu,
                   const arma::vec& nu) {
   
   arma::mat d   = arma::join_rows(mu, nu);
   
-  arma::mat tmp = riwish(n, d.t()*d);
-  smu2          = tmp(0, 0);
-  snu2          = tmp(1, 1);
-  rho           = tmp(0, 1)/sqrt(smu2*snu2);
+  Sigma = riwish(n, d.t()*d);
+  smu2  = Sigma(0, 0);
+  snu2  = Sigma(1, 1);
+  rho   = Sigma(0, 1)/sqrt(smu2*snu2);
 }
 
-
+void updatellh(double& llh,
+               const arma::vec& mu,
+               const arma::vec& nu,
+               const arma::vec& a,
+               const arma::vec& dxbeta,
+               const arma::vec& mupnu,
+               const arma::mat& Sigma,
+               const int& n){
+  arma::vec tmp  = dxbeta + mupnu;
+  arma::vec tmpp = tmp.elem(arma::find(a == 0));
+  NumericVector tmp0 = wrap(tmpp);
+  tmpp = tmp.elem(arma::find(a == 1));
+  NumericVector tmp1 = wrap(tmpp);
+  arma::mat tmp2 = arma::join_rows(mu, nu);
+  llh = sum(Rcpp::pnorm5(tmp0, 0, 1, false, true)) + sum(Rcpp::pnorm5(tmp1, 0, 1, true, true)) - 
+    0.5*arma::accu((tmp2*arma::inv(Sigma))%tmp2) -  0.5*n*log(arma::det(Sigma));
+}
 
 //[[Rcpp::export]]
 List updategparms1(const arma::vec& a,
@@ -317,13 +334,15 @@ List updategparms1(const arma::vec& a,
     }
   }
   arma::vec ast(N, arma::fill::zeros);
-  
+  arma::mat Sigma;
+  double llh;
   // output
   arma::mat Smu(n, iteration), Snu(n, iteration), Sbeta(K, iteration);
-  NumericVector Ssmu2(iteration), Ssnu2(iteration), Srho(iteration);
+  NumericVector Ssmu2(iteration), Ssnu2(iteration), Srho(iteration), Sllh(iteration);
   Ssmu2.attr("dim") = R_NilValue;
   Ssnu2.attr("dim") = R_NilValue;
   Srho.attr("dim")  = R_NilValue;
+  Sllh.attr("dim")  = R_NilValue;
   
   Progress p(iteration, true);
   for(int t(0); t < iteration; ++ t) {
@@ -339,7 +358,10 @@ List updategparms1(const arma::vec& a,
     updatemunu(mu, nu, mupnu, beta, dxbeta, dx, ast, Kx, INDEXgr, M, N, n, nfix, nvec, index, indexgr, smu2, snu2, rho);
     
     //update sigmas
-    updateusigma(smu2, snu2, rho, n, mu, nu);
+    updateusigma(smu2, snu2, rho, Sigma, n, mu, nu);
+    
+    //likelihood
+    updatellh(llh, mu, nu, a, dxbeta, mupnu, Sigma, n);
     
     //save
     Smu.col(t)    = mu;
@@ -348,13 +370,15 @@ List updategparms1(const arma::vec& a,
     Ssmu2(t)      = smu2;
     Ssnu2(t)      = snu2;
     Srho(t)       = rho;
+    Sllh(t)       = llh;
   }
   return List::create(Named("beta")      = Sbeta.t(),
                       Named("mu")        = Smu.t(),
                       Named("nu")        = Snu.t(),
                       Named("sigma2_mu") = Ssmu2,
                       Named("sigma2_nu") = Ssnu2,
-                      Named("rho")       = Srho);
+                      Named("rho")       = Srho,
+                      Named("loglike")   = Sllh);
 }
 
 
@@ -393,15 +417,17 @@ List updategparms2(const arma::vec& a,
       dxbeta.subvec(INDEXgr(m, 0), INDEXgr(m, 1)) += beta(m);
     }
   }
-  arma::vec ast(N, arma::fill::zeros), astmdxbeta;
-  
+  arma::vec ast(N, arma::fill::zeros);
+  arma::mat Sigma;
+  double llh;
   // output
   arma::mat Smu(n, iteration), Snu(n, iteration), Sbeta(K, iteration);
-  NumericVector Ssmu2(iteration), Ssnu2(iteration), Srho(iteration);
+  NumericVector Ssmu2(iteration), Ssnu2(iteration), Srho(iteration), Sllh(iteration);
   Ssmu2.attr("dim") = R_NilValue;
   Ssnu2.attr("dim") = R_NilValue;
   Srho.attr("dim")  = R_NilValue;
-
+  Sllh.attr("dim")  = R_NilValue;
+  
   for(int t(0); t < iteration; ++ t) {
     //update ast
     updateast(ast, dxbeta, mupnu, a, N);
@@ -413,7 +439,10 @@ List updategparms2(const arma::vec& a,
     updatemunu(mu, nu, mupnu, beta, dxbeta, dx, ast, Kx, INDEXgr, M, N, n, nfix, nvec, index, indexgr, smu2, snu2, rho);
     
     //update sigmas
-    updateusigma(smu2, snu2, rho, n, mu, nu);
+    updateusigma(smu2, snu2, rho, Sigma, n, mu, nu);
+    
+    //likelihood
+    updatellh(llh, mu, nu, a, dxbeta, mupnu, Sigma, n);
     
     //save
     Smu.col(t)    = mu;
@@ -422,11 +451,13 @@ List updategparms2(const arma::vec& a,
     Ssmu2(t)      = smu2;
     Ssnu2(t)      = snu2;
     Srho(t)       = rho;
+    Sllh(t)       = llh;
   }
   return List::create(Named("beta")      = Sbeta.t(),
                       Named("mu")        = Smu.t(),
                       Named("nu")        = Snu.t(),
                       Named("sigma2_mu") = Ssmu2,
                       Named("sigma2_nu") = Ssnu2,
-                      Named("rho")       = Srho);
+                      Named("rho")       = Srho,
+                      Named("loglike")   = Sllh);
 }
