@@ -7,7 +7,7 @@
 \alias{print.summary.SARTMLs}
 \title{Summarize SART Model}
 \usage{
-\method{summary}{SARTML}(object, ...)
+\method{summary}{SARTML}(object, Glist, data, ...)
 
 \method{print}{summary.SARTML}(x, ...)
 

@@ -130,7 +130,7 @@ SARTML <- function(formula,
   formula    <- f.t.data$formula
   y          <- f.t.data$y
   X          <- f.t.data$X
-  coln       <- c("lambda", colnames(X), "sigma")
+  coln       <- c("lambda", colnames(X))
   
   K          <- ncol(X)
   
@@ -160,6 +160,7 @@ SARTML <- function(formula,
   resTO      <- list()
   covt       <- NULL
   covm       <- NULL
+  var.comp   <- NULL
   t          <- NULL
   ybt        <- NULL
   Gybt       <- NULL
@@ -237,7 +238,6 @@ SARTML <- function(formula,
         cat(paste0("Likelihood    : ", round(llh,3)), "\n")
         cat("Estimate:", "\n")
         print(theta)
-        
       }
     } else {
       while(cont) {
@@ -267,22 +267,8 @@ SARTML <- function(formula,
       warning("The maximum number of iterations of the NPL algorithm has been reached.")
     }
     
-    if (cov) {
-      covt           <- solve(hessian(foptimRE_TBT, thetat, method="Richardson",
-                                      yb = ybt, Gyb = Gybt, yidpos = yidpos, X = X, G = Glist, 
-                                      igroup = igr, ngroup = M, npos = sum(npos), 
-                                      idpos = idpos, idzero = idzero, K = K, n = n, 
-                                      tol = npl.tol, maxit  = npl.maxit))
-      
-      Rm               <- diag(K + 2)
-      Rm[1,1]          <- exp(thetat[1])/(1 + exp(thetat[1]))^2
-      Rm[K + 2, K + 2] <- exp(thetat[K + 2])
-      covt             <- Rm %*% covt %*% Rm
-      colnames(covt)   <- coln
-      rownames(covt)   <- coln
-    }
-    
-    Ztlambda <- Gybt*theta[1] + X%*%theta[2:(K +1)]
+    covt       <- fcovSTI(n = n, Gyb = Gybt, theta = thetat, X = X, K = K, G = Glist,
+                          igroup = igr, ngroup = M, ccov = cov)
   } else{
     G2list     <- lapply(1:M, function(w) Glist[[w]][idposlis[[w]], idposlis[[w]]])
     Gy         <- unlist(lapply(1:M, function(w) Glist[[w]] %*% ylist[[w]]))
@@ -297,7 +283,7 @@ SARTML <- function(formula,
     # arguments
     ctr        <- c(list("X" = X, "G2" = G2list, "I2" = I2list, "K" = K, "y" = y, "Gy" = Gy,
                          "idpos" = idpos, "idzero" = idzero, "npos" = sum(npos), "ngroup" = M,
-                         "alphatilde" = alphatde, "logdetA2" = logdetA2, "N" = n, 
+                         "alphatilde" = alphatde, "logdetA2" = logdetA2, "n" = n, 
                          "I" = Ilist,  "W" = Wlist, "igroup" = igr), opt.ctr)
     if (optimizer == "optim") {
       ctr    <- c(ctr, list(par = thetat))
@@ -321,71 +307,61 @@ SARTML <- function(formula,
     
     resTO    <- do.call(get(optimizer), ctr)
     theta    <- resTO[[par1]]
+    
+    covt     <- fcovSTC(theta = theta, X = X, G2 = G2list, I = Ilist, W = Wlist, K =  K, n = n, 
+                        y = y, Gy = Gy, indzero = indzero, indpos = indpos, igroup = igr, 
+                        ngroup = M, ccov = cov)
+    
     theta    <- c(1/(1 + exp(-theta[1])), theta[2:(K + 1)], exp(theta[K + 2]))
     llh      <- -resTO[[like]]
     rm(list = c("alphatde", "logdetA2"))
-    if (cov) {
-      covtmp           <- fqTobit(theta, X, G2list, Ilist, Wlist, K, n, y, Gy,  indzero,
-                                  indpos, igr, M)
-      covt           <- solve(stats::cov(covtmp))/n
-      colnames(covt) <- coln
-      rownames(covt) <- coln
-    }
-    Ztlambda <- Gy*theta[1] + X%*%theta[2:(K +1)]
   }
   
-  names(theta)         <- coln
+  names(theta)      <- c(coln, "sigma")
   
   # Marginal effects
-  thetaME              <- head(theta, K + 1)
-  colnME               <- head(coln, K + 1)
+  meffects          <- c(covt$meffects)
+  var.comp          <- covt$var.comp
+  covm              <- covt$covm
+  covt              <- covt$covt
+  
+  colnME            <- coln
   if("(Intercept)" %in% coln) {
-    thetaME            <- thetaME[-2]
-    colnME             <- colnME[-2]
+    colnME          <- coln[-2]
+    meffects        <- meffects[-2]
+    covm            <- covm[-2, -2]
+  } 
+  names(meffects)   <- colnME
+  
+  if(!is.null(covt)) {
+    colnames(covt)  <- c(coln, "logsigma")
+    rownames(covt)  <- c(coln, "logsigma")
+    colnames(covm)  <- colnME
+    rownames(covm)  <- colnME
+    if(!is.null(var.comp$Sigma)){
+      rownames(var.comp$Sigma) <- c(coln, "logsigma")
+      rownames(var.comp$Omega) <- c(coln, "logsigma")
+      colnames(var.comp$Sigma) <- c(coln, "logsigma")
+      colnames(var.comp$Omega) <- c(coln, "logsigma")
+    }
   }
   
-  ZLst                 <- Ztlambda/theta[K + 2]
-  meanPhiZLst          <- mean(pnorm(ZLst))
-  meffects             <- thetaME*meanPhiZLst
-  names(meffects)      <- colnME
+  INFO              <- list("M"          = M,
+                            "n"          = n,
+                            "formula"    = formula,
+                            "nlinks"     = unlist(lapply(Glist, function(u) sum(u > 0))),
+                            "censured"   = sum(indzero),
+                            "uncensured" = n - sum(indzero),
+                            "log.like"   = llh, 
+                            "npl.iter"   = t)
   
-  if(cov) {
-    phiZLst            <- c(dnorm(ZLst))
-    meanphiZLstz       <- NULL 
-    if(RE){
-      meanphiZLstz     <- colSums(phiZLst*as.matrix(cbind(Gybt, X)))/n
-    } else {
-      meanphiZLstz     <- colSums(phiZLst*as.matrix(cbind(f.t.data$Gy, X)))/n 
-    }
-    tmp1               <- diag(K + 1)*meanPhiZLst + theta[-(K + 2)] %*% matrix(meanphiZLstz, nrow = 1)/theta[K + 2]
-    tmp2               <- - mean(ZLst*phiZLst)*theta[-(K + 2)]/theta[K + 2]
-    tmp3               <- cbind(tmp1, tmp2)
-    
-    covm               <- tmp3 %*% covt %*% t(tmp3)
-    
-    if("(Intercept)" %in% coln) {
-      covm             <- covm[-2, -2]
-    }
-    colnames(covm)     <- colnME
-    rownames(covm)     <- colnME
-  }
-  
-  INFO                 <- list("M"          = M,
-                               "n"          = n,
-                               "formula"    = formula,
-                               "nlinks"     = unlist(lapply(Glist, function(u) sum(u > 0))),
-                               "censured"   = sum(indzero),
-                               "uncensured" = n - sum(indzero),
-                               "log.like"   = llh, 
-                               "npl.iter"   = t)
-  
-  out                  <- list("info"       = INFO,
-                               "estimate"   = list(theta = theta, marg.effects = meffects),
-                               "yb"         = ybt, 
-                               "Gyb"        = Gybt,
-                               "cov"        = list(parms = covt, marg.effects = covm),
-                               "details"    = resTO)
-  class(out)            <- "SARTML"
+  out               <- list("info"       = INFO,
+                            "estimate"   = list(theta = theta, marg.effects = meffects),
+                            "yb"         = ybt, 
+                            "Gyb"        = Gybt,
+                            "cov"        = list(parms = covt, marg.effects = covm, var.comp = var.comp),
+                            "details"    = resTO)
+  class(out)        <- "SARTML"
   out
 }
 
@@ -402,11 +378,81 @@ SARTML <- function(formula,
 #' @param ... further arguments passed to or from other methods.
 #' @export 
 "summary.SARTML" <- function(object,
+                             Glist,
+                             data,
                              ...) {
   stopifnot(class(object) == "SARTML")
   out           <- c(object, list("..." = ...)) 
   if(is.null(object$cov$parms)){
-    stop("Covariance was not computed")
+    env.formula <- environment(object$info$formula)
+    thetat      <- object$estimate$theta
+    thetat      <- c(log(thetat[1]/(1 - thetat[1])), thetat[-c(1, length(thetat))], log(thetat[length(thetat)]))
+    Gybt        <- object$Gyb
+    contextual  <- FALSE
+    formula     <- object$info$formula
+    if (!is.list(Glist)) {
+      Glist     <- list(Glist)
+    }
+    M        <- length(Glist)
+    nvec     <- unlist(lapply(Glist, nrow))
+    n        <- sum(nvec)
+    igr      <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
+    
+    f.t.data <- formula.to.data(formula, contextual, Glist, M, igr, data, theta0 = thetat)
+    formula  <- f.t.data$formula
+    y        <- f.t.data$y
+    X        <- f.t.data$X
+    K        <- ncol(X)
+    coln     <- c("lambda", colnames(X))
+    tmp      <- NULL
+    if(is.null(Gybt)){
+      indpos     <- (y > 1e-323)
+      indzero    <- !indpos
+      idpos      <- which(indpos) - 1
+      idzero     <- which(indzero) - 1
+      ylist      <- lapply(1:M, function(x) y[(igr[x,1]:igr[x,2]) + 1])
+      idposlis   <- lapply(ylist, function(w) which(w > 0))
+      npos       <- unlist(lapply(idposlis, length))  
+      G2list     <- lapply(1:M, function(w) Glist[[w]][idposlis[[w]], idposlis[[w]]])
+      Gy         <- unlist(lapply(1:M, function(w) Glist[[w]] %*% ylist[[w]]))
+      I2list     <- lapply(npos, diag)
+      Ilist      <- lapply(nvec, diag)  
+      Wlist      <- lapply(1:M, function(x) (indpos[(igr[x,1]:igr[x,2]) + 1] %*% t(indpos[(igr[x,1]:igr[x,2]) + 1]))*Glist[[x]])
+      tmp        <- fcovSTC(theta = thetat, X = X, G2 = G2list, I = Ilist, W = Wlist, K =  K, n = n, 
+                            y = y, Gy = Gy, indzero = indzero, indpos = indpos, igroup = igr, 
+                            ngroup = M, ccov = TRUE)
+    } else {
+      tmp    <- fcovSTI(n = n, Gyb = Gybt, theta = thetat, X = X, K = K, G = Glist,
+                        igroup = igr, ngroup = M, ccov = TRUE)
+    }
+    meffects          <- c(tmp$meffects)
+    var.comp          <- tmp$var.comp
+    covt              <- tmp$covt
+    covm              <- tmp$covm
+    Rmax              <- tmp$Rmax
+    
+    colnME            <- coln
+    if("(Intercept)" %in% coln) {
+      colnME          <- coln[-2]
+      meffects        <- meffects[-2]
+      covm            <- covm[-2, -2]
+    } 
+    names(meffects)   <- colnME
+    
+    if(!is.null(covt)) {
+      colnames(covt)  <- c(coln, "logsigma")
+      rownames(covt)  <- c(coln, "logsigma")
+      colnames(covm)  <- colnME
+      rownames(covm)  <- colnME
+      if(!is.null(var.comp$Sigma)){
+        rownames(var.comp$Sigma) <- c(coln, "logsigma")
+        rownames(var.comp$Omega) <- c(coln, "logsigma")
+        colnames(var.comp$Sigma) <- c(coln, "logsigma")
+        colnames(var.comp$Omega) <- c(coln, "logsigma")
+      }
+    }
+    
+    out$cov           <- list(parms = covt, marg.effects = covm, var.comp = var.comp)
   }
   class(out)    <- "summary.SARTML"
   out

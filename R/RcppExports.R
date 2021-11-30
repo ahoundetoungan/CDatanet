@@ -109,20 +109,20 @@ fyTobit <- function(yst, y, Gy, Ztlamda, G, eps, igroup, ngroup, psi, n, lambda,
     .Call(`_CDatanet_fyTobit`, yst, y, Gy, Ztlamda, G, eps, igroup, ngroup, psi, n, lambda, tol, maxit)
 }
 
-foptimTobit <- function(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, npos, ngroup, I, W, N, igroup) {
-    .Call(`_CDatanet_foptimTobit`, theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, npos, ngroup, I, W, N, igroup)
+foptimTobit <- function(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, npos, ngroup, I, W, n, igroup) {
+    .Call(`_CDatanet_foptimTobit`, theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, npos, ngroup, I, W, n, igroup)
 }
 
-foptimTobit0 <- function(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, npos, ngroup, I, W, N, igroup) {
-    .Call(`_CDatanet_foptimTobit0`, theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, npos, ngroup, I, W, N, igroup)
+foptimTobit0 <- function(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, npos, ngroup, I, W, n, igroup) {
+    .Call(`_CDatanet_foptimTobit0`, theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, npos, ngroup, I, W, n, igroup)
 }
 
-fgradvecTobit <- function(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, ngroup, I, W, N, indzero, indpos, igroup) {
-    .Call(`_CDatanet_fgradvecTobit`, theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, ngroup, I, W, N, indzero, indpos, igroup)
+fgradvecTobit <- function(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, ngroup, I, W, n, indzero, indpos, igroup) {
+    .Call(`_CDatanet_fgradvecTobit`, theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, ngroup, I, W, n, indzero, indpos, igroup)
 }
 
-fqTobit <- function(theta, X, G2, I, W, K, N, y, Gy, indzero, indpos, igroup, ngroup) {
-    .Call(`_CDatanet_fqTobit`, theta, X, G2, I, W, K, N, y, Gy, indzero, indpos, igroup, ngroup)
+fcovSTC <- function(theta, X, G2, I, W, K, n, y, Gy, indzero, indpos, igroup, ngroup, ccov) {
+    .Call(`_CDatanet_fcovSTC`, theta, X, G2, I, W, K, n, y, Gy, indzero, indpos, igroup, ngroup, ccov)
 }
 
 fybtbit <- function(yb, Gyb, G, igroup, ngroup, psi, lambda, sigma, n, tol, maxit) {
@@ -139,5 +139,9 @@ foptimTBT_NPL <- function(yidpos, Gyb, X, theta, npos, idpos, idzero, K) {
 
 fLTBT_NPL <- function(yb, Gyb, G, X, theta, igroup, ngroup, n, K) {
     invisible(.Call(`_CDatanet_fLTBT_NPL`, yb, Gyb, G, X, theta, igroup, ngroup, n, K))
+}
+
+fcovSTI <- function(n, Gyb, theta, X, K, G, igroup, ngroup, ccov) {
+    .Call(`_CDatanet_fcovSTI`, n, Gyb, theta, X, K, G, igroup, ngroup, ccov)
 }
 

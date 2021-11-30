@@ -158,3 +158,92 @@ void fLTBT_NPL(arma::vec& yb,
     Gyb.subvec(n1, n2) = Gm*yb.subvec(n1, n2);
   }
 }
+
+
+// variance
+//[[Rcpp::export]]
+List fcovSTI(const int& n,
+             const arma::vec& Gyb,
+             const arma::vec& theta,
+             const arma::mat& X,
+             const int& K,
+             List& G,
+             const arma::mat& igroup,
+             const int& ngroup,
+             const bool& ccov) {
+  List out;
+  double lambda          = 1.0/(exp(-theta(0)) + 1);
+  double sigma           = exp(theta(K + 1));
+  arma::vec ZtL          = lambda*Gyb + X*theta.subvec(1, K); 
+  NumericVector ZtLst    = wrap(ZtL/sigma);
+  NumericVector PhiZtLst = Rcpp::pnorm(ZtLst, 0, 1, true, false);
+  double avPhiZtLst      = sum(PhiZtLst)/n;
+  arma::vec lbeta        = arma::join_cols(arma::ones(1)*lambda, theta.subvec(1, K));
+  arma::vec meffects     = avPhiZtLst*lbeta;
+  
+  if(ccov){
+    arma::mat Z                = arma::join_rows(Gyb, X);
+    NumericVector phiZtLst     = Rcpp::dnorm4(ZtLst, 0, 1, false); 
+    NumericVector Zst1phiZtLst = ZtLst*phiZtLst;
+    NumericVector Zst2phiZtLst = ZtLst*Zst1phiZtLst;
+    NumericVector Zst3phiZtLst = ZtLst*Zst2phiZtLst;
+    NumericVector RphiPhi      = phiZtLst/(1 - PhiZtLst);
+    
+    // compute GinvSW
+    arma::mat GinvSW(n, K + 2);
+    {// Compute b and d
+      arma::vec d = as<arma::vec>(PhiZtLst); 
+      arma::vec b = as<arma::vec>(phiZtLst); 
+      
+      // G*inv(S)*W
+      arma::mat W = arma::join_rows(Z.each_col() % d, b/sigma);
+      for (int m(0); m < ngroup; ++ m) {
+        int n1              = igroup(m,0);
+        int n2              = igroup(m,1);
+        int nm              = n2 - n1 + 1;
+        arma::mat Gm        = G[m];
+        arma::mat Sm        = Gm.each_col() % d.subvec(n1, n2);
+        Sm                  = arma::eye<arma::mat>(nm, nm) - lambda*Sm;
+        GinvSW.rows(n1, n2) = Gm * arma::solve(Sm, W.rows(n1, n2));
+      }
+    }
+  
+    // Compute Sigma0 and Omega0
+    arma::mat Sigma(K + 2, K + 2), Omega(K + 2, K + 2);
+    {
+    NumericVector tmp1 = Zst1phiZtLst - phiZtLst*RphiPhi - PhiZtLst; 
+    NumericVector tmp2 = -phiZtLst - Zst2phiZtLst + RphiPhi*Zst1phiZtLst; 
+    arma::mat Ztmp1    = arma::trans(Z.each_col()%as<arma::vec>(tmp1))/sigma;
+    arma::vec Ztmp2    = Z.t()*as<arma::vec>(tmp2)/sigma;
+
+    Sigma.submat(0, 0, K, K)         = Ztmp1*Z;
+    Omega.rows(0, K)                 = Ztmp1*GinvSW;
+    
+    Sigma.submat(0, K + 1, K, K + 1) = Ztmp2;
+    Sigma.submat(K + 1, 0, K + 1, K) = Ztmp2.t();
+    Omega.row(K + 1)                 = arma::trans(as<arma::vec>(tmp2))*GinvSW;
+    
+    Sigma(K + 1, K + 1)              = sum(Zst1phiZtLst + Zst3phiZtLst - Zst2phiZtLst*RphiPhi - 2*PhiZtLst);
+    }
+    
+    Omega          = Omega*lambda/sigma;
+    // covt
+    arma::mat covt = arma::inv(Sigma + Omega);
+    covt           = -covt*Sigma*covt.t();
+    // covm
+    arma::rowvec ZavphiZtLst = arma::mean(Z.each_col()%as<arma::vec>(phiZtLst), 0);
+    arma::mat tmp1 = arma::eye<arma::mat>(K + 1, K + 1)*avPhiZtLst + lbeta*ZavphiZtLst/sigma;
+    arma::vec tmp2 = -lbeta*mean(ZtLst*phiZtLst);
+    arma::mat tmp3 = arma::join_rows(tmp1, tmp2);
+    arma::mat covm = tmp3*covt*tmp3.t();
+
+    out            = List::create(Named("meffects")    = meffects,
+                                  Named("covtheta")    = covt,
+                                  Named("covmeffects") = covm,
+                                  Named("var.comp")    = List::create(Named("Sigma") = Sigma/n, Named("Omega") = Omega/n));
+  } else{
+    out            = List::create(Named("meffects")    = meffects);
+  }
+  
+  return out;
+}

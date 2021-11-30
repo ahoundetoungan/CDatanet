@@ -7,7 +7,7 @@
 \alias{print.summary.CDnetNPLs}
 \title{Summarize Count Data Model with Social Interactions}
 \usage{
-\method{summary}{CDnetNPL}(object, ...)
+\method{summary}{CDnetNPL}(object, Glist, data, S = 1000L, ...)
 
 \method{print}{summary.CDnetNPL}(x, ...)
 

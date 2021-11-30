@@ -232,6 +232,7 @@ CDnetNPL    <- function(formula,
   par0     <- NULL
   par1     <- NULL
   like     <- NULL
+  var.comp <- NULL
   steps    <- list()
   
   # arguments
@@ -335,6 +336,7 @@ CDnetNPL    <- function(formula,
   # covariance and ME
   tmp               <- fcovCDI(n, Gybt, thetat, X, Rbar, K, npl.S, Glist, igr, M, cov)
   meffects          <- c(tmp$meffects)
+  var.comp          <- tmp$var.comp
   covt              <- tmp$covt
   covm              <- tmp$covm
   Rmax              <- tmp$Rmax
@@ -352,6 +354,10 @@ CDnetNPL    <- function(formula,
     rownames(covt)  <- c(coln, paste0("logdelta", 2:(Rbar)))
     colnames(covm)  <- colnME
     rownames(covm)  <- colnME
+    rownames(var.comp$Sigma) <- c(coln, paste0("logdelta", 2:(Rbar)))
+    rownames(var.comp$Omega) <- c(coln, paste0("logdelta", 2:(Rbar)))
+    colnames(var.comp$Sigma) <- c(coln, paste0("logdelta", 2:(Rbar)))
+    colnames(var.comp$Omega) <- c(coln, paste0("logdelta", 2:(Rbar)))
   }
   
   
@@ -368,7 +374,7 @@ CDnetNPL    <- function(formula,
                                "estimate"   = list(theta = head(theta, K + 1), delta = tail(theta, Rbar - 1), marg.effects = meffects),
                                "yb"         = ybt, 
                                "Gyb"        = Gybt,
-                               "cov"        = list(parms = covt, marg.effects = covm),
+                               "cov"        = list(parms = covt, marg.effects = covm, var.comp = var.comp),
                                "details"    = steps)
   class(out)           <- "CDnetNPL"
   out
@@ -386,11 +392,65 @@ CDnetNPL    <- function(formula,
 #' @return A list of the same objects in `object`.
 #' @export 
 "summary.CDnetNPL" <- function(object,
+                               Glist,
+                               data,
+                               S = 1e3L,
                                ...) {
   stopifnot(class(object) == "CDnetNPL")
   out        <- c(object, list("..." = ...))
   if(is.null(object$cov$parms)){
-    stop("Covariance was not computed")
+    env.formula <- environment(object$info$formula)
+    thetat      <- c(object$estimate$theta, log(object$estimate$delta))
+    thetat      <- c(log(thetat[1]/(1 - thetat[1])), thetat[-1])
+    Gybt        <- object$Gyb
+    Rbar        <- object$info$Rbar
+    npl.S       <- S
+    if (is.null(npl.S)) {
+      npl.S     <- 1e3L
+    }
+    contextual  <- FALSE
+    formula     <- object$info$formula
+    if (!is.list(Glist)) {
+      Glist     <- list(Glist)
+    }
+    M        <- length(Glist)
+    nvec     <- unlist(lapply(Glist, nrow))
+    n        <- sum(nvec)
+    igr      <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
+    
+    f.t.data <- formula.to.data(formula, contextual, Glist, M, igr, data, theta0 = thetat)
+    formula  <- f.t.data$formula
+    y        <- f.t.data$y
+    X        <- f.t.data$X
+    K        <- ncol(X)
+    coln     <- c("lambda", colnames(X))
+    tmp      <- fcovCDI(n, Gybt, thetat, X, Rbar, K, npl.S, Glist, igr, M, TRUE)
+    var.comp          <- tmp$var.comp
+    meffects          <- c(tmp$meffects)
+    covt              <- tmp$covt
+    covm              <- tmp$covm
+    Rmax              <- tmp$Rmax
+    
+    colnME            <- coln
+    if("(Intercept)" %in% coln) {
+      colnME          <- coln[-2]
+      meffects        <- meffects[-2]
+      covm            <- covm[-2, -2]
+    } 
+    names(meffects)   <- colnME
+    
+    if(!is.null(covt)) {
+      colnames(covt)  <- c(coln, paste0("logdelta", 2:(Rbar)))
+      rownames(covt)  <- c(coln, paste0("logdelta", 2:(Rbar)))
+      colnames(covm)  <- colnME
+      rownames(covm)  <- colnME
+      rownames(var.comp$Sigma) <- c(coln, paste0("logdelta", 2:(Rbar)))
+      rownames(var.comp$Omega) <- c(coln, paste0("logdelta", 2:(Rbar)))
+      colnames(var.comp$Sigma) <- c(coln, paste0("logdelta", 2:(Rbar)))
+      colnames(var.comp$Omega) <- c(coln, paste0("logdelta", 2:(Rbar)))
+    }
+    
+    out$cov           <- list(parms = covt, marg.effects = covm, var.comp = var.comp)
   }
   class(out) <- "summary.CDnetNPL"
   out

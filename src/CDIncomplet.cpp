@@ -536,7 +536,7 @@ arma::vec flogintphi(const int& n,
   return out + log(b - a);
 }
 
-// variance component
+// variance
 //[[Rcpp::export]]
 List fcovCDI(const int& n,
              const arma::vec& Gyb,
@@ -712,7 +712,8 @@ List fcovCDI(const int& n,
     out            = List::create(Named("Rmax")        = Rmax, 
                                   Named("meffects")    = meffects,
                                   Named("covtheta")    = covt,
-                                  Named("covmeffects") = covm);
+                                  Named("covmeffects") = covm,
+                                  Named("var.comp")    = List::create(Named("Sigma") = Sigma/n, Named("Omega") = Omega/n));
   } else{
     arma::mat lphi(n, 1, arma::fill::zeros);
     
