@@ -1,4 +1,4 @@
-############### THIS CODE REPLICATES THE MONTE CARLO RESULTS FOR EXOGENEITY ############### 
+############### THIS CODE REPLICATES THE MONTE CARLO RESULTS WITH ENDOGENEITY ############### 
 rm(list = ls())
 library(PartialNetwork)
 library(CDatanet)
