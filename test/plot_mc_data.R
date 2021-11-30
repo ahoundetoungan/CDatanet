@@ -1,92 +1,87 @@
-# This code plots an example of simulated data following the cout data model
+# This code plots an example of simulated data following the count data model
 # with social interactions
-
 rm(list = ls())
-set.seed(0)
-
+set.seed(12)
 library(CDatanet)
 library(ggplot2)
 library(latex2exp)
 
+# Parameters
+lambda <- 0.3
+beta   <- c(2.5, 1.5, -1.2)
+gamma  <- c(0.5, -0.9)
+theta  <- c(lambda, beta, gamma)
 
-thetal  <- rbind(c(0.4, -2, -2.5, 2.1, 1.5, -1.2, 1.5),
-                 c(0.4, -1, -6.8, 2.3, -2.5, 2.5, 1.5),
-                 c(0.4, 1, 0.4, 0.5, 0.5, 0.6, 1.5),
-                 c(0.4, 3, -1.8, 2.3, 2.5, 2.5, 1.5))
+Xlab    <- c("y", "y")
+Ylab    <- c("Frequency", "")
 
+deltal  <- list(c(1, 0.87, 0.75, 0.55, 0.35),
+                c(1.2, 0.7, 0.55, rep(0.5, 2), rep(0.4, 2), rep(0.3, 2), rep(0.25, 2), 0.2))
 
+PAT     <- LETTERS[1:2]
 
-TYPE    <- c("A", "B")
-DIS     <- c("Low", "High")
-N       <- 1500
-
-# j should be in 1:4
-# 1: type A dispersion low
-# 2: type A dispersion high
-# 3: type B dispersion low
-# 4: type B dispersion high
+n       <- 1500
 
 fgraph  <- function(j) {
-  # parameters
-  theta          <- thetal[j,]
-
+  delta <- deltal[[j]]
+  
   # X
-  X              <- cbind(rnorm(N, 1, 2), rpois(N, 3))
-
-
+  X1    <- rnorm(n, 1, 1)
+  X2    <- rpois(n, 2)
+  
   # Network
-  G              <- matrix(0, N, N)
-  nmax_f         <- c(30, 35, 50)[N == c(250, 750, 1500)]
-  for (i in 1:N) {
-    tmp          <- sample((1:N)[-i], sample(0:nmax_f, 1))
+  G              <- matrix(0, n, n)
+  nmax_f         <- 30
+  for (i in 1:n) {
+    tmp          <- sample((1:n)[-i], sample(0:nmax_f, 1))
     G[i, tmp]    <- 1
   }
   rs             <- rowSums(G); rs[rs == 0] <- 1
   G              <- G/rs
   Glist          <- list(G)
-
+  
   # data
-  ytmp           <- simCDnet(formula = ~ X | X, Glist = Glist, theta = theta)
+  ytmp           <- simCDnet(formula = ~ X1 + X2 | X1 + X2, Glist = Glist, 
+                             theta = theta, delta = delta)
   y              <- ytmp$y
-
+  
   ggplot(data = data.frame(y = y), aes(x = y)) +
-    geom_bar(color = "black", fill = "#eeeeee") +
-    theme_bw() + xlab("") + ylab("Frequency")  +
-
-    ggtitle(TeX(sprintf(paste0("Type ", TYPE[ceiling(j/2)], "\n Dispersion: ",  DIS[((j - 1)%%2) + 1])))) +
+    geom_bar(color = "black", fill = "#eeeeee") + 
+    theme_bw() + xlab("") + ylab("Frequency")  + 
+    xlab(Xlab[j]) + ylab(Ylab[j]) + 
+    ggtitle(TeX(sprintf(paste0("Model ", PAT[j])))) + 
     ylab("") + theme(plot.title = element_text(size = 8, vjust = -12, hjust = 0.96))
 }
 
-# This function puts the graphics on a same loyout
 multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
   require(grid)
-
+  
   plots <- c(list(...), plotlist)
-
+  
   numPlots = length(plots)
-
+  
   if (is.null(layout)) {
     layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
                      ncol = cols, nrow = ceiling(numPlots/cols))
   }
-
+  
   if (numPlots == 1) {
     print(plots[[1]])
-
+    
   } else {
     grid.newpage()
     pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-
+    
     for (i in 1:numPlots) {
       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-
+      
       print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
                                       layout.pos.col = matchidx$col))
     }
   }
 }
 
+Graph <- lapply(1:2, fgraph)
 
-Graph <- lapply(1:4, fgraph)
-multiplot(Graph[[1]], Graph[[3]], Graph[[2]], Graph[[4]], cols = 2)
-# save with dimension 7.42 × 4 
+multiplot(Graph[[1]], Graph[[2]], cols = 2)
+# save with dimension 3 x 7.5
