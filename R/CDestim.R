@@ -473,7 +473,7 @@ CDnetNPL    <- function(formula,
   std                  <- sqrt(head(diag(x$cov$parms), K))
   std.meff             <- sqrt(diag(x$cov$marg.effects))
   delta                <- x$estimate$delta
-  llh                  <- x$info$log.likelihood
+  llh                  <- x$info$log.like
   
   
   tmp                  <- fcoefficients(coef, std)

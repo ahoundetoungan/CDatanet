@@ -335,7 +335,6 @@ List updategparms1(const arma::vec& a,
   }
   arma::vec ast(N, arma::fill::zeros);
   arma::mat Sigma;
-  double llh;
   // output
   arma::mat Smu(n, iteration), Snu(n, iteration), Sbeta(K, iteration);
   NumericVector Ssmu2(iteration), Ssnu2(iteration), Srho(iteration); //, Sllh(iteration);
@@ -419,7 +418,6 @@ List updategparms2(const arma::vec& a,
   }
   arma::vec ast(N, arma::fill::zeros);
   arma::mat Sigma;
-  double llh;
   // output
   arma::mat Smu(n, iteration), Snu(n, iteration), Sbeta(K, iteration);
   NumericVector Ssmu2(iteration), Ssnu2(iteration), Srho(iteration); //, Sllh(iteration);
