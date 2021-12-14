@@ -18,7 +18,7 @@
 #' @param opt.ctr list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in `optimizer`) such as control, method, ...
 #' @param cov a boolean indicating if the covariance should be computed.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `CDnetNPL` is called.
+#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `cdnet` is called.
 #' @return A list consisting of:
 #'     \item{info}{list of general information about the model.}
 #'     \item{estimate}{NPL estimator.}
@@ -47,7 +47,7 @@
 #' \item{print}{ a boolean indicating if the estimate should be printed at each step.}
 #' \item{S}{ the number of simulation performed use to compute integral in the covariance by important sampling.} 
 #' }
-#' @seealso \code{\link{simCDnet}}, \code{\link{SARML}} and \code{\link{SARTML}}.
+#' @seealso \code{\link{simcdnet}}, \code{\link{SARML}} and \code{\link{SARTML}}.
 #' @examples 
 #' \donttest{
 #' # Groups' size
@@ -87,7 +87,7 @@
 #' 
 #' rm(list = ls()[!(ls() %in% c("Glist", "data", "theta"))])
 #' 
-#' ytmp    <- simCDnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, theta = theta, delta = delta, data = data)
+#' ytmp    <- simcdnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, theta = theta, delta = delta, data = data)
 #' 
 #' y       <- ytmp$y
 #' 
@@ -97,22 +97,22 @@
 #' data    <- data.frame(yt = y, x1 = data$x1, x2 = data$x2)
 #' rm(list = ls()[!(ls() %in% c("Glist", "data"))])
 #' 
-#' out   <- CDnetNPL(formula = yt ~ x1 + x2, contextual = TRUE, Glist = Glist, data = data, Rbar = 10)
+#' out   <- cdnet(formula = yt ~ x1 + x2, contextual = TRUE, Glist = Glist, data = data, Rbar = 10)
 #' summary(out)
 #' }
 #' @importFrom stats quantile
 #' @export
-CDnetNPL    <- function(formula,
-                        contextual, 
-                        Glist, 
-                        Rbar      = NULL,
-                        starting  = list(theta = NULL, delta = NULL), 
-                        yb0       = NULL,
-                        optimizer = "optim", 
-                        npl.ctr   = list(), 
-                        opt.ctr   = list(), 
-                        cov       = TRUE,
-                        data) {
+cdnet    <- function(formula,
+                     contextual, 
+                     Glist, 
+                     Rbar      = NULL,
+                     starting  = list(theta = NULL, delta = NULL), 
+                     yb0       = NULL,
+                     optimizer = "optim", 
+                     npl.ctr   = list(), 
+                     opt.ctr   = list(), 
+                     cov       = TRUE,
+                     data) {
   
   stopifnot(optimizer %in% c("optim", "nlm"))
   env.formula <- environment(formula)
@@ -376,27 +376,27 @@ CDnetNPL    <- function(formula,
                                "Gyb"        = Gybt,
                                "cov"        = list(parms = covt, marg.effects = covm, var.comp = var.comp),
                                "details"    = steps)
-  class(out)           <- "CDnetNPL"
+  class(out)           <- "cdnet"
   out
 }
 
 
 #' @title Summarize Count Data Model with Social Interactions
-#' @description Summary and print methods for the class `CDnetNPL` as returned by the function \link{CDnetNPL}.
-#' @param object an object of class `CDnetNPL`, output of the function \code{\link{CDnetNPL}}.
-#' @param x an object of class `summary.CDnetNPL`, output of the function \code{\link{summary.CDnetNPL}},
-#' class `summary.CDnetNPLs`, list of outputs of the function \code{\link{summary.CDnetNPL}} 
+#' @description Summary and print methods for the class `cdnet` as returned by the function \link{cdnet}.
+#' @param object an object of class `cdnet`, output of the function \code{\link{cdnet}}.
+#' @param x an object of class `summary.cdnet`, output of the function \code{\link{summary.cdnet}},
+#' class `summary.cdnets`, list of outputs of the function \code{\link{summary.cdnet}} 
 #' (when the model is estimated many times to control for the endogeneity) 
-#' or class `CDnetNPL` of the function \code{\link{CDnetNPL}}.
+#' or class `cdnet` of the function \code{\link{cdnet}}.
 #' @param ... further arguments passed to or from other methods.
 #' @return A list of the same objects in `object`.
 #' @export 
-"summary.CDnetNPL" <- function(object,
-                               Glist,
-                               data,
-                               S = 1e3L,
-                               ...) {
-  stopifnot(class(object) == "CDnetNPL")
+"summary.cdnet" <- function(object,
+                            Glist,
+                            data,
+                            S = 1e3L,
+                            ...) {
+  stopifnot(class(object) == "cdnet")
   out        <- c(object, list("..." = ...))
   if(is.null(object$cov$parms)){
     env.formula <- environment(object$info$formula)
@@ -452,15 +452,15 @@ CDnetNPL    <- function(formula,
     
     out$cov           <- list(parms = covt, marg.effects = covm, var.comp = var.comp)
   }
-  class(out) <- "summary.CDnetNPL"
+  class(out) <- "summary.cdnet"
   out
 }
 
 
-#' @rdname summary.CDnetNPL
+#' @rdname summary.cdnet
 #' @export
-"print.summary.CDnetNPL"  <- function(x, ...) {
-  stopifnot(class(x) == "summary.CDnetNPL")
+"print.summary.cdnet"  <- function(x, ...) {
+  stopifnot(class(x) == "summary.cdnet")
   
   M                    <- x$info$M
   n                    <- x$info$n
@@ -510,23 +510,23 @@ CDnetNPL    <- function(formula,
   invisible(x)
 }
 
-#' @rdname summary.CDnetNPL
+#' @rdname summary.cdnet
 #' @export
-"print.CDnetNPL" <- function(x, ...) {
-  stopifnot(class(x) == "CDnetNPL")
+"print.cdnet" <- function(x, ...) {
+  stopifnot(class(x) == "cdnet")
   print(summary(x, ...))
 }
 
 
-#' @rdname summary.CDnetNPL
+#' @rdname summary.cdnet
 #' @importFrom stats cov
 #' @export
-"print.summary.CDnetNPLs" <- function(x, ...) {
-  stopifnot(class(x) %in% c("list", "CDnetNPLs", "summary.CDnetNPLs")) 
+"print.summary.cdnets" <- function(x, ...) {
+  stopifnot(class(x) %in% c("list", "cdnets", "summary.cdnets")) 
   
   lclass        <- unique(unlist(lapply(x, class)))
-  if (!all(lclass %in%c("CDnetNPL", "summary.CDnetNPL"))) {
-    stop("All the components in `x` should be from `CDnetNPL` or `summary.CDnetNPL` class")
+  if (!all(lclass %in%c("cdnet", "summary.cdnet"))) {
+    stop("All the components in `x` should be from `cdnet` or `summary.cdnet` class")
   }
   
   nsim          <- length(x)
@@ -592,6 +592,6 @@ CDnetNPL    <- function(formula,
                                "meffects"   = meffects,
                                "cov.me"     = vmeff,
                                ...          = ...)
-  class(out)           <- "print.summary.CDnetNPLs"
+  class(out)           <- "print.summary.cdnets"
   invisible(out)
 } 

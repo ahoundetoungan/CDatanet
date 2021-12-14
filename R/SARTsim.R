@@ -69,8 +69,8 @@
 #' 
 #' rm(list = ls()[!(ls() %in% c("Glist", "data", "theta"))])
 #' 
-#' ytmp    <- simTobitnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist,
-#'                        theta = theta, data = data)
+#' ytmp    <- simsart(formula = ~ x1 + x2 | x1 + x2, Glist = Glist,
+#'                    theta = theta, data = data)
 #' 
 #' y       <- ytmp$y
 #' 
@@ -79,14 +79,14 @@
 #' 
 #' @importFrom Rcpp sourceCpp
 #' @export
-simTobitnet   <- function(formula,
-                          contextual,
-                          Glist,
-                          theta,
-                          tol   = 1e-15,
-                          maxit = 500,
-                          RE = FALSE,
-                          data) {
+simsart   <- function(formula,
+                      contextual,
+                      Glist,
+                      theta,
+                      tol   = 1e-15,
+                      maxit = 500,
+                      RE = FALSE,
+                      data) {
   if (missing(contextual)) {
     contextual <- FALSE
   }

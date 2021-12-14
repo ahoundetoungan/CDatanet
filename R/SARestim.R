@@ -73,7 +73,7 @@
 #' data    <- data.frame(yt = y, x1 = data$x1, x2 = data$x2)
 #' rm(list = ls()[!(ls() %in% c("Glist", "data"))])
 #' 
-#' out     <- SARML(formula = yt ~ x1 + x2, contextual = TRUE, 
+#' out     <- sar(formula = yt ~ x1 + x2, contextual = TRUE, 
 #'                  Glist = Glist, optimizer = "optim", data = data)
 #' summary(out)
 #' }
@@ -83,15 +83,15 @@
 #'     \item{cov}{covariance matrix of the estimate.}
 #'     \item{details}{outputs as returned by the optimizer.}
 #' @export
-SARML <- function(formula,
-                  contextual,
-                  Glist, 
-                  lambda0   = NULL, 
-                  optimizer = "optim",
-                  opt.ctr   = list(), 
-                  print     = TRUE, 
-                  cov       = TRUE,
-                  data) {
+sar <- function(formula,
+                contextual,
+                Glist, 
+                lambda0   = NULL, 
+                optimizer = "optim",
+                opt.ctr   = list(), 
+                print     = TRUE, 
+                cov       = TRUE,
+                data) {
   stopifnot(optimizer %in% c("optim", "nlm"))
   env.formula <- environment(formula)
   #size 
@@ -210,7 +210,7 @@ SARML <- function(formula,
                                "estimate"   = theta, 
                                "cov"        = covout,
                                "details"    = resSAR)
-  class(out)           <- "SARML"
+  class(out)           <- "sar"
   out
 }
 
@@ -218,30 +218,30 @@ SARML <- function(formula,
 
 
 #' @title Summarize SAR Model
-#' @description Summary and print methods for the class `SARML` as returned by the function \link{SARML}.
-#' @param object an object of class `SARML`, output of the function \code{\link{SARML}}.
-#' @param x an object of class `summary.SARML`, output of the function \code{\link{summary.SARML}} or 
-#' class `SARML`, output of the function \code{\link{SARML}}.
+#' @description Summary and print methods for the class `sar` as returned by the function \link{sar}.
+#' @param object an object of class `sar`, output of the function \code{\link{sar}}.
+#' @param x an object of class `summary.sar`, output of the function \code{\link{summary.sar}} or 
+#' class `sar`, output of the function \code{\link{sar}}.
 #' @param ... further arguments passed to or from other methods.
 #' @return A list of the same objects in `object`.
 #' @param ... further arguments passed to or from other methods.
 #' @export 
-"summary.SARML" <- function(object,
-                            ...) {
-  stopifnot(class(object) == "SARML")
+"summary.sar" <- function(object,
+                          ...) {
+  stopifnot(class(object) == "sar")
   out           <- c(object, list("..."       = ...)) 
   if(is.null(object$cov)){
     stop("Covariance was not computed")
   }
-  class(out)    <- "summary.SARML"
+  class(out)    <- "summary.sar"
   out
 }
 
 
-#' @rdname summary.SARML
+#' @rdname summary.sar
 #' @export
-"print.summary.SARML"  <- function(x, ...) {
-  stopifnot(class(x) == "summary.SARML")
+"print.summary.sar"  <- function(x, ...) {
+  stopifnot(class(x) == "summary.sar")
   
   M                    <- x$info$M
   n                    <- x$info$n
@@ -276,25 +276,25 @@ SARML <- function(formula,
   cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
   cat("sigma: ", sigma, "\n")
   cat("log likelihood: ", llh, "\n")
-
+  
   invisible(x)
 }
 
-#' @rdname summary.SARML
+#' @rdname summary.sar
 #' @export
-"print.SARML" <- function(x, ...) {
-  stopifnot(class(x) == "SARML")
+"print.sar" <- function(x, ...) {
+  stopifnot(class(x) == "sar")
   print(summary(x, ...))
 }
 
-#' @rdname summary.SARML
+#' @rdname summary.sar
 #' @export
-"print.summary.SARMLs" <- function(x, ...) {
-  stopifnot(class(x) %in% c("list", "SARMLs", "summary.SARMLs")) 
+"print.summary.sars" <- function(x, ...) {
+  stopifnot(class(x) %in% c("list", "SARs", "summary.SARs")) 
   
   lclass            <- unique(unlist(lapply(x, class)))
-  if (!all(lclass %in% c("SARML", "summary.SARML"))) {
-    stop("All the components in `x` should be from `SARML` or `summary.SARML` class")
+  if (!all(lclass %in% c("sar", "summary.sar"))) {
+    stop("All the components in `x` should be from `sar` or `summary.sar` class")
   }
   
   nsim        <- length(x)
@@ -326,7 +326,7 @@ SARML <- function(formula,
   out_print   <- c(list(out_print), x[[1]][-(1:4)], list(...))
   
   cat("Count data Model with Social Interactions\n\n")
-  cat("Method: Replication of SAR-ML \nReplication: ", nsim, "\n\n")
+  cat("Method: Replication of sar models \nReplication: ", nsim, "\n\n")
   
   cat("Coefficients:\n")
   do.call("print", out_print)
@@ -343,6 +343,6 @@ SARML <- function(formula,
                                "likelihood" = llh, 
                                "cov"        = vcoef, 
                                ...          = ...)
-  class(out)           <- "print.summary.SARMLs"
+  class(out)           <- "print.summary.SARs"
   invisible(out)
 } 

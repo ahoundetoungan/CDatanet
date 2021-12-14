@@ -37,7 +37,7 @@ f.estim  <- function(nvec, delta, Rbar){
     Gm           <- Gm/rs
     Glist[[m]]   <- Gm
   }
-  ytmp    <- simCDnet(formula = ~ X1 + X2 | X1 + X2, Glist = Glist, 
+  ytmp    <- simcdnet(formula = ~ X1 + X2 | X1 + X2, Glist = Glist, 
                       theta = theta, delta = delta)
   y       <- ytmp$y
   yb      <- ytmp$yb
@@ -49,17 +49,17 @@ f.estim  <- function(nvec, delta, Rbar){
   tmp[1:length(delta)]                <- delta
   tmp[(length(delta) + 1):(Rbar - 1)] <- tail(delta,1)
   start   <- list(theta = theta, delta = head(tmp, Rbar - 1))
-  out1    <- CDnetNPL(y ~ X1 + X2 | X1 + X2, Glist =  Glist, starting = start,  optimizer = "optim", 
-                      npl.ctr   = list(print = FALSE),  opt.ctr   = list(), Rbar = Rbar, yb0 = yb,
-                      cov = FALSE)
+  out1    <- cdnet(y ~ X1 + X2 | X1 + X2, Glist =  Glist, starting = start,  optimizer = "optim", 
+                   npl.ctr   = list(print = FALSE),  opt.ctr   = list(), Rbar = Rbar, yb0 = yb,
+                   cov = FALSE)
   start   <- list(theta = theta, delta = mean(start$delta))
-  out2    <- CDnetNPL(y ~ X1 + X2 | X1 + X2, Glist =  Glist, starting = start,  optimizer = "optim", 
-                      npl.ctr   = list(print = FALSE),  opt.ctr   = list(), Rbar = 2, yb0 = yb,
-                      cov = FALSE)
+  out2    <- cdnet(y ~ X1 + X2 | X1 + X2, Glist =  Glist, starting = start,  optimizer = "optim", 
+                   npl.ctr   = list(print = FALSE),  opt.ctr   = list(), Rbar = 2, yb0 = yb,
+                   cov = FALSE)
   
-  outsart <- SARTML(y ~ X1 + X2 | X1 + X2, Glist =  Glist, optimizer = "optim", 
-                    print = FALSE,  opt.ctr   = list(), RE = TRUE, theta0 = c(theta, 1),
-                    cov = FALSE)
+  outsart <- sart(y ~ X1 + X2 | X1 + X2, Glist =  Glist, optimizer = "optim", 
+                  print = FALSE,  opt.ctr   = list(), RE = TRUE, theta0 = c(theta, 1),
+                  cov = FALSE)
   
   c(out1$estimate$theta, out1$estimate$delta, 
     out2$estimate$theta, out2$estimate$delta, 

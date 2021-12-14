@@ -56,7 +56,7 @@ f.estim <- function(nvec, delta, Rbar) {
   network <- sim.network(dnetwork = distr)
   Glist   <- norm.network(network)
   
-  ytmp    <- simCDnet(formula = ~ X1 + X2 + mu + nu| X1 + X2, Glist = Glist, 
+  ytmp    <- simcdnet(formula = ~ X1 + X2 + mu + nu| X1 + X2, Glist = Glist, 
                       theta = theta, delta = delta)
   y       <- ytmp$y
   yb      <- ytmp$yb
@@ -66,8 +66,8 @@ f.estim <- function(nvec, delta, Rbar) {
   tmp[(length(delta) + 1):(Rbar - 1)] <- tail(delta,1)
   
   start1 <- list(theta = c(lambda, beta, gamma), delta = head(tmp, Rbar - 1))
-  est1   <- CDnetNPL(y ~ X1 + X2| X1 + X2, Glist =  Glist, starting = start1, optimizer = "optim", 
-                     npl.ctr   = list(print = FALSE, maxit = 1e3), Rbar = Rbar, yb = yb, cov = FALSE)
+  est1   <- cdnet(y ~ X1 + X2| X1 + X2, Glist =  Glist, starting = start1, optimizer = "optim", 
+                  npl.ctr   = list(print = FALSE, maxit = 1e3), Rbar = Rbar, yb = yb, cov = FALSE)
   
   init   <- list(beta = c(dbeta0, dbeta), mu = mu, nu = nu, smu2 = smu2, snu2 = snu2, rho = rho)
   out.n  <- homophily(network =  network, formula = ~ dX, iteration = 1e3, fixed.effects = TRUE,
@@ -78,8 +78,8 @@ f.estim <- function(nvec, delta, Rbar) {
   
   start2 <- list(theta = c(lambda, beta, betast,  gamma), delta = head(tmp, Rbar - 1))
   
-  est2   <- CDnetNPL(y ~ X1 + X2 + mus + nus| X1 + X2, Glist =  Glist, starting = start2, optimizer = "optim", 
-                     npl.ctr   = list(print = FALSE, maxit = 1e3), Rbar = Rbar, yb = yb, cov = FALSE)
+  est2   <- cdnet(y ~ X1 + X2 + mus + nus| X1 + X2, Glist =  Glist, starting = start2, optimizer = "optim", 
+                  npl.ctr   = list(print = FALSE, maxit = 1e3), Rbar = Rbar, yb = yb, cov = FALSE)
   
   c(est1$estimate$theta, est1$estimate$delta, est2$estimate$theta, est2$estimate$delta,
     ytmp$marg.effects, est1$estimate$marg.effects, est2$estimate$marg.effects, 

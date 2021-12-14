@@ -1,4 +1,4 @@
-#' @title Estimate SART model
+#' @title Estimate sart model
 #' @param formula an object of class \link[stats]{formula}: a symbolic description of the model. The `formula` should be as for example \code{y ~ x1 + x2 | x1 + x2}
 #' where `y` is the endogenous vector, the listed variables before the pipe, `x1`, `x2` are the individual exogenous variables and
 #' the listed variables after the pipe, `x1`, `x2` are the contextual observable variables. Other formulas may be
@@ -18,7 +18,7 @@
 #' @param cov a boolean indicating if the covariance should be computed.
 #' @param RE a boolean which indicates if the model if under rational expectation of not.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `SARTML` is called.
+#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `sart` is called.
 #' @return A list consisting of:
 #'     \item{info}{list of general information on the model.}
 #'     \item{estimate}{Maximum Likelihood (ML) estimator.}
@@ -87,15 +87,14 @@
 #' data    <- data.frame(yt = y, x1 = data$x1, x2 = data$x2)
 #' rm(list = ls()[!(ls() %in% c("Glist", "data"))])
 #' 
-#' out     <- SARTML(formula = yt ~ x1 + x2, optimizer = "nlm",
+#' out     <- sart(formula = yt ~ x1 + x2, optimizer = "nlm",
 #'                   contextual = TRUE, Glist = Glist, data = data)
 #' summary(out)
 #' }
 #' @importFrom stats dnorm
 #' @importFrom stats pnorm
-#' @importFrom numDeriv hessian
 #' @export
-SARTML <- function(formula,
+sart <- function(formula,
                    contextual,
                    Glist,
                    theta0 = NULL,
@@ -361,27 +360,27 @@ SARTML <- function(formula,
                             "Gyb"        = Gybt,
                             "cov"        = list(parms = covt, marg.effects = covm, var.comp = var.comp),
                             "details"    = resTO)
-  class(out)        <- "SARTML"
+  class(out)        <- "sart"
   out
 }
 
 
 
-#' @title Summarize SART Model
-#' @description Summary and print methods for the class `SARTML` as returned by the function \link{SARTML}.
-#' @param object an object of class `SARTML`, output of the function \code{\link{SARTML}}.
-#' @param x an object of class `summary.SARTML`, output of the function \code{\link{summary.SARTML}} 
-#' or class `SARTML`, output of the function \code{\link{SARTML}}.
+#' @title Summarize sart Model
+#' @description Summary and print methods for the class `sart` as returned by the function \link{sart}.
+#' @param object an object of class `sart`, output of the function \code{\link{sart}}.
+#' @param x an object of class `summary.sart`, output of the function \code{\link{summary.sart}} 
+#' or class `sart`, output of the function \code{\link{sart}}.
 #' @param ... further arguments passed to or from other methods.
 #' @return A list of the same objects in `object`.
 #' @export 
 #' @param ... further arguments passed to or from other methods.
 #' @export 
-"summary.SARTML" <- function(object,
+"summary.sart" <- function(object,
                              Glist,
                              data,
                              ...) {
-  stopifnot(class(object) == "SARTML")
+  stopifnot(class(object) == "sart")
   out           <- c(object, list("..." = ...)) 
   if(is.null(object$cov$parms)){
     env.formula <- environment(object$info$formula)
@@ -454,15 +453,15 @@ SARTML <- function(formula,
     
     out$cov           <- list(parms = covt, marg.effects = covm, var.comp = var.comp)
   }
-  class(out)    <- "summary.SARTML"
+  class(out)    <- "summary.sart"
   out
 }
 
 
-#' @rdname summary.SARTML
+#' @rdname summary.sart
 #' @export
-"print.summary.SARTML"  <- function(x, ...) {
-  stopifnot(class(x) == "summary.SARTML")
+"print.summary.sart"  <- function(x, ...) {
+  stopifnot(class(x) == "summary.sart")
   
   M                    <- x$info$M
   n                    <- x$info$n
@@ -494,7 +493,7 @@ SARTML <- function(formula,
   
   
   nfr                  <- x$info$nlinks
-  cat("SART Model", ifelse(RE, "with Rational Expectation", ""), "\n\n")
+  cat("sart Model", ifelse(RE, "with Rational Expectation", ""), "\n\n")
   cat("Call:\n")
   print(formula)
   if(RE){
@@ -523,22 +522,22 @@ SARTML <- function(formula,
   invisible(x)
 }
 
-#' @rdname summary.SARTML
+#' @rdname summary.sart
 #' @export
-"print.SARTML" <- function(x, ...) {
-  stopifnot(class(x) == "SARTML")
+"print.sart" <- function(x, ...) {
+  stopifnot(class(x) == "sart")
   print(summary(x, ...))
 }
 
 
-#' @rdname summary.SARTML
+#' @rdname summary.sart
 #' @export
-"print.summary.SARTMLs" <- function(x, ...) {
-  stopifnot(class(x) %in% c("list", "SARTMLs", "summary.SARTMLs")) 
+"print.summary.sarts" <- function(x, ...) {
+  stopifnot(class(x) %in% c("list", "sarts", "summary.sarts")) 
   
   lclass          <- unique(unlist(lapply(x, class)))
-  if (!all(lclass %in% c("SARTML", "summary.SARTML"))) {
-    stop("All the components in `x` should be from `SARTML` or `summary.SARTML` class")
+  if (!all(lclass %in% c("sart", "summary.sart"))) {
+    stop("All the components in `x` should be from `sart` or `summary.sart` class")
   }
   
   nsim            <- length(x)
@@ -582,7 +581,7 @@ SARTML <- function(formula,
   out_print.meff  <- c(list(out_print.meff), x[[1]][-(1:6)], list(...))
   
   cat("Count data Model with Social Interactions\n\n")
-  cat("Method: Replication of SART-ML \nReplication: ", nsim, "\n\n")
+  cat("Method: Replication of sart models \nReplication: ", nsim, "\n\n")
   
   cat("Coefficients:\n")
   do.call("print", out_print)
@@ -601,6 +600,6 @@ SARTML <- function(formula,
                                "likelihood" = llh, 
                                "cov"        = list(parms = vcoef, marg.effects = vmeff), 
                                ...          = ...)
-  class(out)           <- "print.summary.SARTMLs"
+  class(out)           <- "print.summary.sarts"
   invisible(out)
 } 

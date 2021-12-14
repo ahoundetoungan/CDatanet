@@ -41,7 +41,7 @@ fgraph  <- function(j) {
   Glist          <- list(G)
   
   # data
-  ytmp           <- simCDnet(formula = ~ X1 + X2 | X1 + X2, Glist = Glist, 
+  ytmp           <- simcdnet(formula = ~ X1 + X2 | X1 + X2, Glist = Glist, 
                              theta = theta, delta = delta)
   y              <- ytmp$y
   
