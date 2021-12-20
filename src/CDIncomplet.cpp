@@ -361,6 +361,7 @@ double foptimREM_NPL(const arma::vec& Gyb,
   arma::vec delta    = exp(theta.tail(Rbar - 1));
   arma::vec logp     = flogp(y, ZtLambda, maxy, lambda, delta, Rbar, n);
   double llh         = sum(logp);
+//cout<<llh<<endl;
   // if(llh < -1e293) {
   //   llh              = -1e293;
   // }
@@ -394,6 +395,25 @@ void fL_NPL(arma::vec& yb,
     arma::mat Gm       = G[m];
     Gyb.subvec(n1, n2) = Gm*yb.subvec(n1, n2);
   }
+}
+
+//[[Rcpp::export]]
+void fnewyb(arma::vec& yb,
+            arma::vec& Gyb,
+            List& G,
+            const arma::mat& igroup,
+            const int& ngroup,
+            const arma::mat& X,
+            const arma::vec& theta,
+            const int& Rbar,
+            const int& K,
+            const int& n,
+            const double& tol,
+            const int& maxit) {
+  arma::vec psi = X*theta.subvec(1, K);
+  double lambda      = 1.0/(exp(-theta(0)) + 1);
+  arma::vec delta    = exp(theta.tail(Rbar - 1));
+  fyb(yb, Gyb, G, igroup, ngroup, psi, lambda, delta, n,Rbar, tol, maxit);
 }
 
 // non conditional version

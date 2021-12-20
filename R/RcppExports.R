@@ -37,6 +37,10 @@ fL_NPL <- function(yb, Gyb, G, igroup, ngroup, X, theta, Rbar, K, n) {
     invisible(.Call(`_CDatanet_fL_NPL`, yb, Gyb, G, igroup, ngroup, X, theta, Rbar, K, n))
 }
 
+fnewyb <- function(yb, Gyb, G, igroup, ngroup, X, theta, Rbar, K, n, tol, maxit) {
+    invisible(.Call(`_CDatanet_fnewyb`, yb, Gyb, G, igroup, ngroup, X, theta, Rbar, K, n, tol, maxit))
+}
+
 foptimREM_NPLncond1 <- function(Gyb, theta, X, Simu1, nsimu, Rbar, maxy, K, n, y) {
     .Call(`_CDatanet_foptimREM_NPLncond1`, Gyb, theta, X, Simu1, nsimu, Rbar, maxy, K, n, y)
 }
