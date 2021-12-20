@@ -137,7 +137,7 @@ cdnet    <- function(formula,
   if (is.null(npl.S)) {
     npl.S     <- 1e3L
   }
-  if (is.null(npl.S)) {
+  if (is.null(npl.incdit)) {
     npl.incdit<- 10L
   }
   
