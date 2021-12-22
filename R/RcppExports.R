@@ -145,6 +145,10 @@ fLTBT_NPL <- function(yb, Gyb, G, X, theta, igroup, ngroup, n, K) {
     invisible(.Call(`_CDatanet_fLTBT_NPL`, yb, Gyb, G, X, theta, igroup, ngroup, n, K))
 }
 
+fnewybTBT <- function(yb, Gyb, G, igroup, ngroup, X, theta, K, n, tol, maxit) {
+    invisible(.Call(`_CDatanet_fnewybTBT`, yb, Gyb, G, igroup, ngroup, X, theta, K, n, tol, maxit))
+}
+
 fcovSTI <- function(n, Gyb, theta, X, K, G, igroup, ngroup, ccov) {
     .Call(`_CDatanet_fcovSTI`, n, Gyb, theta, X, K, G, igroup, ngroup, ccov)
 }

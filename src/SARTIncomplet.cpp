@@ -159,6 +159,26 @@ void fLTBT_NPL(arma::vec& yb,
   }
 }
 
+//[[Rcpp::export]]
+void fnewybTBT(arma::vec& yb,
+               arma::vec& Gyb,
+               List& G,
+               const arma::mat& igroup,
+               const int& ngroup,
+               const arma::mat& X,
+               const arma::vec& theta,
+               const int& K,
+               const int& n, 
+               const double& tol,
+               const int& maxit) {
+  double lambda      = 1.0/(exp(-theta(0)) + 1);
+  double sigma       = exp(theta(K + 1));
+  arma::vec psi      = X*theta.subvec(1, K);
+
+  fybtbit(yb, Gyb, G, igroup, ngroup, psi, lambda, sigma, n, tol, maxit);
+}
+
+
 
 // variance
 //[[Rcpp::export]]

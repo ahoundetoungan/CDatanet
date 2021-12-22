@@ -763,6 +763,26 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// fnewybTBT
+void fnewybTBT(arma::vec& yb, arma::vec& Gyb, List& G, const arma::mat& igroup, const int& ngroup, const arma::mat& X, const arma::vec& theta, const int& K, const int& n, const double& tol, const int& maxit);
+RcppExport SEXP _CDatanet_fnewybTBT(SEXP ybSEXP, SEXP GybSEXP, SEXP GSEXP, SEXP igroupSEXP, SEXP ngroupSEXP, SEXP XSEXP, SEXP thetaSEXP, SEXP KSEXP, SEXP nSEXP, SEXP tolSEXP, SEXP maxitSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type yb(ybSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type Gyb(GybSEXP);
+    Rcpp::traits::input_parameter< List& >::type G(GSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type igroup(igroupSEXP);
+    Rcpp::traits::input_parameter< const int& >::type ngroup(ngroupSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< const int& >::type K(KSEXP);
+    Rcpp::traits::input_parameter< const int& >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< const int& >::type maxit(maxitSEXP);
+    fnewybTBT(yb, Gyb, G, igroup, ngroup, X, theta, K, n, tol, maxit);
+    return R_NilValue;
+END_RCPP
+}
 // fcovSTI
 List fcovSTI(const int& n, const arma::vec& Gyb, const arma::vec& theta, const arma::mat& X, const int& K, List& G, const arma::mat& igroup, const int& ngroup, const bool& ccov);
 RcppExport SEXP _CDatanet_fcovSTI(SEXP nSEXP, SEXP GybSEXP, SEXP thetaSEXP, SEXP XSEXP, SEXP KSEXP, SEXP GSEXP, SEXP igroupSEXP, SEXP ngroupSEXP, SEXP ccovSEXP) {
@@ -820,6 +840,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CDatanet_foptimRE_TBT", (DL_FUNC) &_CDatanet_foptimRE_TBT, 15},
     {"_CDatanet_foptimTBT_NPL", (DL_FUNC) &_CDatanet_foptimTBT_NPL, 8},
     {"_CDatanet_fLTBT_NPL", (DL_FUNC) &_CDatanet_fLTBT_NPL, 9},
+    {"_CDatanet_fnewybTBT", (DL_FUNC) &_CDatanet_fnewybTBT, 11},
     {"_CDatanet_fcovSTI", (DL_FUNC) &_CDatanet_fcovSTI, 9},
     {NULL, NULL, 0}
 };

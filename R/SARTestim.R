@@ -95,17 +95,17 @@
 #' @importFrom stats pnorm
 #' @export
 sart <- function(formula,
-                   contextual,
-                   Glist,
-                   theta0 = NULL,
-                   yb0  = NULL,
-                   optimizer = "optim",
-                   npl.ctr  = list(), 
-                   opt.ctr = list(),
-                   print = TRUE,
-                   cov = TRUE,
-                   RE = FALSE,
-                   data) {
+                 contextual,
+                 Glist,
+                 theta0 = NULL,
+                 yb0  = NULL,
+                 optimizer = "optim",
+                 npl.ctr  = list(), 
+                 opt.ctr = list(),
+                 print = TRUE,
+                 cov = TRUE,
+                 RE = FALSE,
+                 data) {
   stopifnot(optimizer %in% c("optim", "nlm"))
   env.formula <- environment(formula)
   # controls
@@ -211,52 +211,72 @@ sart <- function(formula,
     
     if(npl.print) {
       while(cont) {
-        ybt0        <- ybt + 0    #copy in different memory
-        
-        # compute theta
-        REt         <- do.call(get(optimizer), ctr)
-        thetat      <- REt[[par1]]
-        llh         <- -REt[[like]]
-        
-        theta       <- c(1/(1 + exp(-thetat[1])), thetat[2:(K + 1)], exp(thetat[K + 2]))
-        
-        # compute y
-        fLTBT_NPL(ybt, Gybt, Glist, X, thetat, igr, M, n, K)
-        
-        # distance
-        dist        <- sum(abs(ctr[[par0]] - thetat)) + sum(abs(ybt0 - ybt))
-        cont        <- (dist > npl.tol & t < (npl.maxit - 1))
-        t           <- t + 1
-        REt$dist    <- dist
-        ctr[[par0]] <- thetat
-        resTO[[t]]  <- REt
-        
-        cat("---------------\n")
-        cat(paste0("Step          : ", t), "\n")
-        cat(paste0("Distance      : ", round(dist,3)), "\n")
-        cat(paste0("Likelihood    : ", round(llh,3)), "\n")
-        cat("Estimate:", "\n")
-        print(theta)
+        tryCatch({
+          ybt0        <- ybt + 0    #copy in different memory
+          
+          # compute theta
+          REt         <- do.call(get(optimizer), ctr)
+          thetat      <- REt[[par1]]
+          llh         <- -REt[[like]]
+          
+          theta       <- c(1/(1 + exp(-thetat[1])), thetat[2:(K + 1)], exp(thetat[K + 2]))
+          
+          # compute y
+          fLTBT_NPL(ybt, Gybt, Glist, X, thetat, igr, M, n, K)
+          
+          # distance
+          dist        <- sum(abs(ctr[[par0]] - thetat)) + sum(abs(ybt0 - ybt))
+          cont        <- (dist > npl.tol & t < (npl.maxit - 1))
+          t           <- t + 1
+          REt$dist    <- dist
+          ctr[[par0]] <- thetat
+          resTO[[t]]  <- REt
+          
+          cat("---------------\n")
+          cat(paste0("Step          : ", t), "\n")
+          cat(paste0("Distance      : ", round(dist,3)), "\n")
+          cat(paste0("Likelihood    : ", round(llh,3)), "\n")
+          cat("Estimate:", "\n")
+          print(theta)
+        },
+        error = function(e){
+          cat("** Non-convergence ** Redefining theta and computing a new yb\n")
+          thetat[1]   <- -4.5
+          fnewybTBT(ybt, Gybt, Glist, igr, M, X, thetat, K, n, npl.tol, npl.maxit)
+          cont        <- TRUE
+          t           <- t + 1
+          ctr[[par0]] <- thetat
+          steps[[t]]  <- NULL
+        })
       }
     } else {
       while(cont) {
-        ybt0        <- ybt + 0    #copy in different memory
-        
-        # compute theta
-        REt         <- do.call(get(optimizer), ctr)
-        thetat      <- REt[[par1]]
-        
-        # compute y
-        fLTBT_NPL(ybt, Gybt, Glist, X, thetat, igr, M, n, K)
-        
-        # distance
-        dist        <- sum(abs(ctr[[par0]] - thetat)) + sum(abs(ybt0 - ybt))
-        cont        <- (dist > npl.tol & t < (npl.maxit - 1))
-        t           <- t + 1
-        REt$dist    <- dist
-        
-        ctr[[par0]] <- thetat
-        resTO[[t]]  <- REt
+        tryCatch({
+          ybt0        <- ybt + 0    #copy in different memory
+          
+          # compute theta
+          REt         <- do.call(get(optimizer), ctr)
+          thetat      <- REt[[par1]]
+          
+          # compute y
+          fLTBT_NPL(ybt, Gybt, Glist, X, thetat, igr, M, n, K)
+          
+          # distance
+          dist        <- sum(abs(ctr[[par0]] - thetat)) + sum(abs(ybt0 - ybt))
+          cont        <- (dist > npl.tol & t < (npl.maxit - 1))
+          t           <- t + 1
+          REt$dist    <- dist
+          ctr[[par0]] <- thetat
+          resTO[[t]]  <- REt
+        },
+        error = function(e){
+          thetat[1]   <- -4.5
+          fnewybTBT(ybt, Gybt, Glist, igr, M, X, thetat, K, n, npl.tol, npl.maxit)
+          cont        <- TRUE
+          t           <- t + 1
+          ctr[[par0]] <- thetat
+          steps[[t]]  <- NULL
+        })
       }
       llh           <- -REt[[like]]
       theta         <- c(1/(1 + exp(-thetat[1])), thetat[2:(K +1)], exp(thetat[K + 2]))
@@ -377,9 +397,9 @@ sart <- function(formula,
 #' @param ... further arguments passed to or from other methods.
 #' @export 
 "summary.sart" <- function(object,
-                             Glist,
-                             data,
-                             ...) {
+                           Glist,
+                           data,
+                           ...) {
   stopifnot(class(object) == "sart")
   out           <- c(object, list("..." = ...)) 
   if(is.null(object$cov$parms)){
