@@ -3,8 +3,6 @@
 #' It also simulates data from the count data model and implements the Spatial Autoregressive Tobit model (LeSage, 2000; Xu and Lee, 2015) for left censored data and the Spatial Autoregressive Model (Lee, 2004). 
 #' To make the computations faster \pkg{CDatanet} uses \code{C++} through the \pkg{Rcpp} package (Eddelbuettel et al., 2011). 
 #'
-#' @seealso \code{\link{simCDnet}}, \code{\link{CDnetNPL}}, \code{\link{SARML}}, \code{\link{SARTML}} and \code{\link{homophily}}.
-#' 
 #' @references 
 #' Atchade, Y. F., & Rosenthal, J. S. (2005). On adaptive markov chain monte carlo algorithms, \emph{Bernoulli}, 11(5), 815-828, \doi{10.3150/bj/1130077595}
 #' @references Eddelbuettel, D., François, R., Allaire, J., Ushey, K., Kou, Q., Russel, N., ... & Bates, D., 2011,
