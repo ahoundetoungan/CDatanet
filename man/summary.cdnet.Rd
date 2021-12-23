@@ -4,7 +4,9 @@
 \alias{summary.cdnet}
 \alias{print.summary.cdnet}
 \alias{print.cdnet}
+\alias{summary.cdnets}
 \alias{print.summary.cdnets}
+\alias{print.cdnets}
 \title{Summarize Count Data Model with Social Interactions}
 \usage{
 \method{summary}{cdnet}(object, Glist, data, S = 1000L, ...)
@@ -13,7 +15,11 @@
 
 \method{print}{cdnet}(x, ...)
 
+\method{summary}{cdnets}(object, ...)
+
 \method{print}{summary.cdnets}(x, ...)
+
+\method{print}{cdnets}(x, ...)
 }
 \arguments{
 \item{object}{an object of class \code{cdnet}, output of the function \code{\link{cdnet}}.}

@@ -22,7 +22,7 @@
 #' where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.\cr
 #' The count variable \eqn{y_i} is then define that is \eqn{y_i = 0} if  
 #' \eqn{y_i^* \leq 0}{ys_i \le 0} and \eqn{y_i = y_i^*}{y_i = ys_i} otherwise.
-#' @seealso \code{\link{CDnetNPL}}.
+#' @seealso \code{\link{sart}}, \code{\link{simsar}}, \code{\link{simcdnet}}.
 #' @return A list consisting of:
 #'     \item{yst}{ys (see details), the latent variable.}
 #'     \item{y}{the observed count data.}

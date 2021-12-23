@@ -84,5 +84,5 @@ hist(y)
 
 }
 \seealso{
-\code{\link{CDnetNPL}}.
+\code{\link{sar}}, \code{\link{simsart}}, \code{\link{simcdnet}}.
 }

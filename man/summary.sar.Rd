@@ -4,7 +4,9 @@
 \alias{summary.sar}
 \alias{print.summary.sar}
 \alias{print.sar}
+\alias{summary.sars}
 \alias{print.summary.sars}
+\alias{print.sars}
 \title{Summarize SAR Model}
 \usage{
 \method{summary}{sar}(object, ...)
@@ -13,7 +15,11 @@
 
 \method{print}{sar}(x, ...)
 
+\method{summary}{sars}(object, ...)
+
 \method{print}{summary.sars}(x, ...)
+
+\method{print}{sars}(x, ...)
 }
 \arguments{
 \item{object}{an object of class \code{sar}, output of the function \code{\link{sar}}.}

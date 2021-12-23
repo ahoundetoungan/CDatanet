@@ -13,7 +13,7 @@
 #' @param optimizer is either `nlm` (referring to the function \link[stats]{nlm}) or `optim` (referring to the function \link[stats]{optim}). 
 #' Other arguments 
 #' of these functions such as, the control values and the method can be defined through the argument `opt.ctr`.
-#' @param npl.ctr list of controls for the NPL method (see \code{\link{CDnetNPL}}).
+#' @param npl.ctr list of controls for the NPL method (see \code{\link{cdnet}}).
 #' @param opt.ctr list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in `optimizer`) such as control, method, ...
 #' @param cov a boolean indicating if the covariance should be computed.
 #' @param RE a boolean which indicates if the model if under rational expectation of not.
@@ -34,7 +34,7 @@
 #' where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.\cr
 #' The count variable \eqn{y_i} is then define that is \eqn{y_i = 0} if  
 #' \eqn{y_i^* \leq 0}{ys_i \le 0} and \eqn{y_i = y_i^*}{y_i = ys_i} otherwise.
-#' @seealso \code{\link{CDnetNPL}} and \code{\link{SARML}}.
+#' @seealso \code{\link{sar}}, \code{\link{cdnet}}, \code{\link{simsart}}.
 #' @examples 
 #' \donttest{
 #' # Groups' size
@@ -549,59 +549,99 @@ sart <- function(formula,
   print(summary(x, ...))
 }
 
-
 #' @rdname summary.sart
+#' @importFrom stats cov
 #' @export
-"print.summary.sarts" <- function(x, ...) {
-  stopifnot(class(x) %in% c("list", "sarts", "summary.sarts")) 
+"summary.sarts" <- function(object, ...) {
+  stopifnot(class(object) %in% c("list", "sarts", "summary.sarts")) 
   
-  lclass          <- unique(unlist(lapply(x, class)))
-  if (!all(lclass %in% c("sart", "summary.sart"))) {
-    stop("All the components in `x` should be from `sart` or `summary.sart` class")
+  lclass        <- unique(unlist(lapply(object, class)))
+  if (!all(lclass %in%c("summary.sart"))) {
+    stop("All the components in `object` should be from `summary.sart` class")
   }
   
-  nsim            <- length(x)
-  coef            <- do.call("rbind", lapply(x, function(z) t(z$estimate$theta)))
-  meff            <- do.call("rbind", lapply(x, function(z) t(z$estimate$marg.effects)))
-  estimate        <- colSums(coef)/nsim
-  meffects        <- colSums(meff)/nsim
+  nsim          <- length(object)
+  K             <- length(object[[1]]$estimate$theta)
+  coef          <- do.call("rbind", lapply(object, function(z) t(c(z$estimate$theta))))
+  meff          <- do.call("rbind", lapply(object, function(z) t(z$estimate$marg.effects)))
+  estimate      <- colSums(coef)/nsim
+  meffects      <- colSums(meff)/nsim
+  RE            <- !is.null(object[[1]]$yb)
   
-  vcoef2          <- Reduce("+", lapply(x, function(z) z$cov$parms))/nsim
-  vmeff2          <- Reduce("+", lapply(x, function(z) z$cov$marg.effects))/nsim
+  vcoef2        <- Reduce("+", lapply(object, function(z) z$cov$parms))/nsim
+  vmeff2        <- Reduce("+", lapply(object, function(z) z$cov$marg.effects))/nsim
   
-  vcoef1          <- cov(coef)
-  vmeff1          <- cov(meff)
+  vcoef1        <- cov(coef)
+  vmeff1        <- cov(meff)
   
-  vcoef           <- vcoef1 + vcoef2
-  vmeff           <- vmeff1 + vmeff2
+  vcoef         <- vcoef1 + vcoef2
+  vmeff         <- vmeff1 + vmeff2
   
+  llh           <- unlist(lapply(object, function(z) z$info$log.like))
+  llh           <- c("min" = min(llh), "mean" = mean(llh), "max" = max(llh))
   
-  llh             <- sapply(x, function(z) z$info$log.like)
-  llh             <- c("min" = min(llh), "mean" = mean(llh), "max" = max(llh))
+  M             <- object[[1]]$info$M
+  n             <- object[[1]]$info$n
   
-  M               <- x[[1]]$info$M
-  n               <- x[[1]]$info$n
+  INFO                 <- list("M"          = M,
+                               "n"          = n,
+                               "log.like"   = llh,
+                               "Rat.Exp"    = RE,
+                               "simulation" = nsim)
   
+  out                  <- list("info"       = INFO,
+                               "estimate"   = list(theta = estimate, marg.effects = meffects),
+                               "cov"        = list(parms = vcoef, marg.effects = vmeff),
+                               ...          = ...)
+  class(out)           <- "summary.sarts"
+  out
+} 
+
+
+#' @rdname summary.sart
+#' @importFrom stats cov
+#' @export
+"print.summary.sarts" <- function(x, ...) {
+  stopifnot(class(x) %in% c("summary.sarts")) 
   
-  K               <- length(estimate)
-  coef            <- estimate[-K]
-  std             <- sqrt(diag(vcoef)[-K])
-  std.meff        <- sqrt(diag(vmeff))
-  sigma           <- estimate[K]
+  nsim          <- x$info$simulation
+  coef          <- x$estimate$theta
+  meffects      <- x$estimate$marg.effects
+  K             <- length(coef)
+  sigma            <- tail(coef, 1)
+  coef          <- head(coef, K - 1)
+  RE            <- x$info$Rat.Exp
   
-  tmp             <- fcoefficients(coef, std)
-  out_print       <- tmp$out_print
-  out             <- tmp$out
+  vcoef         <- x$cov$parms
+  vmeff         <- x$cov$marg.effects
   
-  tmp.meff        <- fcoefficients(meffects, std.meff)
-  out_print.meff  <- tmp.meff$out_print
-  out.meff        <- tmp.meff$out
+  llh           <- x$info$log.like
   
-  out_print       <- c(list(out_print), x[[1]][-(1:6)], list(...))
-  out_print.meff  <- c(list(out_print.meff), x[[1]][-(1:6)], list(...))
+  M             <- x$info$M
+  n             <- x$info$n
   
-  cat("Count data Model with Social Interactions\n\n")
-  cat("Method: Replication of sart models \nReplication: ", nsim, "\n\n")
+  std           <- sqrt(head(diag(vcoef), K-1))
+  std.meff      <- sqrt(diag(vmeff))
+  
+  tmp           <- fcoefficients(coef, std)
+  out_print     <- tmp$out_print
+  out           <- tmp$out
+  
+  tmp.meff       <- fcoefficients(meffects, std.meff)
+  out_print.meff <- tmp.meff$out_print
+  out.meff       <- tmp.meff$out
+  
+  out_print      <- c(list(out_print), x[-c(1:3)], list(...))
+  out_print.meff <- c(list(out_print.meff), x[-c(1:3)], list(...))
+  
+  cat("SART Model", ifelse(RE, "with Rational Expectation", ""), "\n\n")
+  cat("Method: Replication of ")
+  if(RE){
+    cat("Nested pseudo-likelihood (NPL)")
+  } else{
+    cat("Maximum Likelihood (ML)")
+  }
+  cat("\nReplication: ", nsim, "\n\n")
   
   cat("Coefficients:\n")
   do.call("print", out_print)
@@ -610,16 +650,16 @@ sart <- function(formula,
   do.call("print", out_print.meff)
   cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
   cat("sigma: ", sigma, "\n")
-  cat("log pseudo-likelihood: ", "\n")
+  cat("log likelihood: \n")
   print(llh)
   
-  out                  <- list("M"          = M,
-                               "n"          = n,
-                               "simulation" = nsim, 
-                               "estimate"   = list(theta = estimate, marg.effects = meffects), 
-                               "likelihood" = llh, 
-                               "cov"        = list(parms = vcoef, marg.effects = vmeff), 
-                               ...          = ...)
-  class(out)           <- "print.summary.sarts"
-  invisible(out)
+  invisible(x)
+} 
+
+#' @rdname summary.sart
+#' @importFrom stats cov
+#' @export
+"print.sarts" <- function(x, ...) { 
+  stopifnot(class(x) %in% c("sarts", "list"))
+  print(summary.sarts(x, ...))
 } 

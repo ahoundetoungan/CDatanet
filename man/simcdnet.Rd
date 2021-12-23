@@ -108,5 +108,5 @@ hist(y, breaks = max(y))
 
 }
 \seealso{
-\code{\link{cdnet}}.
+\code{\link{cdnet}}, \code{\link{simsart}}, \code{\link{simsar}}.
 }

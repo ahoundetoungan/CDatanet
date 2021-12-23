@@ -47,7 +47,7 @@
 #' \item{print}{ a boolean indicating if the estimate should be printed at each step.}
 #' \item{S}{ the number of simulation performed use to compute integral in the covariance by important sampling.} 
 #' }
-#' @seealso \code{\link{simcdnet}}, \code{\link{SARML}} and \code{\link{SARTML}}.
+#' @seealso \code{\link{sart}}, \code{\link{sar}}, \code{\link{simcdnet}}.
 #' @examples 
 #' \donttest{
 #' # Groups' size
@@ -562,27 +562,26 @@ cdnet    <- function(formula,
   print(summary(x, ...))
 }
 
-
 #' @rdname summary.cdnet
 #' @importFrom stats cov
 #' @export
-"print.summary.cdnets" <- function(x, ...) {
-  stopifnot(class(x) %in% c("list", "cdnets", "summary.cdnets")) 
+"summary.cdnets" <- function(object, ...) {
+  stopifnot(class(object) %in% c("list", "cdnets", "summary.cdnets")) 
   
-  lclass        <- unique(unlist(lapply(x, class)))
-  if (!all(lclass %in%c("cdnet", "summary.cdnet"))) {
-    stop("All the components in `x` should be from `cdnet` or `summary.cdnet` class")
+  lclass        <- unique(unlist(lapply(object, class)))
+  if (!all(lclass %in%c("summary.cdnet"))) {
+    stop("All the components in `object` should be from `summary.cdnet` class")
   }
   
-  nsim          <- length(x)
-  K             <- length(x[[1]]$estimate$theta)
-  coef          <- do.call("rbind", lapply(x, function(z) t(c(z$estimate$theta, z$estimate$delta))))
-  meff          <- do.call("rbind", lapply(x, function(z) t(z$estimate$marg.effects)))
+  nsim          <- length(object)
+  K             <- length(object[[1]]$estimate$theta)
+  coef          <- do.call("rbind", lapply(object, function(z) t(c(z$estimate$theta, z$estimate$delta))))
+  meff          <- do.call("rbind", lapply(object, function(z) t(z$estimate$marg.effects)))
   estimate      <- colSums(coef)/nsim
   meffects      <- colSums(meff)/nsim
   
-  vcoef2        <- Reduce("+", lapply(x, function(z) z$cov$parms))/nsim
-  vmeff2        <- Reduce("+", lapply(x, function(z) z$cov$marg.effects))/nsim
+  vcoef2        <- Reduce("+", lapply(object, function(z) z$cov$parms))/nsim
+  vmeff2        <- Reduce("+", lapply(object, function(z) z$cov$marg.effects))/nsim
   
   vcoef1        <- cov(coef)
   vmeff1        <- cov(meff)
@@ -590,14 +589,52 @@ cdnet    <- function(formula,
   vcoef         <- vcoef1 + vcoef2
   vmeff         <- vmeff1 + vmeff2
   
-  llh           <- unlist(lapply(x, function(z) z$info$log.like))
+  llh           <- unlist(lapply(object, function(z) z$info$log.like))
   llh           <- c("min" = min(llh), "mean" = mean(llh), "max" = max(llh))
   
-  M             <- x[[1]]$info$M
-  n             <- x[[1]]$info$n
+  M             <- object[[1]]$info$M
+  n             <- object[[1]]$info$n
+  Rbar          <- object[[1]]$info$Rbar
   
   coef          <- head(estimate, K)
   delta         <- estimate[-(1:K)]
+  
+  INFO                 <- list("M"          = M,
+                               "n"          = n,
+                               "log.like"   = llh,
+                               "Rbar"       = Rbar,
+                               "simulation" = nsim)
+  
+  out                  <- list("info"       = INFO,
+                               "estimate"   = list(theta = coef, delta = delta, marg.effects = meffects),
+                               "cov"        = list(parms = vcoef, marg.effects = vmeff),
+                               ...          = ...)
+  class(out)           <- "summary.cdnets"
+  out
+} 
+
+
+#' @rdname summary.cdnet
+#' @importFrom stats cov
+#' @export
+"print.summary.cdnets" <- function(x, ...) {
+  stopifnot(class(x) %in% c("summary.cdnets")) 
+
+  nsim          <- x$info$simulation
+  coef          <- x$estimate$theta
+  delta         <- x$estimate$delta
+  meffects      <- x$estimate$marg.effects
+  K             <- length(coef)
+
+  vcoef         <- x$cov$parms
+  vmeff         <- x$cov$marg.effects
+  
+  llh           <- x$info$log.like
+  
+  M             <- x$info$M
+  n             <- x$info$n
+  Rbar          <- x$info$Rbar
+  
   std           <- sqrt(head(diag(vcoef), K))
   std.meff      <- sqrt(diag(vmeff))
   
@@ -609,10 +646,8 @@ cdnet    <- function(formula,
   out_print.meff <- tmp.meff$out_print
   out.meff       <- tmp.meff$out
   
-  out_print      <- c(list(out_print), x[[1]][-(1:6)], list(...))
-  out_print.meff <- c(list(out_print.meff), x[[1]][-(1:6)], list(...))
-  
-  Rbar           <- x[[1]]$info$Rbar
+  out_print      <- c(list(out_print), x[-c(1:3)], list(...))
+  out_print.meff <- c(list(out_print.meff), x[-c(1:3)], list(...))
   
   cat("Count data Model with Social Interactions\n\n")
   cat("Method: Replication of Nested pseudo-likelihood (NPL) \nReplication: ", nsim, "\n\n")
@@ -628,15 +663,13 @@ cdnet    <- function(formula,
   cat("log pseudo-likelihood: ", "\n")
   print(llh)
   
-  out                  <- list("M"          = M,
-                               "n"          = n,
-                               "simulation" = nsim, 
-                               "estimate"   = estimate, 
-                               "likelihood" = llh, 
-                               "cov"        = vcoef, 
-                               "meffects"   = meffects,
-                               "cov.me"     = vmeff,
-                               ...          = ...)
-  class(out)           <- "print.summary.cdnets"
-  invisible(out)
+  invisible(x)
+} 
+
+#' @rdname summary.cdnet
+#' @importFrom stats cov
+#' @export
+"print.cdnets" <- function(x, ...) { 
+  stopifnot(class(x) %in% c("cdnets", "list"))
+  print(summary.cdnets(x, ...))
 } 

@@ -143,5 +143,5 @@ summary(out)
 }
 }
 \seealso{
-\code{\link{simcdnet}}, \code{\link{SARML}} and \code{\link{SARTML}}.
+\code{\link{sart}}, \code{\link{sar}}, \code{\link{simcdnet}}.
 }

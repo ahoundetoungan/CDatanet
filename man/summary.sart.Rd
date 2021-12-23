@@ -4,7 +4,9 @@
 \alias{summary.sart}
 \alias{print.summary.sart}
 \alias{print.sart}
+\alias{summary.sarts}
 \alias{print.summary.sarts}
+\alias{print.sarts}
 \title{Summarize sart Model}
 \usage{
 \method{summary}{sart}(object, Glist, data, ...)
@@ -13,7 +15,11 @@
 
 \method{print}{sart}(x, ...)
 
+\method{summary}{sarts}(object, ...)
+
 \method{print}{summary.sarts}(x, ...)
+
+\method{print}{sarts}(x, ...)
 }
 \arguments{
 \item{object}{an object of class \code{sart}, output of the function \code{\link{sart}}.}

@@ -40,7 +40,7 @@ does not contain contextual effects (see details).}
 Other arguments
 of these functions such as, the control values and the method can be defined through the argument \code{opt.ctr}.}
 
-\item{npl.ctr}{list of controls for the NPL method (see \code{\link{CDnetNPL}}).}
+\item{npl.ctr}{list of controls for the NPL method (see \code{\link{cdnet}}).}
 
 \item{opt.ctr}{list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in \code{optimizer}) such as control, method, ...}
 
@@ -132,5 +132,5 @@ summary(out)
 }
 }
 \seealso{
-\code{\link{CDnetNPL}} and \code{\link{SARML}}.
+\code{\link{sar}}, \code{\link{cdnet}}, \code{\link{simsart}}.
 }

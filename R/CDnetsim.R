@@ -23,7 +23,7 @@
 #' Then, \eqn{y_i = r} iff \eqn{a_r \leq y_i^* \leq a_{r+1}}{a_r \le ys_i \le a_{r + 1}}, where
 #' \eqn{a_0 = -\inf}{a_0 = -Inf}, \eqn{a_1 = 0}, \eqn{a_r = \sum_{k = 1}^r\delta_k}{a_r = \delta_1 + ... + \delta_r} if \eqn{1 \leq r \leq \bar{R}}{1 \le r \le Rbar}, and 
 #' \eqn{a_r = (r - \bar{R})\delta_{\bar{R}} + a_{\bar{R}}}{a_r = (r - Rbar)\delta_{Rbar} + a_{Rbar}} otherwise.
-#' @seealso \code{\link{cdnet}}.
+#' @seealso \code{\link{cdnet}}, \code{\link{simsart}}, \code{\link{simsar}}.
 #' @return A list consisting of:
 #'     \item{yst}{ys (see details), the latent variable.}
 #'     \item{y}{the observed count data.}

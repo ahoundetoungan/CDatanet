@@ -118,5 +118,5 @@ summary(out)
 }
 }
 \seealso{
-\code{\link{CDnetNPL}} and \code{\link{SARTML}}.
+\code{\link{sart}}, \code{\link{cdnet}}, \code{\link{simsar}}.
 }

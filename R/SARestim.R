@@ -22,7 +22,7 @@
 #' The variable \eqn{\mathbf{y}}{y} is given for all i as
 #' \deqn{y_i = \lambda \mathbf{g}_i y + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{y_i = \lambda g_i*y + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 #' where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.
-#' @seealso \code{\link{CDnetNPL}} and \code{\link{SARTML}}.
+#' @seealso \code{\link{sart}}, \code{\link{cdnet}}, \code{\link{simsar}}.
 #' @examples 
 #' \donttest{
 #' # Groups' size
@@ -288,61 +288,107 @@ sar <- function(formula,
 }
 
 #' @rdname summary.sar
+#' @importFrom stats cov
 #' @export
-"print.summary.sars" <- function(x, ...) {
-  stopifnot(class(x) %in% c("list", "SARs", "summary.SARs")) 
+"summary.sars" <- function(object, ...) {
+  stopifnot(class(object) %in% c("list", "sars", "summary.sars")) 
   
-  lclass            <- unique(unlist(lapply(x, class)))
-  if (!all(lclass %in% c("sar", "summary.sar"))) {
-    stop("All the components in `x` should be from `sar` or `summary.sar` class")
+  lclass        <- unique(unlist(lapply(object, class)))
+  if (!all(lclass %in%c("summary.sar"))) {
+    stop("All the components in `object` should be from `summary.sar` class")
   }
   
-  nsim        <- length(x)
-  coef        <- do.call("rbind", lapply(x, function(z) t(z$estimate)))
-  estimate    <- colSums(coef)/nsim
+  nsim          <- length(object)
+  K             <- length(object[[1]]$estimate$theta)
+  coef          <- do.call("rbind", lapply(object, function(z) t(c(z$estimate$theta))))
+  meff          <- do.call("rbind", lapply(object, function(z) t(z$estimate$marg.effects)))
+  estimate      <- colSums(coef)/nsim
+  meffects      <- colSums(meff)/nsim
   
-  vcoef2      <- Reduce("+", lapply(x, function(z) z$cov))/nsim
+  vcoef2        <- Reduce("+", lapply(object, function(z) z$cov$parms))/nsim
+  vmeff2        <- Reduce("+", lapply(object, function(z) z$cov$marg.effects))/nsim
   
-  vcoef1      <- cov(coef)
+  vcoef1        <- cov(coef)
+  vmeff1        <- cov(meff)
   
-  vcoef       <- vcoef1 + vcoef2
+  vcoef         <- vcoef1 + vcoef2
+  vmeff         <- vmeff1 + vmeff2
   
+  llh           <- unlist(lapply(object, function(z) z$info$log.like))
+  llh           <- c("min" = min(llh), "mean" = mean(llh), "max" = max(llh))
   
-  llh         <- sapply(x, function(z) z$info$log.like)
-  llh         <- c("min" = min(llh), "mean" = mean(llh), "max" = max(llh))
+  M             <- object[[1]]$info$M
+  n             <- object[[1]]$info$n
   
-  M           <- x[[1]]$info$M
-  n           <- x[[1]]$info$n
+  INFO                 <- list("M"          = M,
+                               "n"          = n,
+                               "log.like"   = llh,
+                               "simulation" = nsim)
   
-  K           <- length(estimate)
-  coef        <- estimate[-K]
-  std         <- sqrt(diag(vcoef)[-K])
-  sigma       <- estimate[K]
+  out                  <- list("info"       = INFO,
+                               "estimate"   = list(theta = estimate, marg.effects = meffects),
+                               "cov"        = list(parms = vcoef, marg.effects = vmeff),
+                               ...          = ...)
+  class(out)           <- "summary.sars"
+  out
+} 
+
+
+#' @rdname summary.sar
+#' @importFrom stats cov
+#' @export
+"print.summary.sars" <- function(x, ...) {
+  stopifnot(class(x) %in% c("summary.sars")) 
   
-  tmp         <- fcoefficients(coef, std)
-  out_print   <- tmp$out_print
-  out         <- tmp$out
+  nsim          <- x$info$simulation
+  coef          <- x$estimate$theta
+  meffects      <- x$estimate$marg.effects
+  K             <- length(coef)
+  sigma         <- tail(coef, 1)
+  coef          <- head(coef, K - 1)
   
-  out_print   <- c(list(out_print), x[[1]][-(1:4)], list(...))
+  vcoef         <- x$cov$parms
+  vmeff         <- x$cov$marg.effects
   
-  cat("Count data Model with Social Interactions\n\n")
-  cat("Method: Replication of sar models \nReplication: ", nsim, "\n\n")
+  llh           <- x$info$log.like
+  
+  M             <- x$info$M
+  n             <- x$info$n
+  
+  std           <- sqrt(head(diag(vcoef), K-1))
+  std.meff      <- sqrt(diag(vmeff))
+  
+  tmp           <- fcoefficients(coef, std)
+  out_print     <- tmp$out_print
+  out           <- tmp$out
+  
+  tmp.meff       <- fcoefficients(meffects, std.meff)
+  out_print.meff <- tmp.meff$out_print
+  out.meff       <- tmp.meff$out
+  
+  out_print      <- c(list(out_print), x[-c(1:3)], list(...))
+  out_print.meff <- c(list(out_print.meff), x[-c(1:3)], list(...))
+  
+  cat("sar Model", ifelse(RE, "with Rational Expectation", ""), "\n\n")
+  cat("Method: Replication of Maximum Likelihood (ML) \nReplication: ", nsim, "\n\n")
   
   cat("Coefficients:\n")
   do.call("print", out_print)
   
+  cat("\nMarginal Effects:\n")
+  do.call("print", out_print.meff)
   cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
   cat("sigma: ", sigma, "\n")
-  cat("log likelihood: ", "\n")
+  cat("log likelihood: \n")
   print(llh)
   
-  out                  <- list("M"          = M,
-                               "n"          = n,
-                               "simulation" = nsim, 
-                               "estimate"   = estimate, 
-                               "likelihood" = llh, 
-                               "cov"        = vcoef, 
-                               ...          = ...)
-  class(out)           <- "print.summary.SARs"
-  invisible(out)
+  invisible(x)
+} 
+
+#' @rdname summary.sar
+#' @importFrom stats cov
+#' @export
+"print.sars" <- function(x, ...) { 
+  stopifnot(class(x) %in% c("sars", "list"))
+  print(summary.sars(x, ...))
 } 

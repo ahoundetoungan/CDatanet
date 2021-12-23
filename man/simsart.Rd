@@ -109,5 +109,5 @@ hist(y)
 
 }
 \seealso{
-\code{\link{CDnetNPL}}.
+\code{\link{sart}}, \code{\link{simsar}}, \code{\link{simcdnet}}.
 }

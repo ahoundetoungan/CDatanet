@@ -15,7 +15,7 @@
 #' The variable \eqn{\mathbf{y}}{y} is given for all i as
 #' \deqn{y_i = \lambda \mathbf{g}_i y + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{y_i = \lambda g_i*y + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 #' where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.
-#' @seealso \code{\link{CDnetNPL}}.
+#' @seealso \code{\link{sar}}, \code{\link{simsart}}, \code{\link{simcdnet}}.
 #' @return A list consisting of:
 #'     \item{y}{the observed count data.}
 #'     \item{Gy}{the average of y among friends.}
