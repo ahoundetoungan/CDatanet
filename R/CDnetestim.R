@@ -340,7 +340,6 @@ cdnet    <- function(formula,
         ctr[[par0]] <- thetat
         steps[[t]]  <- REt
         
-        print(theta)
         if((ninc.d > npl.incdit) | (llht < -1e293)) {
           thetat[1] <- -4.5
           dist0     <- Inf
