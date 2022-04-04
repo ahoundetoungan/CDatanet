@@ -24,6 +24,12 @@
 \arguments{
 \item{object}{an object of class \code{cdnet}, output of the function \code{\link{cdnet}}.}
 
+\item{Glist}{adjacency matrix or list sub-adjacency matrix. This is not necessary if the covariance method was computed in \link{cdnet}.}
+
+\item{data}{a \code{dataframe} containing the explanatory variables. This is not necessary if the covariance method was computed in \link{cdnet}.}
+
+\item{S}{number of simulation to be used to compute integral in the covariance by important sampling.}
+
 \item{...}{further arguments passed to or from other methods.}
 
 \item{x}{an object of class \code{summary.cdnet}, output of the function \code{\link{summary.cdnet}},

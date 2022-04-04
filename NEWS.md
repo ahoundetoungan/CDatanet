@@ -12,3 +12,6 @@
 - `simTobitnet` has been replaced by `simsart`.
 - `simCDnet` has been replaced by `simcdnet`.
 - `netformation` has been replaced by `homophily`.
+
+## SART model under rational expectations
+It is now possible to estimate the SART model under rational expectations. In the previous version, the SART model is only available under complete information.

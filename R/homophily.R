@@ -26,10 +26,11 @@
 #' @examples 
 #' \donttest{
 #' set.seed(1234)
+#' library(MASS)
 #' M            <- 4 # Number of sub-groups
 #' nvec         <- round(runif(M, 100, 500))
 #' beta         <- c(.1, -.1)
-#' distr        <- list()
+#' Glist        <- list()
 #' dX           <- matrix(0, 0, 2)
 #' mu           <- list()
 #' nu           <- list()
@@ -40,7 +41,7 @@
 #' Smunu        <- matrix(c(smu2, rho*sqrt(smu2*snu2), rho*sqrt(smu2*snu2), snu2), 2)
 #' for (m in 1:M) {
 #'   n          <- nvec[m]
-#'   tmp        <- MASS::mvrnorm(n, c(0, 0), Smunu)
+#'   tmp        <- mvrnorm(n, c(0, 0), Smunu)
 #'   mum        <- tmp[,1] - mean(tmp[,1])
 #'   num        <- tmp[,2] - mean(tmp[,2])
 #'   X1         <- rnorm(n, 0, 1)
@@ -55,25 +56,22 @@
 #'     }
 #'   }
 #'   
-#'   distrm       <- pnorm(cst[m] + Z1*beta[1] + Z2*beta[2] +
-#'                           kronecker(mum, t(num), "+"))
-#'   diag(distrm) <- 0
-#'   
+#'   Gm           <- 1*((cst[m] + Z1*beta[1] + Z2*beta[2] +
+#'                        kronecker(mum, t(num), "+") + rnorm(n^2)) > 0)
+#'   diag(Gm)     <- 0
 #'   diag(Z1)     <- NA
 #'   diag(Z2)     <- NA
 #'   Z1           <- Z1[!is.na(Z1)]
 #'   Z2           <- Z2[!is.na(Z2)]
 #'   
 #'   dX           <- rbind(dX, cbind(Z1, Z2))
-#'   distr[[m]]   <- distrm
+#'   Glist[[m]]   <- Gm
 #'   mu[[m]]      <- mum
 #'   nu[[m]]      <- num
 #' }
 #' 
 #' mu  <- unlist(mu)
 #' nu  <- unlist(nu)
-#' 
-#' Glist <- PartialNetwork::sim.network(dnetwork = distr)
 #' 
 #' out   <- homophily(network =  Glist, formula = ~ dX, fixed.effects = T, iteration = 2e3)
 #' 

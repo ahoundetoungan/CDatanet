@@ -44,6 +44,8 @@ of these functions such as, the control values and the method can be defined thr
 
 \item{opt.ctr}{list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in \code{optimizer}) such as control, method, ...}
 
+\item{print}{a boolean indicating if the estimate should be printed at each step.}
+
 \item{cov}{a boolean indicating if the covariance should be computed.}
 
 \item{RE}{a boolean which indicates if the model if under rational expectation of not.}

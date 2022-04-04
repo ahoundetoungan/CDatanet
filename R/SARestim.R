@@ -346,6 +346,7 @@ sar <- function(formula,
   K             <- length(coef)
   sigma         <- tail(coef, 1)
   coef          <- head(coef, K - 1)
+  RE            <- x$info$Rat.Exp
   
   vcoef         <- x$cov$parms
   vmeff         <- x$cov$marg.effects
@@ -368,7 +369,7 @@ sar <- function(formula,
   
   out_print      <- c(list(out_print), x[-c(1:3)], list(...))
   out_print.meff <- c(list(out_print.meff), x[-c(1:3)], list(...))
-  
+  RE             <- FALSE
   cat("sar Model", ifelse(RE, "with Rational Expectation", ""), "\n\n")
   cat("Method: Replication of Maximum Likelihood (ML) \nReplication: ", nsim, "\n\n")
   

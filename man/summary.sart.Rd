@@ -24,6 +24,10 @@
 \arguments{
 \item{object}{an object of class \code{sart}, output of the function \code{\link{sart}}.}
 
+\item{Glist}{adjacency matrix or list sub-adjacency matrix. This is not necessary if the covariance method was computed in \link{cdnet}.}
+
+\item{data}{dataframe containing the explanatory variables. This is not necessary if the covariance method was computed in \link{cdnet}.}
+
 \item{...}{further arguments passed to or from other methods.}
 
 \item{x}{an object of class \code{summary.sart}, output of the function \code{\link{summary.sart}}

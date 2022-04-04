@@ -15,6 +15,7 @@
 #' of these functions such as, the control values and the method can be defined through the argument `opt.ctr`.
 #' @param npl.ctr list of controls for the NPL method (see \code{\link{cdnet}}).
 #' @param opt.ctr list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in `optimizer`) such as control, method, ...
+#' @param print a boolean indicating if the estimate should be printed at each step.
 #' @param cov a boolean indicating if the covariance should be computed.
 #' @param RE a boolean which indicates if the model if under rational expectation of not.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
@@ -391,6 +392,8 @@ sart <- function(formula,
 #' @param object an object of class `sart`, output of the function \code{\link{sart}}.
 #' @param x an object of class `summary.sart`, output of the function \code{\link{summary.sart}} 
 #' or class `sart`, output of the function \code{\link{sart}}.
+#' @param Glist adjacency matrix or list sub-adjacency matrix. This is not necessary if the covariance method was computed in \link{cdnet}.
+#' @param data dataframe containing the explanatory variables. This is not necessary if the covariance method was computed in \link{cdnet}.
 #' @param ... further arguments passed to or from other methods.
 #' @return A list of the same objects in `object`.
 #' @export 

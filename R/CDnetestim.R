@@ -85,9 +85,10 @@
 #' # data
 #' data    <- data.frame(x1 = X[,1], x2 =  X[,2])
 #' 
-#' rm(list = ls()[!(ls() %in% c("Glist", "data", "theta"))])
+#' rm(list = ls()[!(ls() %in% c("Glist", "data", "theta", "delta"))])
 #' 
-#' ytmp    <- simcdnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, theta = theta, delta = delta, data = data)
+#' ytmp    <- simcdnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, theta = theta,
+#'                     delta = delta, data = data)
 #' 
 #' y       <- ytmp$y
 #' 
@@ -101,6 +102,8 @@
 #' summary(out)
 #' }
 #' @importFrom stats quantile
+#' @importFrom utils head
+#' @importFrom utils tail
 #' @export
 cdnet    <- function(formula,
                      contextual, 
@@ -432,6 +435,9 @@ cdnet    <- function(formula,
 #' class `summary.cdnets`, list of outputs of the function \code{\link{summary.cdnet}} 
 #' (when the model is estimated many times to control for the endogeneity) 
 #' or class `cdnet` of the function \code{\link{cdnet}}.
+#' @param Glist adjacency matrix or list sub-adjacency matrix. This is not necessary if the covariance method was computed in \link{cdnet}.
+#' @param data a `dataframe` containing the explanatory variables. This is not necessary if the covariance method was computed in \link{cdnet}.
+#' @param S number of simulation to be used to compute integral in the covariance by important sampling.
 #' @param ... further arguments passed to or from other methods.
 #' @return A list of the same objects in `object`.
 #' @export 

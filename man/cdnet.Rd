@@ -126,9 +126,10 @@ for (m in 1:M) {
 # data
 data    <- data.frame(x1 = X[,1], x2 =  X[,2])
 
-rm(list = ls()[!(ls() \%in\% c("Glist", "data", "theta"))])
+rm(list = ls()[!(ls() \%in\% c("Glist", "data", "theta", "delta"))])
 
-ytmp    <- simcdnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, theta = theta, delta = delta, data = data)
+ytmp    <- simcdnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, theta = theta,
+                    delta = delta, data = data)
 
 y       <- ytmp$y
 
