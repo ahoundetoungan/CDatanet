@@ -22,35 +22,12 @@ vignette: >
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-# Introduction
-
-There is a large and growing literature on peer effects in economics.^[For recent reviews, see @boucher2016some, @de2017econometrics and @bramoulle2019peer.] Recent contributions include, among others, models for discrete data, including binary [e.g., @lee2014binary; @liu2019simultaneous], ordered [e.g., @boucher2018peer], and multinomial [e.g., @guerra2017multinomial]. To my knowledge, however, there
-are no existing models for count variables with microeconomic foundations, despite these variables being prevalent in survey data (e.g., number of times teenagers have taken drugs, number of times teenagers have drunk alcohol, frequency of participation in sport activities, frequency of participation in extracurricular activities, frequency of restaurant visits, number of physician visits). 
-
-
-I present an incomplete information game with social interactions in which the outcome takes unbounded integer values. I show that it is important to account for the counting nature of the dependent variable. Assuming that this variable is continuous significantly underestimates the peer effects.  
-
-I also present an easy-to-use R package---named  **CDatanet**---for implementing the model. This note is a supplement for the package manual. I provide examples with simulated data to show how to use the package. The package is located on GitHub at [github.com/ahoundetoungan/CDatanet](https://github.com/ahoundetoungan/CDatanet). All the results of the note can be replicated following the code provided.
-
-The remainder of the paper is organized as follows. Section [2](#model) briefly introduces the model. Sections [3](#exo) and [4](#endo) provide examples in which the network matrix is exogenous and endogenous respectively. They present a Monte Carlo study to assess the performance of the estimator of the model parameters. They also discuss how to control for the endogeneity of the network. Section [5](#con) concludes.
-
 # Model{#model}
-Let $\mathcal{V} = \{1, \dots, n\}$ be a set of $n$ players indexed by $i$ and $y_i$ the observed integer outcome of player $i$ (e.g., the number of cigarettes smoked per day or per week). I denote by $\boldsymbol{G}$ the adjacency matrix such that $G_{ij} = \dfrac{1}{n_i}$ if $i$ knows $j$ and $G_{ij} = 0$ otherwise, where $n_i$ the number of friends of $i$. Let also $\boldsymbol{X}$ be the matrix of explanatory variables. 
-
-As in @liu2019simultaneous, I assume that there is a latent variable $y_i^*$ which determines the observed count variable $y_i$ . This latent variable $y_i^*$ and the observed $y_i$ are linked as follow.
-
-Let $\left(a_q\right)_{q \in \mathbb{N}}$ be a sequence  given by $a_0 = -\infty$, $a_1 \in \mathbb{R}$, and $a_q = a_1 + \gamma(q-1)$ for $q \in \mathbb{N}^*$ and $\gamma \in \mathbb{R}_+^*$. If $y_i^* \in (a_{q}, a_{q + 1}]$ then $y_i = q$.
 
 The first order conditions of the game equilibrium implies that
 
-$$ y_i^*  =  \lambda\sum_{i = 1}^n \sum_{r = 0}^{\infty} rG_{ij} p_{ir}  + \boldsymbol{x}_i^{\prime}\boldsymbol{\beta} + \varepsilon_{i}$$
-where $p_{ir}$ is the probability of $y_i = r$, $\lambda$ is the peer effect and $\varepsilon_{i} \sim \mathcal{N}\left(0, \sigma_{\varepsilon}^2\right)$.
-
-The game equilibrium is given by
-$$ p_{ir} = \Phi\left(\dfrac{\lambda\sum_{i = 1}^n \sum_{r = 0}^{\infty} rG_{ij} p_{ir}  + \boldsymbol{x}_i^{\prime}\boldsymbol{\beta} - a_q}{\sigma_{\varepsilon}}\right) - \Phi\left(\dfrac{\lambda\sum_{i = 1}^n \sum_{r = 0}^{\infty} rG_{ij} p_{ir}  + \boldsymbol{x}_i^{\prime}\boldsymbol{\beta}  - a_{q+1}}{\sigma_{\varepsilon}}\right)$$
-where $\Phi$ is the probability density function of $\mathcal{N}(0, 1)$.
-
-To estimate $\boldsymbol{\theta} = (\lambda, \boldsymbol{\beta}^{\prime}, \sigma_{\varepsilon})^{\prime}$, I rely on the Nested Partial Likelihood (NPL) method proposed by  @aguirregabiria2007sequential. I refer the reader to @houndetoungan2020cdata for more details. The estimation method is implemented in the package **CDatanet**.
+$$ p_{iq} = \Phi\left(\lambda\sum_{i = 1}^n \sum_{r = 0}^{\infty} rG_{ij} p_{ir}  + \boldsymbol{x}_i^{\prime}\boldsymbol{\beta} - a_r\right) - \Phi\left(\lambda\sum_{i = 1}^n \sum_{r = 0}^{\infty} rG_{ij} p_{ir}  + \boldsymbol{x}_i^{\prime}\boldsymbol{\beta}  - a_{r+1}\right),$$
+where $a_0 = -\infty$, $a_r = \sum_{k = 1}^r\delta_ k$ if $1\leq r<\bar{R}$, $\delta_1 = 0$, $a_r = (r-\bar{R}) \delta_ {\bar{R}} + \sum_{k = 1}^{\bar{R}} \delta_ k$ if $r\geq\bar{R}$, and $\Phi$ is the probability density function of $\mathcal{N}(0, 1)$. The parameter to be estimated in the model are $\delta_2$, \dots, $\delta_{\bar{R}}$, $\lambda$, $\boldsymbol{\beta}$. I refer the reader to @houndetoungan2020cdata for more details. The estimation method is implemented in the package **CDatanet**.
 
 # Examples with exogenous network{#exo}
 In this section, I present examples to show how to use the package. I simulate data following the model by assuming that the network matrix is exogenous. I then show how to estimate the model parameters using functions provided by **CDatanet**. I also use Monte Carlo simulations to assess the performance of the estimator of the model parameters.
