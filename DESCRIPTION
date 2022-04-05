@@ -20,4 +20,3 @@ Suggests:
     ggplot2,
     knitr,
     rmarkdown
-VignetteBuilder: knitr
