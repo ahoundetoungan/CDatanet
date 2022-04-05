@@ -98,7 +98,7 @@
 #' data    <- data.frame(yt = y, x1 = data$x1, x2 = data$x2)
 #' rm(list = ls()[!(ls() %in% c("Glist", "data"))])
 #' 
-#' out   <- cdnet(formula = yt ~ x1 + x2, contextual = TRUE, Glist = Glist, data = data, Rbar = 10)
+#' out   <- cdnet(formula = yt ~ x1 + x2, contextual = TRUE, Glist = Glist, data = data, Rbar = 6)
 #' summary(out)
 #' }
 #' @importFrom stats quantile
