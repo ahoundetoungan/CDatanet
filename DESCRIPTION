@@ -18,5 +18,6 @@ RoxygenNote: 7.1.2
 Roxygen: list(markdown = TRUE)
 Suggests: 
     ggplot2,
+    MASS,
     knitr,
     rmarkdown

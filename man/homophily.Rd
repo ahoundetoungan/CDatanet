@@ -97,7 +97,8 @@ for (m in 1:M) {
 mu  <- unlist(mu)
 nu  <- unlist(nu)
 
-out   <- homophily(network =  Glist, formula = ~ dX, fixed.effects = T, iteration = 2e3)
+out   <- homophily(network =  Glist, formula = ~ dX, fixed.effects = TRUE, 
+                   iteration = 1e3)
 
 # plot simulations
 plot(out$posterior$beta[,1], type = "l")
