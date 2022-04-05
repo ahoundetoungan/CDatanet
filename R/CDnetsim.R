@@ -32,6 +32,7 @@
 #'     \item{marg.effects}{the marginal effects.}
 #'     \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 #' @examples 
+#' \donttest{
 #' # Groups' size
 #' M      <- 5 # Number of sub-groups
 #' nvec   <- round(runif(M, 100, 1000))
@@ -75,8 +76,7 @@
 #' y       <- ytmp$y
 #' 
 #' # plot histogram
-#' hist(y, breaks = max(y))
-#' 
+#' hist(y, breaks = max(y))}
 #' @importFrom Rcpp sourceCpp
 #' @importFrom stats rnorm
 #' @export

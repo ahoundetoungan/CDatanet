@@ -62,6 +62,7 @@ Then, \eqn{y_i = r} iff \eqn{a_r \leq y_i^* \leq a_{r+1}}{a_r \le ys_i \le a_{r 
 \eqn{a_r = (r - \bar{R})\delta_{\bar{R}} + a_{\bar{R}}}{a_r = (r - Rbar)\delta_{Rbar} + a_{Rbar}} otherwise.
 }
 \examples{
+\donttest{
 # Groups' size
 M      <- 5 # Number of sub-groups
 nvec   <- round(runif(M, 100, 1000))
@@ -105,8 +106,7 @@ ytmp    <- simcdnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, theta = theta,
 y       <- ytmp$y
 
 # plot histogram
-hist(y, breaks = max(y))
-
+hist(y, breaks = max(y))}
 }
 \seealso{
 \code{\link{cdnet}}, \code{\link{simsart}}, \code{\link{simsar}}.

@@ -101,8 +101,8 @@ data    <- data.frame(x1 = X[,1], x2 =  X[,2])
 
 rm(list = ls()[!(ls() \%in\% c("Glist", "data", "theta"))])
 
-ytmp    <- simSARnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist,
-                     theta = theta, data = data) 
+ytmp    <- simsar(formula = ~ x1 + x2 | x1 + x2, Glist = Glist,
+                  theta = theta, data = data) 
 
 y       <- ytmp$y
 

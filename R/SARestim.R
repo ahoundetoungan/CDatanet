@@ -62,8 +62,8 @@
 #' 
 #' rm(list = ls()[!(ls() %in% c("Glist", "data", "theta"))])
 #' 
-#' ytmp    <- simSARnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist,
-#'                      theta = theta, data = data) 
+#' ytmp    <- simsar(formula = ~ x1 + x2 | x1 + x2, Glist = Glist,
+#'                   theta = theta, data = data) 
 #' 
 #' y       <- ytmp$y
 #' 
