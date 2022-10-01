@@ -21,6 +21,10 @@ fy <- function(yst, maxyst, delta, n, Rbar) {
     .Call(`_CDatanet_fy`, yst, maxyst, delta, n, Rbar)
 }
 
+fmeffects <- function(n, delta, Rbar, ZtLambda, lbeta) {
+    .Call(`_CDatanet_fmeffects`, n, delta, Rbar, ZtLambda, lbeta)
+}
+
 foptimREM <- function(yb, Gyb, theta, X, G, igroup, ngroup, K, n, Rbar, y, maxy, tol = 1e-13, maxit = 1e3L) {
     .Call(`_CDatanet_foptimREM`, yb, Gyb, theta, X, G, igroup, ngroup, K, n, Rbar, y, maxy, tol, maxit)
 }
@@ -63,6 +67,70 @@ flogintphi <- function(n, S, a, b, Mean, simu, igroup, ngroup) {
 
 fcovCDI <- function(n, Gyb, theta, X, Rbar, K, S, G, igroup, ngroup, ccov) {
     .Call(`_CDatanet_fcovCDI`, n, Gyb, theta, X, Rbar, K, S, G, igroup, ngroup, ccov)
+}
+
+fL2 <- function(ZtLambda, lambda, delta, bdelta, rho, Rbar, n) {
+    .Call(`_CDatanet_fL2`, ZtLambda, lambda, delta, bdelta, rho, Rbar, n)
+}
+
+fLncond2 <- function(ZtLambda, lambda, delta, bdelta, rho, Rbar, n, nsimu) {
+    .Call(`_CDatanet_fLncond2`, ZtLambda, lambda, delta, bdelta, rho, Rbar, n, nsimu)
+}
+
+fyb2 <- function(yb, Gyb, G, igroup, ngroup, psi, lambda, delta, bdelta, rho, n, Rbar, tol, maxit) {
+    .Call(`_CDatanet_fyb2`, yb, Gyb, G, igroup, ngroup, psi, lambda, delta, bdelta, rho, n, Rbar, tol, maxit)
+}
+
+fybncond2 <- function(yb, Gyb, G, igroup, ngroup, psi, lambda, delta, bdelta, rho, n, nsimu, Rbar, tol, maxit) {
+    .Call(`_CDatanet_fybncond2`, yb, Gyb, G, igroup, ngroup, psi, lambda, delta, bdelta, rho, n, nsimu, Rbar, tol, maxit)
+}
+
+fy2 <- function(yst, maxyst, lambda, delta, bdelta, rho, n, Rbar) {
+    .Call(`_CDatanet_fy2`, yst, maxyst, lambda, delta, bdelta, rho, n, Rbar)
+}
+
+fmeffects2 <- function(n, lambda, delta, bdelta, rho, Rbar, ZtLambda, lbeta) {
+    .Call(`_CDatanet_fmeffects2`, n, lambda, delta, bdelta, rho, Rbar, ZtLambda, lbeta)
+}
+
+foptimREM2 <- function(yb, Gyb, theta, X, G, igroup, ngroup, K, n, Rbar, y, maxy, tol = 1e-13, maxit = 1e3L) {
+    .Call(`_CDatanet_foptimREM2`, yb, Gyb, theta, X, G, igroup, ngroup, K, n, Rbar, y, maxy, tol, maxit)
+}
+
+foptimREMncond12 <- function(yb, Gyb, theta, X, Simu1, nsimu, G, igroup, ngroup, K, n, Rbar, y, maxy, tol = 1e-13, maxit = 1e3L) {
+    .Call(`_CDatanet_foptimREMncond12`, yb, Gyb, theta, X, Simu1, nsimu, G, igroup, ngroup, K, n, Rbar, y, maxy, tol, maxit)
+}
+
+foptimREM_NPL2 <- function(Gyb, theta, X, Rbar, maxy, K, n, y) {
+    .Call(`_CDatanet_foptimREM_NPL2`, Gyb, theta, X, Rbar, maxy, K, n, y)
+}
+
+fL_NPL2 <- function(yb, Gyb, G, igroup, ngroup, X, theta, Rbar, K, n) {
+    invisible(.Call(`_CDatanet_fL_NPL2`, yb, Gyb, G, igroup, ngroup, X, theta, Rbar, K, n))
+}
+
+fnewyb2 <- function(yb, Gyb, G, igroup, ngroup, X, theta, Rbar, K, n, tol, maxit) {
+    invisible(.Call(`_CDatanet_fnewyb2`, yb, Gyb, G, igroup, ngroup, X, theta, Rbar, K, n, tol, maxit))
+}
+
+foptimREM_NPLncond12 <- function(Gyb, theta, X, Simu1, nsimu, Rbar, maxy, K, n, y) {
+    .Call(`_CDatanet_foptimREM_NPLncond12`, Gyb, theta, X, Simu1, nsimu, Rbar, maxy, K, n, y)
+}
+
+fL_NPLncond12 <- function(yb, Gyb, G, igroup, ngroup, X, theta, Simu1, nsimu, Rbar, K, n) {
+    invisible(.Call(`_CDatanet_fL_NPLncond12`, yb, Gyb, G, igroup, ngroup, X, theta, Simu1, nsimu, Rbar, K, n))
+}
+
+foptimREM_NPLncond22 <- function(Gyb, theta, X, Simu1, Simu2, nsimu, Rbar, maxy, K, n, y) {
+    .Call(`_CDatanet_foptimREM_NPLncond22`, Gyb, theta, X, Simu1, Simu2, nsimu, Rbar, maxy, K, n, y)
+}
+
+fL_NPLncond22 <- function(yb, Gyb, G, igroup, ngroup, X, theta, Simu1, Simu2, nsimu, Rbar, K, n) {
+    invisible(.Call(`_CDatanet_fL_NPLncond22`, yb, Gyb, G, igroup, ngroup, X, theta, Simu1, Simu2, nsimu, Rbar, K, n))
+}
+
+fcovCDI2 <- function(n, Gyb, theta, X, Rbar, K, S, G, igroup, ngroup, ccov) {
+    .Call(`_CDatanet_fcovCDI2`, n, Gyb, theta, X, Rbar, K, S, G, igroup, ngroup, ccov)
 }
 
 fdummies <- function(out, limit, M, n) {

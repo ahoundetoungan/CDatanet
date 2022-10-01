@@ -6,7 +6,7 @@
 \alias{CDatanet-package}
 \title{The CDatanet package}
 \description{
-The \pkg{CDatanet} package implements the count data model with social interactions and the dyadic linking model developed in Houndetoungan (2020).
+The \pkg{CDatanet} package implements the count data model with social interactions and the dyadic linking model developed in Houndetoungan (2022).
 It also simulates data from the count data model and implements the Spatial Autoregressive Tobit model (LeSage, 2000; Xu and Lee, 2015) for left censored data and the Spatial Autoregressive Model (Lee, 2004).
 To make the computations faster \pkg{CDatanet} uses \code{C++} through the \pkg{Rcpp} package (Eddelbuettel et al., 2011).
 }

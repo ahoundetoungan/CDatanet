@@ -226,7 +226,7 @@ sart <- function(formula,
           fLTBT_NPL(ybt, Gybt, Glist, X, thetat, igr, M, n, K)
           
           # distance
-          dist        <- sum(abs(ctr[[par0]] - thetat)) + sum(abs(ybt0 - ybt))
+          dist        <- max(abs(c(ctr[[par0]]/thetat, ybt0/(ybt + 1e-50)) - 1), na.rm = TRUE)
           cont        <- (dist > npl.tol & t < (npl.maxit - 1))
           t           <- t + 1
           REt$dist    <- dist
@@ -263,7 +263,7 @@ sart <- function(formula,
           fLTBT_NPL(ybt, Gybt, Glist, X, thetat, igr, M, n, K)
           
           # distance
-          dist        <- sum(abs(ctr[[par0]] - thetat)) + sum(abs(ybt0 - ybt))
+          dist        <- max(abs(c(ctr[[par0]]/thetat, ybt0/(ybt + 1e-50)) - 1), na.rm = TRUE)
           cont        <- (dist > npl.tol & t < (npl.maxit - 1))
           t           <- t + 1
           REt$dist    <- dist

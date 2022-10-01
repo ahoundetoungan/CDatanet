@@ -15,3 +15,6 @@
 
 ## SART model under rational expectations
 It is now possible to estimate the SART model under rational expectations. In the previous version, the SART model is only available under complete information.
+
+# Changes in version 2.0.1
+This version follows the major revision of the paper in September 2022. The count data model includes a more flexible specification. Especially, it is possible to assume that the cut points are not equally spaced for large values of the dependent variable.

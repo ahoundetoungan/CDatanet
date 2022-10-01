@@ -58,7 +58,7 @@ int fybtbit(arma::vec& yb,
   computeL: ++t;
   ZtLambda       = lambda*Gyb + psi;
   arma::vec ybst = fLTBT(wrap(ZtLambda), sigma);
-  double dist    = arma::accu(arma::abs(yb - ybst));
+  double dist    = max(arma::abs(ybst/(yb + 1e-50) - 1));
   yb             = ybst;
   
   for (int m(0); m < ngroup; ++ m) {

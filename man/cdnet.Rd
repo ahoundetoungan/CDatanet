@@ -9,7 +9,8 @@ cdnet(
   contextual,
   Glist,
   Rbar = NULL,
-  starting = list(theta = NULL, delta = NULL),
+  estim.rho = FALSE,
+  starting = list(theta = NULL, deltabar = NULL, delta = NULL, rho = NULL),
   yb0 = NULL,
   optimizer = "optim",
   npl.ctr = list(),
@@ -32,7 +33,9 @@ the \code{formula} as \code{y ~ x1 + x2} and \code{contextual} as \code{TRUE} is
 
 \item{Rbar}{the value of Rbar. If not provided, it is automatically set at \code{quantile(y, 0.9)}.}
 
-\item{starting}{(optional) starting value of \eqn{\theta = (\lambda, \beta', \gamma')'} and \eqn{\delta = (\delta_2, ..., \delta_{\bar{R}})}{\delta = (\delta_2, ..., \delta_{Rbar})}. The parameter \eqn{\gamma} should be removed if the model
+\item{estim.rho}{indicates if the parameter \eqn{\rho} should be estimated or set to zero.}
+
+\item{starting}{(optional) starting value of \eqn{\theta = (\lambda, \beta', \gamma')'}, \eqn{\bar{\delta}}{deltabar}, \eqn{\delta = (\delta_2, ..., \delta_{\bar{R}})}{\delta = (\delta_2, ..., \delta_{Rbar})}, and \eqn{\rho}. The parameter \eqn{\gamma} should be removed if the model
 does not contain contextual effects (see details).}
 
 \item{yb0}{(optional) expectation of y.}
@@ -65,13 +68,15 @@ Estimate Count Data Model with Social Interactions using NPL Method
 \details{
 \subsection{Model}{
 
-Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}.
+Following Houndetoungan (2022), the count data \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}.
 The latent variable is given for all i as
-\deqn{y_i^* = \lambda \mathbf{g}_i \bar{\mathbf{y}} + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*ybar + x_i'\beta + g_i*X\gamma + \epsilon_i,}
+\deqn{y_i^* = \lambda \mathbf{g}_i \mathbf{E}(\bar{\mathbf{y}}|\mathbf{X},\mathbf{G})  + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*E(ybar|X, G) + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 where \eqn{\epsilon_i \sim N(0, 1)}{\epsilon_i --> N(0, 1)}.\cr
 Then, \eqn{y_i = r} iff \eqn{a_r \leq y_i^* \leq a_{r+1}}{a_r \le ys_i \le a_{r + 1}}, where
-\eqn{a_0 = -\inf}{a_0 = -Inf}, \eqn{a_1 = 0}, \eqn{a_r = \sum_{k = 1}^r\delta_k}{a_r = \delta_1 + ... + \delta_r} if \eqn{1 \leq r \leq \bar{R}}{1 \le r \le Rbar}, and
-\eqn{a_r = (r - \bar{R})\delta_{\bar{R}} + a_{\bar{R}}}{a_r = (r - Rbar)\delta_{Rbar} + a_{Rbar}} otherwise.
+\eqn{a_0 = -\inf}{a_0 = -Inf}, \eqn{a_1 = 0}, \eqn{a_r = \sum_{k = 1}^r\delta_k}{a_r = \delta_1 + ... + \delta_r}.
+The parameter are subject to the constraints \eqn{\delta_r \geq \lambda}{\delta_r \ge \lambda} if \eqn{1 \leq r \leq \bar{R}}{1 \le r \le Rbar},  and
+\eqn{\delta_r = (r - \bar{R})^{\rho}\bar{\delta} + \lambda}{a_r = deltabar*(r - Rbar)^{\rho} + \lambda} if \eqn{r \geq \bar{R} + 1}{r \ge Rbar + 1}. The unknown parameters to be estimated are
+\eqn{\lambda}, \eqn{\beta}, \eqn{\gamma}, \eqn{\delta_2}, ..., \eqn{\delta_{\bar{R}}}{\delta_{Rbar}}, \eqn{\bar{\delta}}{deltabar}, and \eqn{\rho}.
 }
 
 \subsection{\code{npl.ctr}}{
@@ -100,7 +105,9 @@ n      <- sum(nvec)
 lambda <- 0.4
 beta   <- c(1.5, 2.2, -0.9)
 gamma  <- c(1.5, -1.2)
-delta  <- c(1, 0.87, 0.75, 0.6, 0.4)
+delta  <- c(1, 0.87, 0.75, 0.6)
+delbar <- 0.05
+rho    <- 0.5
 theta  <- c(lambda, beta, gamma)
 
 # X
@@ -126,10 +133,8 @@ for (m in 1:M) {
 # data
 data    <- data.frame(x1 = X[,1], x2 =  X[,2])
 
-rm(list = ls()[!(ls() \%in\% c("Glist", "data", "theta", "delta"))])
-
 ytmp    <- simcdnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, theta = theta,
-                    delta = delta, data = data)
+                    deltabar = delbar, delta = delta, rho = rho, data = data)
 
 y       <- ytmp$y
 
@@ -139,7 +144,8 @@ hist(y, breaks = max(y))
 data    <- data.frame(yt = y, x1 = data$x1, x2 = data$x2)
 rm(list = ls()[!(ls() \%in\% c("Glist", "data"))])
 
-out   <- cdnet(formula = yt ~ x1 + x2, contextual = TRUE, Glist = Glist, data = data, Rbar = 6)
+out   <- cdnet(formula = yt ~ x1 + x2, contextual = TRUE, Glist = Glist, 
+               data = data, Rbar = 6, estim.rho = TRUE)
 summary(out)
 }
 }

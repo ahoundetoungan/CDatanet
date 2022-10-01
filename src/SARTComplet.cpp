@@ -35,7 +35,7 @@ int fyTobit(arma::vec& yst,
     arma::mat Gm      = G[m];
     Gy.subvec(n1, n2) = Gm*y.subvec(n1, n2);
   }
-  double dist         = arma::accu(arma::abs(y0 - y));
+  double dist         = max(arma::abs(y0/(y + 1e-50)));
   if (dist > tol && t < maxit) goto computeyst;
   return t; 
 }

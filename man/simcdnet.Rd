@@ -9,8 +9,10 @@ simcdnet(
   contextual,
   Glist,
   theta,
-  delta,
-  tol = 1e-15,
+  deltabar,
+  delta = NULL,
+  rho = 0,
+  tol = 1e-10,
   maxit = 500,
   data
 )
@@ -30,9 +32,13 @@ without intercept or \code{y ~ x1 + x2 | x2 + x3} to allow the contextual variab
 \item{theta}{the true value of the vector \eqn{\theta = (\lambda, \beta', \gamma')'}. The parameter \eqn{\gamma} should be removed if the model
 does not contain contextual effects (see details).}
 
-\item{delta}{the true value of the vector \eqn{\delta = (\delta_2, ..., \delta_{\bar{R}})}{\delta = (\delta_2, ..., \delta_{Rbar})}}
+\item{deltabar}{the true value of \eqn{\bar{\delta}}{deltabar}.}
 
-\item{tol}{the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of \code{y}. The process stops if the \eqn{L_1}{L} distance
+\item{delta}{the true value of the vector \eqn{\delta = (\delta_2, ..., \delta_{\bar{R}})}{\delta = (\delta_2, ..., \delta_{Rbar})}. If \code{NULL}, then \eqn{\bar{R}}{Rbar} is set to one and \code{delta} is empty.}
+
+\item{rho}{the true value of \eqn{\rho}.}
+
+\item{tol}{the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of \code{y}. The process stops if the \eqn{L_1}{L1} distance
 between two consecutive values of the expectancy of \code{y} is less than \code{tol}.}
 
 \item{maxit}{the maximal number of iterations in the Fixed Point Iteration Method.}
@@ -47,19 +53,22 @@ A list consisting of:
 \item{yb}{ybar (see details), the expectation of y.}
 \item{Gyb}{the average of the expectation of y among friends.}
 \item{marg.effects}{the marginal effects.}
+\item{rho}{the return value of rho.}
+\item{Rmax}{infinite sums in the marginal effects are approximated by sums up to Rmax.}
 \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 }
 \description{
 Simulate data from Count Data Model with Social Interactions
 }
 \details{
-Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}.
+Following Houndetoungan (2022), the count data \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}.
 The latent variable is given for all i as
-\deqn{y_i^* = \lambda \mathbf{g}_i \bar{\mathbf{y}} + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*ybar + x_i'\beta + g_i*X\gamma + \epsilon_i,}
+\deqn{y_i^* = \lambda \mathbf{g}_i \mathbf{E}(\bar{\mathbf{y}}|\mathbf{X},\mathbf{G})  + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*E(ybar|X, G) + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 where \eqn{\epsilon_i \sim N(0, 1)}{\epsilon_i --> N(0, 1)}.\cr
 Then, \eqn{y_i = r} iff \eqn{a_r \leq y_i^* \leq a_{r+1}}{a_r \le ys_i \le a_{r + 1}}, where
-\eqn{a_0 = -\inf}{a_0 = -Inf}, \eqn{a_1 = 0}, \eqn{a_r = \sum_{k = 1}^r\delta_k}{a_r = \delta_1 + ... + \delta_r} if \eqn{1 \leq r \leq \bar{R}}{1 \le r \le Rbar}, and
-\eqn{a_r = (r - \bar{R})\delta_{\bar{R}} + a_{\bar{R}}}{a_r = (r - Rbar)\delta_{Rbar} + a_{Rbar}} otherwise.
+\eqn{a_0 = -\inf}{a_0 = -Inf}, \eqn{a_1 = 0}, \eqn{a_r = \sum_{k = 1}^r\delta_k}{a_r = \delta_1 + ... + \delta_r}.
+The parameter are subject to the constraints \eqn{\delta_r \geq \lambda}{\delta_r \ge \lambda} if \eqn{1 \leq r \leq \bar{R}}{1 \le r \le Rbar},  and
+\eqn{\delta_r = (r - \bar{R})^{\rho}\bar{\delta} + \lambda}{a_r = deltabar*(r - Rbar)^{\rho} + \lambda} if \eqn{r \geq \bar{R} + 1}{r \ge Rbar + 1}.
 }
 \examples{
 \donttest{
@@ -72,7 +81,8 @@ n      <- sum(nvec)
 lambda <- 0.4
 beta   <- c(1.5, 2.2, -0.9)
 gamma  <- c(1.5, -1.2)
-delta  <- c(1, 0.87, 0.75, 0.6, 0.4)
+delta  <- c(1, 0.87, 0.75, 0.6)
+delbar <- 0.05
 theta  <- c(lambda, beta, gamma)
 
 # X
@@ -98,10 +108,10 @@ for (m in 1:M) {
 # data
 data    <- data.frame(x1 = X[,1], x2 =  X[,2])
 
-rm(list = ls()[!(ls() \%in\% c("Glist", "data", "theta", "delta"))])
+rm(list = ls()[!(ls() \%in\% c("Glist", "data", "theta", "delta", "delbar"))])
 
 ytmp    <- simcdnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, theta = theta, 
-                    delta = delta, data = data)
+                    deltabar = delbar, delta = delta, rho = 0, data = data)
 
 y       <- ytmp$y
 

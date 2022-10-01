@@ -8,7 +8,8 @@
 #' the `formula` as `y ~ x1 + x2` and `contextual` as `TRUE` is equivalent to set the formula as `y ~ x1 + x2 | x1 + x2`.
 #' @param Glist the adjacency matrix or list sub-adjacency matrix.
 #' @param Rbar the value of Rbar. If not provided, it is automatically set at \code{quantile(y, 0.9)}.
-#' @param starting (optional) starting value of \eqn{\theta = (\lambda, \beta', \gamma')'} and \eqn{\delta = (\delta_2, ..., \delta_{\bar{R}})}{\delta = (\delta_2, ..., \delta_{Rbar})}. The parameter \eqn{\gamma} should be removed if the model
+#' @param estim.rho indicates if the parameter \eqn{\rho} should be estimated or set to zero.
+#' @param starting (optional) starting value of \eqn{\theta = (\lambda, \beta', \gamma')'}, \eqn{\bar{\delta}}{deltabar}, \eqn{\delta = (\delta_2, ..., \delta_{\bar{R}})}{\delta = (\delta_2, ..., \delta_{Rbar})}, and \eqn{\rho}. The parameter \eqn{\gamma} should be removed if the model
 #' does not contain contextual effects (see details).
 #' @param yb0 (optional) expectation of y.
 #' @param optimizer is either `nlm` (referring to the \link[stats]{nlm} function) or `optim` (referring to the \link[stats]{optim} function). 
@@ -28,13 +29,15 @@
 #'     \item{details}{step-by-step output as returned by the optimizer.}
 #' @details 
 #' ## Model
-#' Following Houndetoungan (2020), the count data \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}. 
+#' Following Houndetoungan (2022), the count data \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}. 
 #' The latent variable is given for all i as
-#' \deqn{y_i^* = \lambda \mathbf{g}_i \bar{\mathbf{y}} + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*ybar + x_i'\beta + g_i*X\gamma + \epsilon_i,}
+#' \deqn{y_i^* = \lambda \mathbf{g}_i \mathbf{E}(\bar{\mathbf{y}}|\mathbf{X},\mathbf{G})  + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*E(ybar|X, G) + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 #' where \eqn{\epsilon_i \sim N(0, 1)}{\epsilon_i --> N(0, 1)}.\cr
 #' Then, \eqn{y_i = r} iff \eqn{a_r \leq y_i^* \leq a_{r+1}}{a_r \le ys_i \le a_{r + 1}}, where
-#' \eqn{a_0 = -\inf}{a_0 = -Inf}, \eqn{a_1 = 0}, \eqn{a_r = \sum_{k = 1}^r\delta_k}{a_r = \delta_1 + ... + \delta_r} if \eqn{1 \leq r \leq \bar{R}}{1 \le r \le Rbar}, and 
-#' \eqn{a_r = (r - \bar{R})\delta_{\bar{R}} + a_{\bar{R}}}{a_r = (r - Rbar)\delta_{Rbar} + a_{Rbar}} otherwise.
+#' \eqn{a_0 = -\inf}{a_0 = -Inf}, \eqn{a_1 = 0}, \eqn{a_r = \sum_{k = 1}^r\delta_k}{a_r = \delta_1 + ... + \delta_r}. 
+#' The parameter are subject to the constraints \eqn{\delta_r \geq \lambda}{\delta_r \ge \lambda} if \eqn{1 \leq r \leq \bar{R}}{1 \le r \le Rbar},  and
+#' \eqn{\delta_r = (r - \bar{R})^{\rho}\bar{\delta} + \lambda}{a_r = deltabar*(r - Rbar)^{\rho} + \lambda} if \eqn{r \geq \bar{R} + 1}{r \ge Rbar + 1}. The unknown parameters to be estimated are
+#' \eqn{\lambda}, \eqn{\beta}, \eqn{\gamma}, \eqn{\delta_2}, ..., \eqn{\delta_{\bar{R}}}{\delta_{Rbar}}, \eqn{\bar{\delta}}{deltabar}, and \eqn{\rho}.
 #' ## \code{npl.ctr}
 #' The model parameters is estimated using the Nested Partial Likelihood (NPL) method. This approach 
 #' starts with a guess of \eqn{\theta} and \eqn{\bar{y}}{yb} and constructs iteratively a sequence
@@ -59,7 +62,9 @@
 #' lambda <- 0.4
 #' beta   <- c(1.5, 2.2, -0.9)
 #' gamma  <- c(1.5, -1.2)
-#' delta  <- c(1, 0.87, 0.75, 0.6, 0.4)
+#' delta  <- c(1, 0.87, 0.75, 0.6)
+#' delbar <- 0.05
+#' rho    <- 0.5
 #' theta  <- c(lambda, beta, gamma)
 #' 
 #' # X
@@ -85,10 +90,8 @@
 #' # data
 #' data    <- data.frame(x1 = X[,1], x2 =  X[,2])
 #' 
-#' rm(list = ls()[!(ls() %in% c("Glist", "data", "theta", "delta"))])
-#' 
 #' ytmp    <- simcdnet(formula = ~ x1 + x2 | x1 + x2, Glist = Glist, theta = theta,
-#'                     delta = delta, data = data)
+#'                     deltabar = delbar, delta = delta, rho = rho, data = data)
 #' 
 #' y       <- ytmp$y
 #' 
@@ -98,7 +101,8 @@
 #' data    <- data.frame(yt = y, x1 = data$x1, x2 = data$x2)
 #' rm(list = ls()[!(ls() %in% c("Glist", "data"))])
 #' 
-#' out   <- cdnet(formula = yt ~ x1 + x2, contextual = TRUE, Glist = Glist, data = data, Rbar = 6)
+#' out   <- cdnet(formula = yt ~ x1 + x2, contextual = TRUE, Glist = Glist, 
+#'                data = data, Rbar = 6, estim.rho = TRUE)
 #' summary(out)
 #' }
 #' @importFrom stats quantile
@@ -109,7 +113,8 @@ cdnet    <- function(formula,
                      contextual, 
                      Glist, 
                      Rbar      = NULL,
-                     starting  = list(theta = NULL, delta = NULL), 
+                     estim.rho = FALSE,
+                     starting  = list(theta = NULL, deltabar = NULL, delta = NULL, rho = NULL), 
                      yb0       = NULL,
                      optimizer = "optim", 
                      npl.ctr   = list(), 
@@ -119,15 +124,13 @@ cdnet    <- function(formula,
   
   stopifnot(optimizer %in% c("optim", "nlm"))
   env.formula <- environment(formula)
+  
   # controls
   npl.print   <- npl.ctr$print
   npl.tol     <- npl.ctr$tol
   npl.maxit   <- npl.ctr$maxit
   npl.S       <- npl.ctr$S
   npl.incdit  <- npl.ctr$incdit
-  
-  thetat      <- starting$theta
-  Deltat      <- starting$delta
   if (is.null(npl.print)) {
     npl.print <- TRUE
   }
@@ -143,6 +146,20 @@ cdnet    <- function(formula,
   if (is.null(npl.incdit)) {
     npl.incdit<- 30L
   }
+  
+  # starting values
+  thetat      <- starting$theta
+  Deltat      <- starting$delta
+  Deltabart   <- starting$deltabar
+  rhot        <- starting$rho
+  tmp         <- c(is.null(thetat), is.null(Deltat), is.null(Deltabart))
+  if(estim.rho){
+    tmp       <- c(tmp, is.null(rhot))
+  }
+  if(all(tmp) != any(tmp)){
+    stop("All the parameters in starting should be either NULL or defined. Set delta = numeric() if Rbar = 1.")
+  }
+  
   
   # data
   if (missing(contextual)) {
@@ -195,38 +212,52 @@ cdnet    <- function(formula,
   # Gybt
   Gybt     <- unlist(lapply(1:M, function(x) Glist[[x]] %*% ybt[(igr[x,1]:igr[x,2])+1]))
   
-  #Rbar and delta
+  # Rbar and delta
   if(is.null(Rbar)){
     if(is.null(Deltat)){
-      Rbar   <- max(quantile(y, 0.95) + 1, 2)
-      Deltat <- rep(1, Rbar - 1)
+      Rbar   <- max(quantile(y, 0.95), 1)
     } else {
       Rbar   <- length(Deltat) + 1
     }
   } else {
-    if(is.null(Deltat)){
-      Deltat <- rep(1, Rbar - 1)
-    } else {
+    if(!is.null(Deltat)){
       if(Rbar != (length(Deltat) + 1)) stop("Rbar != length(delta) + 1")
     }
   }
-  lDelta   <- log(Deltat)
-  stopifnot(Rbar <= (max(y) + 1))
-  stopifnot(Rbar >= 2)
+  stopifnot(Rbar <= max(y))
+  stopifnot(Rbar >= 1)
   
-  # theta
+  # check starting and computed them if not defined
+  lmbd0       <- NULL  
   if (!is.null(thetat)) {
     if(length(thetat) != (K + 1)) {
       stop("Length of theta is not suited.")
     }
-    thetat <- c(log(thetat[1]/(1 -thetat[1])), thetat[-1])
+    if(thetat[1] <= 0) stop("Starting lambda is not positive.")
+    lmbd0     <- thetat[1]
+    thetat    <- c(log(thetat[1]/(1 -thetat[1])), thetat[-1])
+    if(Rbar > 1) if(any(Deltat < lmbd0)) stop("Multiple equilibrium issue: Starting lambda is greater than starting delta.")
+    if(Deltabart <= 0) stop("Starting deltabar is not positive.")
+    if((rhot <= 0) & estim.rho) stop("Starting rho is not positive.")
   } else {
-    Xtmp   <- cbind(f.t.data$Gy, X)
-    b      <- solve(t(Xtmp)%*%Xtmp, t(Xtmp)%*%y)
-    b      <- b/sqrt(sum((y - Xtmp%*%b)^2)/n)
-    thetat <- c(log(max(b[1]/(1 - b[1]), 0.01)), b[-1])
+    Xtmp      <- cbind(f.t.data$Gy, X)
+    b         <- solve(t(Xtmp)%*%Xtmp, t(Xtmp)%*%y)
+    b         <- b/sqrt(sum((y - Xtmp%*%b)^2)/n)
+    b[1]      <- max(b[1], 0.01)
+    lmbd0     <- b[1]
+    Deltat    <- rep(b[1] + 0.01, Rbar - 1)
+    thetat    <- c(log(b[1]/(1 - b[1])), b[-1])
+    Deltabart <- 0.01
+    rhot      <- 0.01
   }
-  thetat   <- c(thetat, lDelta)
+  
+  lDelta      <- log(Deltat - lmbd0)
+  lDeltabart  <- log(Deltabart)
+  thetat      <- c(thetat, lDelta, lDeltabart)
+  if(estim.rho){
+    lrho      <- log(rhot)
+    thetat    <- c(thetat, lrho)
+  }
   
   # other variables
   cont     <- TRUE
@@ -251,12 +282,16 @@ cdnet    <- function(formula,
   #   ctr    <- c(ctr, list(Simu1 = simu1, Simu2 = simu2, nsimu = nsimu))
   # }
   
+  # Arguments used in the optimizer
   if (optimizer == "optim") {
     # ctr    <- c(ctr, list(fn = ifelse(Ksimu == 0, foptimREM_NPL, 
     #                                   ifelse(Ksimu == 1, foptimREM_NPLncond1, 
     #                                          foptimREM_NPLncond2)), par = thetat))
-    ctr    <- c(ctr, list(fn = foptimREM_NPL, par = thetat))
-    
+    if(estim.rho){
+      ctr  <- c(ctr, list(fn = foptimREM_NPL2, par = thetat))
+    } else{
+      ctr  <- c(ctr, list(fn = foptimREM_NPL, par = thetat))
+    }
     par0   <- "par"
     par1   <- "par"
     like   <- "value"
@@ -264,29 +299,46 @@ cdnet    <- function(formula,
     # ctr    <- c(ctr, list(f = ifelse(Ksimu == 0, foptimREM_NPL, 
     #                                  ifelse(Ksimu == 1, foptimREM_NPLncond1, 
     #                                         foptimREM_NPLncond2)), p = thetat))
-    ctr    <- c(ctr, list(f = foptimREM_NPL,  p = thetat))
+    if(estim.rho){
+      ctr  <- c(ctr, list(f = foptimREM_NPL2,  p = thetat))
+    } else{
+      ctr  <- c(ctr, list(f = foptimREM_NPL,  p = thetat))
+    }
     par0   <- "p"
     par1   <- "estimate"
     like   <- "minimum"
   }
   
+  # Fonction used to compute new candidate for E(y)
+  fL_NPLR   <- NULL
+  fcovCDIR  <- NULL
+  if(estim.rho){
+    fL_NPLR <- fL_NPL2
+    fcovCDI <- fcovCDI2
+  } else{
+    fL_NPLR <- fL_NPL
+    fcovCDI <- fcovCDI
+  }
+  
+  # NPL algorithm
   ninc.d   <- 0
   dist0    <- Inf
   if(npl.print) {
     while(cont) {
       tryCatch({
         ybt0        <- ybt + 0    #copy in different memory
-        
         # compute theta
         REt         <- do.call(get(optimizer), ctr)
         thetat      <- REt[[par1]]
         llht        <- -REt[[like]]
-        theta       <- c(1/(1 + exp(-thetat[1])), thetat[2:(K +1)], exp(tail(thetat, Rbar-1)))
+        theta       <- c(1/(1 + exp(-thetat[1])), thetat[2:(K +1)], exp(thetat[-(1:(K +1))]))
+        if(Rbar > 1){
+          theta[(K+2):(K+Rbar)] <- theta[(K+2):(K+Rbar)] + theta[1]
+        }
         # compute y
-        fL_NPL(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n)
-        
+        fL_NPLR(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n)
         # distance
-        dist        <- sum(abs(ctr[[par0]] - thetat)) + sum(abs(ybt0 - ybt))
+        dist        <- max(abs(c(ctr[[par0]]/thetat, ybt0/(ybt + 1e-50)) - 1), na.rm = TRUE)
         ninc.d      <- (ninc.d + 1)*(dist > dist0) #counts the successive number of times distance increases
         dist0       <- dist
         cont        <- (dist > npl.tol & t < (npl.maxit - 1))
@@ -305,7 +357,11 @@ cdnet    <- function(formula,
           cat("** Non-convergence ** Redefining theta and computing a new yb\n")
           thetat[1] <- -4.5
           dist0     <- Inf
-          fnewyb(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit) 
+          if(estim.rho){
+            fnewyb2(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
+          } else{
+            fnewyb(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
+          }
           ctr[[par0]] <- thetat
         }
       },
@@ -313,7 +369,11 @@ cdnet    <- function(formula,
         cat("** Non-convergence ** Redefining theta and computing a new yb\n")
         thetat[1]   <- -4.5
         dist0       <- Inf
-        fnewyb(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit) 
+        if(estim.rho){
+          fnewyb2(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
+        } else{
+          fnewyb(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
+        }
         cont        <- TRUE
         t           <- t + 1
         ctr[[par0]] <- thetat
@@ -331,10 +391,10 @@ cdnet    <- function(formula,
         llht        <- -REt[[like]]
 
         # compute y
-        fL_NPL(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n)
+        fL_NPLR(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n)
         
         # distance
-        dist        <- sum(abs(ctr[[par0]] - thetat)) + sum(abs(ybt0 - ybt))
+        dist        <- max(abs(c(ctr[[par0]]/thetat, ybt0/(ybt + 1e-50)) - 1), na.rm = TRUE)
         ninc.d      <- (ninc.d + 1)*(dist > dist0) #counts the successive number of times distance increases
         dist0       <- dist
         cont        <- (dist > npl.tol & t < (npl.maxit - 1))
@@ -346,24 +406,44 @@ cdnet    <- function(formula,
         if((ninc.d > npl.incdit) | (llht < -1e293)) {
           thetat[1] <- -4.5
           dist0     <- Inf
-          fnewyb(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit) 
+          if(estim.rho){
+            fnewyb2(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
+          } else{
+            fnewyb(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
+          }
           ctr[[par0]] <- thetat
         }
       },
       error = function(e){
         thetat[1]   <- -4.5
         dist0       <- Inf
-        fnewyb(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit) 
+        if(estim.rho){
+          fnewyb2(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
+        } else{
+          fnewyb(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
+        }
         cont        <- TRUE
         t           <- t + 1
         ctr[[par0]] <- thetat
         steps[[t]]  <- NULL
       })
     }
-    theta           <- c(1/(1 + exp(-thetat[1])), thetat[2:(K +1)], exp(tail(thetat, Rbar-1)))
+    theta           <- c(1/(1 + exp(-thetat[1])), thetat[2:(K +1)], exp(thetat[-(1:(K +1))]))
+    if(Rbar > 1){
+      theta[(K+2):(K+Rbar)] <- theta[(K+2):(K+Rbar)] + theta[1]
+    }
   }
   
-  names(theta)      <- c(coln, paste0("delta", 2:(Rbar)))
+  # name theta
+  namtheta          <- coln
+  if(Rbar > 1){
+    namtheta        <- c(namtheta, paste0("delta", 2:(Rbar)))
+  }
+  namtheta          <- c(namtheta, "deltabar")
+  if(estim.rho){
+    namtheta        <- c(namtheta, "rho")
+  }
+  names(theta)      <- namtheta
   
   environment(formula) <- env.formula
   sdata               <- list(
@@ -397,28 +477,39 @@ cdnet    <- function(formula,
   names(meffects)   <- colnME
   
   if(!is.null(covt)) {
-    colnames(covt)  <- c(coln, paste0("logdelta", 2:(Rbar)))
-    rownames(covt)  <- c(coln, paste0("logdelta", 2:(Rbar)))
+    namecovt        <- coln
+    if(Rbar > 1){
+      namecovt      <- c(namecovt, paste0("log(delta", 2:(Rbar), ")"))
+    }
+    namecovt        <- c(namecovt, "log(deltabar)")
+    if(estim.rho){
+      namecovt      <- c(namecovt, "log(rho)")
+    }
+    colnames(covt)  <- namecovt
+    rownames(covt)  <- namecovt
     colnames(covm)  <- colnME
     rownames(covm)  <- colnME
-    rownames(var.comp$Sigma) <- c(coln, paste0("logdelta", 2:(Rbar)))
-    rownames(var.comp$Omega) <- c(coln, paste0("logdelta", 2:(Rbar)))
-    colnames(var.comp$Sigma) <- c(coln, paste0("logdelta", 2:(Rbar)))
-    colnames(var.comp$Omega) <- c(coln, paste0("logdelta", 2:(Rbar)))
+    namecovt[1]     <- "log(lambda)"
+    rownames(var.comp$Sigma) <- namecovt
+    rownames(var.comp$Omega) <- namecovt
+    colnames(var.comp$Sigma) <- namecovt
+    colnames(var.comp$Omega) <- namecovt
   }
   
   
   INFO                 <- list("M"          = M,
                                "n"          = n,
+                               "Kz"         = K,
                                "nlinks"     = unlist(lapply(Glist, function(u) sum(u > 0))),
                                "formula"    = formula,
+                               "estim.rho"  = estim.rho,
                                "Rbar"       = Rbar,
                                "Rmax"       = Rmax,
                                "log.like"   = llht, 
                                "npl.iter"   = t)
   
   out                  <- list("info"       = INFO,
-                               "estimate"   = list(theta = head(theta, K + 1), delta = tail(theta, Rbar - 1), marg.effects = meffects),
+                               "estimate"   = list(parms = theta, marg.effects = meffects),
                                "yb"         = ybt, 
                                "Gyb"        = Gybt,
                                "cov"        = list(parms = covt, marg.effects = covm, var.comp = var.comp),
@@ -450,10 +541,24 @@ cdnet    <- function(formula,
   out        <- c(object, list("..." = ...))
   if(is.null(object$cov$parms)){
     env.formula <- environment(object$info$formula)
-    thetat      <- c(object$estimate$theta, log(object$estimate$delta))
-    thetat      <- c(log(thetat[1]/(1 - thetat[1])), thetat[-1])
-    Gybt        <- object$Gyb
     Rbar        <- object$info$Rbar
+    Kz          <- object$info$Kz
+    estim.rho   <- object$info$estim.rho
+    parms       <- object$estimate$parms
+
+    thetat      <- c(log(parms[1]/(1 -parms[1])), parms[-1])
+    if(Rbar > 1){
+      thetat[(2 + Kz):(Kz + Rbar)] <- thetat[(2 + Kz):(Kz + Rbar)] - parms[1]
+    }
+    thetat[(2 + Kz):(Kz + Rbar + 1 + estim.rho)] <- log(tail(thetat, Rbar + estim.rho))
+
+    if(estim.rho){
+      fcovCDI   <- fcovCDI2
+    } else{
+      fcovCDI   <- fcovCDI
+    }
+
+    Gybt        <- object$Gyb
     npl.S       <- S
     if (is.null(npl.S)) {
       npl.S     <- 1e3L
@@ -474,9 +579,11 @@ cdnet    <- function(formula,
     X        <- f.t.data$X
     K        <- ncol(X)
     coln     <- c("lambda", colnames(X))
+    
+
     tmp      <- fcovCDI(n, Gybt, thetat, X, Rbar, K, npl.S, Glist, igr, M, TRUE)
-    var.comp          <- tmp$var.comp
     meffects          <- c(tmp$meffects)
+    var.comp          <- tmp$var.comp
     covt              <- tmp$covt
     covm              <- tmp$covm
     Rmax              <- tmp$Rmax
@@ -490,14 +597,23 @@ cdnet    <- function(formula,
     names(meffects)   <- colnME
     
     if(!is.null(covt)) {
-      colnames(covt)  <- c(coln, paste0("logdelta", 2:(Rbar)))
-      rownames(covt)  <- c(coln, paste0("logdelta", 2:(Rbar)))
+      namecovt        <- coln
+      if(Rbar > 1){
+        namecovt      <- c(namecovt, paste0("log(delta", 2:(Rbar), ")"))
+      }
+      namecovt        <- c(namecovt, "log(deltabar)")
+      if(estim.rho){
+        namecovt      <- c(namecovt, "log(rho)")
+      }
+      colnames(covt)  <- namecovt
+      rownames(covt)  <- namecovt
       colnames(covm)  <- colnME
       rownames(covm)  <- colnME
-      rownames(var.comp$Sigma) <- c(coln, paste0("logdelta", 2:(Rbar)))
-      rownames(var.comp$Omega) <- c(coln, paste0("logdelta", 2:(Rbar)))
-      colnames(var.comp$Sigma) <- c(coln, paste0("logdelta", 2:(Rbar)))
-      colnames(var.comp$Omega) <- c(coln, paste0("logdelta", 2:(Rbar)))
+      namecovt[1]     <- "log(lambda)"
+      rownames(var.comp$Sigma) <- namecovt
+      rownames(var.comp$Omega) <- namecovt
+      colnames(var.comp$Sigma) <- namecovt
+      colnames(var.comp$Omega) <- namecovt
     }
     
     out$cov           <- list(parms = covt, marg.effects = covm, var.comp = var.comp)
@@ -508,6 +624,7 @@ cdnet    <- function(formula,
 
 
 #' @rdname summary.cdnet
+#' @importFrom stats pchisq
 #' @export
 "print.summary.cdnet"  <- function(x, ...) {
   stopifnot(class(x) == "summary.cdnet")
@@ -517,12 +634,17 @@ cdnet    <- function(formula,
   iteration            <- x$info$npl.iter
   Rbar                 <- x$info$Rbar
   formula              <- x$info$formula
-  coef                 <- x$estimate$theta
+  Kz                   <- x$info$Kz
+  estim.rho            <- x$info$estim.rho
+  
+  parms                <- x$estimate$parms
+  coef                 <- parms[1:(1 + Kz)]
   K                    <- length(coef)
   meff                 <- x$estimate$marg.effects
   std                  <- sqrt(head(diag(x$cov$parms), K))
   std.meff             <- sqrt(diag(x$cov$marg.effects))
-  delta                <- x$estimate$delta
+  delta                <- tail(parms, Rbar + estim.rho)
+  
   llh                  <- x$info$log.like
   
   
@@ -554,7 +676,17 @@ cdnet    <- function(formula,
   do.call("print", out_print.meff)
   cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
   cat("Rbar: ", Rbar, "\n")
-  cat("delta: ", delta, "\n")
+  if(Rbar > 1){
+    cat("delta: ", delta[1:(Rbar - 1)], "\n")
+  }
+  cat("deltabar: ", delta[Rbar])
+  if(estim.rho){
+    cat(" -- rho: ", delta[Rbar+1], "\n")
+    cat("Wald test H0: rho = 0, Prob = ", 1 - pchisq(1/x$cov$parms[Kz+Rbar+2,Kz+Rbar+2], df = 1), "\n")
+  } else{
+    cat("\n")
+  }
+
   cat("log pseudo-likelihood: ", llh, "\n")
   
   invisible(x)
@@ -579,8 +711,7 @@ cdnet    <- function(formula,
   }
   
   nsim          <- length(object)
-  K             <- length(object[[1]]$estimate$theta)
-  coef          <- do.call("rbind", lapply(object, function(z) t(c(z$estimate$theta, z$estimate$delta))))
+  coef          <- do.call("rbind", lapply(object, function(z) t(z$estimate$parms)))
   meff          <- do.call("rbind", lapply(object, function(z) t(z$estimate$marg.effects)))
   estimate      <- colSums(coef)/nsim
   meffects      <- colSums(meff)/nsim
@@ -600,18 +731,19 @@ cdnet    <- function(formula,
   M             <- object[[1]]$info$M
   n             <- object[[1]]$info$n
   Rbar          <- object[[1]]$info$Rbar
-  
-  coef          <- head(estimate, K)
-  delta         <- estimate[-(1:K)]
+  Kz            <- object[[1]]$info$Kz
+  estim.rho     <- object[[1]]$info$estim.rho
   
   INFO                 <- list("M"          = M,
                                "n"          = n,
+                               "Kz"         = Kz,
+                               "estim.rho"  = estim.rho,
                                "log.like"   = llh,
                                "Rbar"       = Rbar,
                                "simulation" = nsim)
   
   out                  <- list("info"       = INFO,
-                               "estimate"   = list(theta = coef, delta = delta, marg.effects = meffects),
+                               "estimate"   = list(parms = coef, marg.effects = meffects),
                                "cov"        = list(parms = vcoef, marg.effects = vmeff),
                                ...          = ...)
   class(out)           <- "summary.cdnets"
@@ -626,10 +758,17 @@ cdnet    <- function(formula,
   stopifnot(class(x) %in% c("summary.cdnets")) 
 
   nsim          <- x$info$simulation
-  coef          <- x$estimate$theta
-  delta         <- x$estimate$delta
-  meffects      <- x$estimate$marg.effects
+  
+  Kz            <- x$info$Kz
+  estim.rho     <- x$info$estim.rho
+  
+  parms         <- x$estimate$parms
+  coef          <- parms[1:(1 + Kz)]
   K             <- length(coef)
+  meff          <- x$estimate$marg.effects
+  std           <- sqrt(head(diag(x$cov$parms), K))
+  std.meff      <- sqrt(diag(x$cov$marg.effects))
+  delta         <- tail(parms, Rbar + estim.rho)
 
   vcoef         <- x$cov$parms
   vmeff         <- x$cov$marg.effects
@@ -647,7 +786,7 @@ cdnet    <- function(formula,
   out_print     <- tmp$out_print
   out           <- tmp$out
   
-  tmp.meff       <- fcoefficients(meffects, std.meff)
+  tmp.meff       <- fcoefficients(meff, std.meff)
   out_print.meff <- tmp.meff$out_print
   out.meff       <- tmp.meff$out
   
@@ -664,7 +803,17 @@ cdnet    <- function(formula,
   do.call("print", out_print.meff)
   cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
   cat("Rbar: ", Rbar, "\n")
-  cat("delta: ", delta, "\n")
+  if(Rbar > 1){
+    cat("delta: ", delta[1:(Rbar - 1)], "\n")
+  }
+  cat("deltabar: ", delta[Rbar])
+  if(estim.rho){
+    cat(" -- rho: ", delta[Rbar+1], "\n")
+    cat("Wald test H0: rho = 0, Prob = ", 1 - pchisq(1/x$cov$parms[Kz+Rbar+2,Kz+Rbar+2], df = 1), "\n")
+  } else{
+    cat("\n")
+  }
+  
   cat("log pseudo-likelihood: ", "\n")
   print(llh)
   
