@@ -35,7 +35,7 @@ between two consecutive values of \code{y} is less than \code{tol}.}
 
 \item{maxit}{the maximal number of iterations in the Fixed Point Iteration Method.}
 
-\item{RE}{a boolean which indicates if the model if under rational expectation of not.}
+\item{RE}{a Boolean which indicates if the model if under rational expectation of not.}
 
 \item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{mcmcARD} is called.}
@@ -46,7 +46,7 @@ A list consisting of:
 \item{y}{the censored variable.}
 \item{yb}{expectation of y under rational expectation.}
 \item{Gy}{the average of y among friends.}
-\item{Gyb}{Average of expectation of y among frends under rational expectation.}
+\item{Gyb}{Average of expectation of y among friends under rational expectation.}
 \item{marg.effects}{the marginal effects.}
 \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 }

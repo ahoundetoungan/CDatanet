@@ -26,7 +26,7 @@ in the model. If not found in data, the variables are taken from \code{environme
 \code{mu} an n-dimensional vector, and \code{nu} an n-dimensional vector,
 where K is the number of explanatory variables and n is the number of individuals; or a vector of starting value for \code{c(beta, mu, nu)}.}
 
-\item{print}{boolean indicating if the estimation progression should be printed.}
+\item{print}{Boolean indicating if the estimation progression should be printed.}
 }
 \value{
 A list consisting of:
@@ -47,7 +47,9 @@ Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn
 This probability is specified as
 \deqn{p_{ij} = F(\mathbf{x}_{ij}\beta + \mu_j + \nu_j)}{Pij = F(Xij*\beta + \mu_i + \nu_j),}
 where \eqn{F} is the cumulative of the standard normal distribution. Unobserved degree heterogeneity is captured by
-\eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as fixed effects. As shown by
+\eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as fixed effects. As shown by Yan et al. (2019), the estimator of
+the parameter \eqn{\beta} is biased. A bias correction is then necessary and is not implemented in this version. However
+the estimator of \eqn{\mu_i} and \eqn{\nu_j} are consistent.
 }
 \examples{
 \donttest{

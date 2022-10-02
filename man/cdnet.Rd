@@ -48,7 +48,7 @@ of these functions such as, \code{control} and \code{method} can be defined thro
 
 \item{opt.ctr}{list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in \code{optimizer}) such as control, method, ...}
 
-\item{cov}{a boolean indicating if the covariance should be computed.}
+\item{cov}{a Boolean indicating if the covariance should be computed.}
 
 \item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{cdnet} is called.}

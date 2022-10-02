@@ -30,7 +30,7 @@ A list consisting of:
 \item{Gy}{the average of y among friends.}
 }
 \description{
-\code{simsar} is used to simulate continous variables with social interactions (see details). The model is presented in Lee(2004).
+\code{simsar} is used to simulate continuous variables with social interactions (see details). The model is presented in Lee(2004).
 }
 \details{
 The variable \eqn{\mathbf{y}}{y} is given for all i as

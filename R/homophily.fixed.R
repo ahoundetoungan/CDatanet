@@ -15,7 +15,9 @@
 #' This probability is specified as
 #' \deqn{p_{ij} = F(\mathbf{x}_{ij}\beta + \mu_j + \nu_j)}{Pij = F(Xij*\beta + \mu_i + \nu_j),}
 #' where \eqn{F} is the cumulative of the standard normal distribution. Unobserved degree heterogeneity is captured by
-#' \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as fixed effects. As shown by  
+#' \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as fixed effects. As shown by Yan et al. (2019), the estimator of 
+#' the parameter \eqn{\beta} is biased. A bias correction is then necessary and is not implemented in this version. However
+#' the estimator of \eqn{\mu_i} and \eqn{\nu_j} are consistent.
 #' @seealso \code{\link{homophily}}.
 #' @references 
 #' Yan, T., Jiang, B., Fienberg, S. E., & Leng, C. (2019). Statistical inference in a directed network model with covariates. \emph{Journal of the American Statistical Association}, 114(526), 857-868, \doi{https://doi.org/10.1080/01621459.2018.1448829}.

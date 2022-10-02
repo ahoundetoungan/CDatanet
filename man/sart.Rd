@@ -44,11 +44,11 @@ of these functions such as, the control values and the method can be defined thr
 
 \item{opt.ctr}{list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in \code{optimizer}) such as control, method, ...}
 
-\item{print}{a boolean indicating if the estimate should be printed at each step.}
+\item{print}{a Boolean indicating if the estimate should be printed at each step.}
 
-\item{cov}{a boolean indicating if the covariance should be computed.}
+\item{cov}{a Boolean indicating if the covariance should be computed.}
 
-\item{RE}{a boolean which indicates if the model if under rational expectation of not.}
+\item{RE}{a Boolean which indicates if the model if under rational expectation of not.}
 
 \item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{sart} is called.}
