@@ -7,6 +7,7 @@
 #' @param init (optional) either a list of starting values containing `beta`, an K-dimensional vector of the explanatory variables parameter, 
 #' `mu` an n-dimensional vector, and `nu` an n-dimensional vector, 
 #' where K is the number of explanatory variables and n is the number of individuals; or a vector of starting value for `c(beta, mu, nu)`.  
+#' @param opt.ctr (optimal) is a list of `maxit`, `eps_f`, and `eps_g`, which are control parameters used by the solver `optim_lbfgs`, of the package \pkg{RcppNumerical}.
 #' @param print Boolean indicating if the estimation progression should be printed.
 #' @description 
 #' `homophily.FE` is used to estimate a network formation model with homophily. The model includes degree heterogeneity as fixed effects (see details).
@@ -31,11 +32,12 @@
 #'     package \pkg{RcppNumerical}.}
 #'     \item{init}{returned list of starting values.}
 #' @importFrom stats glm
+#' @importFrom stats binomial
 #' @examples 
 #' \donttest{
 #' set.seed(1234)
-#' M            <- 4 # Number of sub-groups
-#' nvec         <- round(runif(M, 100, 500))
+#' M            <- 2 # Number of sub-groups
+#' nvec         <- round(runif(M, 20, 50))
 #' beta         <- c(.1, -.1)
 #' Glist        <- list()
 #' dX           <- matrix(0, 0, 2)
@@ -161,9 +163,7 @@ homophily.FE <- function(network,
     nu            <- rep(0, n - M)
     init          <- c(beta, mu, nu)
   } else {
-    if(is.vector(init)){
-      stopifnot(length(init) == (K + 2*n - M))
-    } else if(is.list(init)){
+    if(is.list(init)){
       beta        <- c(init$beta)
       mu          <- c(init$mu)
       nu          <- c(init$nu)
@@ -183,6 +183,8 @@ homophily.FE <- function(network,
       stopifnot(length(mu) == n)
       stopifnot(length(nu) == (n - M))
       init        <- c(beta, mu, nu)
+    } else if(is.vector(init)){
+      stopifnot(length(init) == (K + 2*n - M))
     } 
   }
   

@@ -598,7 +598,7 @@ public:
     grad                   = -Eigen::Map<Eigen::VectorXd>(gd.memptr(), nparms);
     Grad                   = gd;
     
-    cout<< llh <<endl;
+    // cout<< llh <<endl;
     return -llh;
   }
 };
@@ -715,8 +715,11 @@ public:
     arma::vec beta         = thetaa.head(Kx);
     arma::vec mu           = thetaa.subvec(m1, m2);
     arma::vec nu           = thetaa.subvec(n1, n2);
-    cout<< "Beta: "<<endl;
-    cout<< beta.t() <<endl;
+    
+    NumericVector betacpp  = wrap(beta);
+    betacpp.attr("dim")    = R_NilValue;
+    std::printf("beta");
+    Rcpp::print(betacpp);
     
     arma::vec dXb          = dx*beta;
     arma::vec adXb         = a%dXb;
@@ -783,7 +786,7 @@ public:
     grad                    = -Eigen::Map<Eigen::VectorXd>(gd.memptr(), nparms);
     Grad                    = gd;
     
-    cout<< llh <<endl;
+    std::printf("llh");
     return -llh;
   }
 };
