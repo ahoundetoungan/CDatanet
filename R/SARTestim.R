@@ -15,11 +15,13 @@
 #' of these functions such as, the control values and the method can be defined through the argument `opt.ctr`.
 #' @param npl.ctr list of controls for the NPL method (see \code{\link{cdnet}}).
 #' @param opt.ctr list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in `optimizer`) such as control, method, ...
-#' @param print a boolean indicating if the estimate should be printed at each step.
-#' @param cov a boolean indicating if the covariance should be computed.
-#' @param RE a boolean which indicates if the model if under rational expectation of not.
+#' @param print a Boolean indicating if the estimate should be printed at each step.
+#' @param cov a Boolean indicating if the covariance should be computed.
+#' @param RE a Boolean which indicates if the model if under rational expectation of not.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `sart` is called.
+#' @description
+#' `sart` is used to estimate peer effects on censored data (see details). The model is presented in Xu and Lee(2015). 
 #' @return A list consisting of:
 #'     \item{info}{list of general information on the model.}
 #'     \item{estimate}{Maximum Likelihood (ML) estimator.}
@@ -36,6 +38,8 @@
 #' The count variable \eqn{y_i} is then define that is \eqn{y_i = 0} if  
 #' \eqn{y_i^* \leq 0}{ys_i \le 0} and \eqn{y_i = y_i^*}{y_i = ys_i} otherwise.
 #' @seealso \code{\link{sar}}, \code{\link{cdnet}}, \code{\link{simsart}}.
+#' @references 
+#' Xu, X., & Lee, L. F. (2015). Maximum likelihood estimation of a spatial autoregressive Tobit model. \emph{Journal of Econometrics}, 188(1), 264-280, \doi{10.1016/j.jeconom.2015.05.004}.
 #' @examples 
 #' \donttest{
 #' # Groups' size

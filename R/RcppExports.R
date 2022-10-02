@@ -149,6 +149,14 @@ updategparms2 <- function(a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, i
     .Call(`_CDatanet_updategparms2`, a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration)
 }
 
+fhomobeta <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5) {
+    .Call(`_CDatanet_fhomobeta`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g)
+}
+
+fhomobetap <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5) {
+    .Call(`_CDatanet_fhomobetap`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g)
+}
+
 fySar <- function(y, Gy, G, eps, igroup, ngroup, psi, lambda) {
     invisible(.Call(`_CDatanet_fySar`, y, Gy, G, eps, igroup, ngroup, psi, lambda))
 }

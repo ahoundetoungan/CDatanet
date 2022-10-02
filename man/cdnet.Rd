@@ -63,7 +63,7 @@ A list consisting of:
 \item{details}{step-by-step output as returned by the optimizer.}
 }
 \description{
-Estimate Count Data Model with Social Interactions using NPL Method
+\code{cdnet} is used to estimate peer effects on counting data with rational expectations (see details). The model is presented in Houndetoungan (2022).
 }
 \details{
 \subsection{Model}{
@@ -148,6 +148,9 @@ out   <- cdnet(formula = yt ~ x1 + x2, contextual = TRUE, Glist = Glist,
                data = data, Rbar = 6, estim.rho = TRUE)
 summary(out)
 }
+}
+\references{
+Houndetoungan, E. A. (2022). Count Data Models with Social Interactions under Rational Expectations. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
 }
 \seealso{
 \code{\link{sart}}, \code{\link{sar}}, \code{\link{simcdnet}}.

@@ -17,7 +17,7 @@
 #' of these functions such as, `control` and `method` can be defined through the argument `opt.ctr`.
 #' @param npl.ctr list of controls for the NPL method (see details).
 #' @param opt.ctr list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in `optimizer`) such as control, method, ...
-#' @param cov a boolean indicating if the covariance should be computed.
+#' @param cov a Boolean indicating if the covariance should be computed.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `cdnet` is called.
 #' @return A list consisting of:
@@ -27,6 +27,8 @@
 #'     \item{Gyb}{average of the expectation of y among friends.}
 #'     \item{cov}{list of covariance matrices.}
 #'     \item{details}{step-by-step output as returned by the optimizer.}
+#' @description
+#' `cdnet` is used to estimate peer effects on counting data with rational expectations (see details). The model is presented in Houndetoungan (2022). 
 #' @details 
 #' ## Model
 #' Following Houndetoungan (2022), the count data \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}. 
@@ -50,6 +52,8 @@
 #' \item{print}{ a boolean indicating if the estimate should be printed at each step.}
 #' \item{S}{ the number of simulation performed use to compute integral in the covariance by important sampling.} 
 #' }
+#' @references 
+#' Houndetoungan, E. A. (2022). Count Data Models with Social Interactions under Rational Expectations. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
 #' @seealso \code{\link{sart}}, \code{\link{sar}}, \code{\link{simcdnet}}.
 #' @examples 
 #' \donttest{

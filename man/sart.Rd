@@ -63,7 +63,7 @@ A list consisting of:
 \item{details}{outputs as returned by the optimizer.}
 }
 \description{
-Estimate sart model
+\code{sart} is used to estimate peer effects on censored data (see details). The model is presented in Xu and Lee(2015).
 }
 \details{
 \subsection{Model}{
@@ -132,6 +132,9 @@ out     <- sart(formula = yt ~ x1 + x2, optimizer = "nlm",
                   contextual = TRUE, Glist = Glist, data = data)
 summary(out)
 }
+}
+\references{
+Xu, X., & Lee, L. F. (2015). Maximum likelihood estimation of a spatial autoregressive Tobit model. \emph{Journal of Econometrics}, 188(1), 264-280, \doi{10.1016/j.jeconom.2015.05.004}.
 }
 \seealso{
 \code{\link{sar}}, \code{\link{cdnet}}, \code{\link{simsart}}.

@@ -12,25 +12,29 @@
 #' @param tol the tolerance value used in the Fixed Point Iteration Method to compute `y`. The process stops if the \eqn{L_1}{L} distance 
 #' between two consecutive values of `y` is less than `tol`.
 #' @param maxit the maximal number of iterations in the Fixed Point Iteration Method.
-#' @param RE a boolean which indicates if the model if under rational expectation of not.
+#' @param RE a Boolean which indicates if the model if under rational expectation of not.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `mcmcARD` is called.
+#' @description
+#' `simsart` is used to simulate censored data with social interactions (see details). The model is presented in Xu and Lee(2015). 
 #' @details 
 #' The left-censored variable \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}. 
 #' The latent variable is given for all i as
 #' \deqn{y_i^* = \lambda \mathbf{g}_i y + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*y + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 #' where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.\cr
-#' The count variable \eqn{y_i} is then define that is \eqn{y_i = 0} if  
+#' The censored variable \eqn{y_i} is then define that is \eqn{y_i = 0} if  
 #' \eqn{y_i^* \leq 0}{ys_i \le 0} and \eqn{y_i = y_i^*}{y_i = ys_i} otherwise.
 #' @seealso \code{\link{sart}}, \code{\link{simsar}}, \code{\link{simcdnet}}.
 #' @return A list consisting of:
 #'     \item{yst}{ys (see details), the latent variable.}
-#'     \item{y}{the observed count data.}
+#'     \item{y}{the censored variable.}
 #'     \item{yb}{expectation of y under rational expectation.}
 #'     \item{Gy}{the average of y among friends.}
-#'     \item{Gyb}{Average of expectation of y among frends under rational expectation.}
+#'     \item{Gyb}{Average of expectation of y among friends under rational expectation.}
 #'     \item{marg.effects}{the marginal effects.}
 #'     \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
+#' @references 
+#' Xu, X., & Lee, L. F. (2015). Maximum likelihood estimation of a spatial autoregressive Tobit model. \emph{Journal of Econometrics}, 188(1), 264-280, \doi{10.1016/j.jeconom.2015.05.004}.
 #' @examples 
 #' # Groups' size
 #' M      <- 5 # Number of sub-groups

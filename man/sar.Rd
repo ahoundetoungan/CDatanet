@@ -52,7 +52,7 @@ A list consisting of:
 \item{details}{outputs as returned by the optimizer.}
 }
 \description{
-Estimate SAR model
+\code{sar} is used to estimate peer effects continous variables (see details). The model is presented in Lee(2004).
 }
 \details{
 \subsection{Model}{
@@ -116,6 +116,9 @@ out     <- sar(formula = yt ~ x1 + x2, contextual = TRUE,
                  Glist = Glist, optimizer = "optim", data = data)
 summary(out)
 }
+}
+\references{
+Lee, L. F. (2004). Asymptotic distributions of quasi‐maximum likelihood estimators for spatial autoregressive models. \emph{Econometrica}, 72(6), 1899-1925, \doi{10.1111/j.1468-0262.2004.00558.x}.
 }
 \seealso{
 \code{\link{sart}}, \code{\link{cdnet}}, \code{\link{simsar}}.

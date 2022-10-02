@@ -2,7 +2,7 @@
 % Please edit documentation in R/homophily.R
 \name{homophily}
 \alias{homophily}
-\title{Estimate Network Formation Model}
+\title{Estimate Network Formation Model with Degree Heterogeneity as Random Effects}
 \usage{
 homophily(
   network,
@@ -45,7 +45,14 @@ A list consisting of:
 \item{init}{returned list of starting values.}
 }
 \description{
-Estimate Network Formation Model
+\code{homophily} implements a Bayesian estimator for network formation model with homophily. The model includes degree heterogeneity as random effects (see details).
+}
+\details{
+Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.
+This probability is specified as
+\deqn{p_{ij} = F(\mathbf{x}_{ij}\beta + \mu_j + \nu_j)}{Pij = F(Xij*\beta + \mu_i + \nu_j),}
+where \eqn{F} is the cumulative of the standard normal distribution. Unobserved degree heterogeneity is captured by
+\eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as random effects.
 }
 \examples{
 \donttest{
@@ -128,4 +135,7 @@ abline(h = mu[i], col = "red")
 plot(out$posterior$nu[,i], type = "l")
 abline(h = nu[i], col = "red")
 }
+}
+\seealso{
+\code{\link{homophily.FE}}.
 }

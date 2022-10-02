@@ -30,7 +30,7 @@ A list consisting of:
 \item{Gy}{the average of y among friends.}
 }
 \description{
-Simulate data from the linear-in-mean Model with Social Interactions
+\code{simsar} is used to simulate continous variables with social interactions (see details). The model is presented in Lee(2004).
 }
 \details{
 The variable \eqn{\mathbf{y}}{y} is given for all i as
@@ -82,6 +82,9 @@ y       <- ytmp$y
 # plot histogram
 hist(y)
 
+}
+\references{
+Lee, L. F. (2004). Asymptotic distributions of quasi‐maximum likelihood estimators for spatial autoregressive models. \emph{Econometrica}, 72(6), 1899-1925, \doi{10.1111/j.1468-0262.2004.00558.x}.
 }
 \seealso{
 \code{\link{sar}}, \code{\link{simsart}}, \code{\link{simcdnet}}.

@@ -1,4 +1,4 @@
-#' @title Estimate Network Formation Model
+#' @title Estimate Network Formation Model with Degree Heterogeneity as Random Effects
 #' @param network matrix or list of sub-matrix of social interactions containing 0 and 1, where links are represented by 1
 #' @param formula an object of class \link[stats]{formula}: a symbolic description of the model. The `formula` should be as for example \code{~ x1 + x2}
 #' where `x1`, `x2` are explanatory variable of links formation
@@ -19,6 +19,15 @@
 #'     \item{posterior}{list of simulations from the posterior distribution.}
 #'     \item{iteration}{number of performed iterations.}
 #'     \item{init}{returned list of starting values.}
+#' @description 
+#' `homophily` implements a Bayesian estimator for network formation model with homophily. The model includes degree heterogeneity as random effects (see details).
+#' @details
+#' Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.
+#' This probability is specified as
+#' \deqn{p_{ij} = F(\mathbf{x}_{ij}\beta + \mu_j + \nu_j)}{Pij = F(Xij*\beta + \mu_i + \nu_j),}
+#' where \eqn{F} is the cumulative of the standard normal distribution. Unobserved degree heterogeneity is captured by
+#' \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as random effects.  
+#' @seealso \code{\link{homophily.FE}}.
 #' @importFrom ddpcr quiet
 #' @importFrom stats lm
 #' @importFrom stats var
@@ -192,6 +201,10 @@ homophily <- function(network,
 
   quiet(gc())
   if (is.null(beta)) {
+    # print(dim(invdXdX))
+    # print(length(sumnetwork))
+    # print(dim(dX))
+    # print(length(network))
     beta          <- c(invdXdX %*% c(sumnetwork, crossprod(dX, network)))
   } else{
     stopifnot(length(beta) == K)

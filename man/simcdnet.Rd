@@ -58,7 +58,7 @@ A list consisting of:
 \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 }
 \description{
-Simulate data from Count Data Model with Social Interactions
+\code{simcdnet} is used simulate counting data with rational expectations (see details). The model is presented in Houndetoungan (2022).
 }
 \details{
 Following Houndetoungan (2022), the count data \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}.
@@ -117,6 +117,9 @@ y       <- ytmp$y
 
 # plot histogram
 hist(y, breaks = max(y))}
+}
+\references{
+Houndetoungan, E. A. (2022). Count Data Models with Social Interactions under Rational Expectations. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
 }
 \seealso{
 \code{\link{cdnet}}, \code{\link{simsart}}, \code{\link{simsar}}.

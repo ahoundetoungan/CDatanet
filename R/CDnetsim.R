@@ -17,6 +17,8 @@
 #' @param maxit the maximal number of iterations in the Fixed Point Iteration Method.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `mcmcARD` is called.
+#' @description
+#' `simcdnet` is used simulate counting data with rational expectations (see details). The model is presented in Houndetoungan (2022). 
 #' @details 
 #' Following Houndetoungan (2022), the count data \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}. 
 #' The latent variable is given for all i as
@@ -36,6 +38,8 @@
 #'     \item{rho}{the return value of rho.}
 #'     \item{Rmax}{infinite sums in the marginal effects are approximated by sums up to Rmax.}
 #'     \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
+#' @references 
+#' Houndetoungan, E. A. (2022). Count Data Models with Social Interactions under Rational Expectations. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
 #' @examples 
 #' \donttest{
 #' # Groups' size

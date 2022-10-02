@@ -43,7 +43,7 @@ in the model. If not found in data, the variables are taken from \code{environme
 \value{
 A list consisting of:
 \item{yst}{ys (see details), the latent variable.}
-\item{y}{the observed count data.}
+\item{y}{the censored variable.}
 \item{yb}{expectation of y under rational expectation.}
 \item{Gy}{the average of y among friends.}
 \item{Gyb}{Average of expectation of y among frends under rational expectation.}
@@ -51,14 +51,14 @@ A list consisting of:
 \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 }
 \description{
-Simulate data from the Tobit Model with Social Interactions
+\code{simsart} is used to simulate censored data with social interactions (see details). The model is presented in Xu and Lee(2015).
 }
 \details{
 The left-censored variable \eqn{\mathbf{y}}{y} is generated from a latent variable \eqn{\mathbf{y}^*}{ys}.
 The latent variable is given for all i as
 \deqn{y_i^* = \lambda \mathbf{g}_i y + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{ys_i = \lambda g_i*y + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.\cr
-The count variable \eqn{y_i} is then define that is \eqn{y_i = 0} if
+The censored variable \eqn{y_i} is then define that is \eqn{y_i = 0} if
 \eqn{y_i^* \leq 0}{ys_i \le 0} and \eqn{y_i = y_i^*}{y_i = ys_i} otherwise.
 }
 \examples{
@@ -107,6 +107,9 @@ y       <- ytmp$y
 # plot histogram
 hist(y)
 
+}
+\references{
+Xu, X., & Lee, L. F. (2015). Maximum likelihood estimation of a spatial autoregressive Tobit model. \emph{Journal of Econometrics}, 188(1), 264-280, \doi{10.1016/j.jeconom.2015.05.004}.
 }
 \seealso{
 \code{\link{sart}}, \code{\link{simsar}}, \code{\link{simcdnet}}.

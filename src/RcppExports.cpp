@@ -2,6 +2,7 @@
 // Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #include <RcppArmadillo.h>
+#include <RcppEigen.h>
 #include <Rcpp.h>
 
 using namespace Rcpp;
@@ -768,6 +769,46 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fhomobeta
+List fhomobeta(Eigen::VectorXd theta, const arma::vec& a, const arma::mat& dx, const arma::vec& nvec, const arma::mat& index, const arma::mat& indexgr, const int& M, const int maxit, const double& eps_f, const double& eps_g);
+RcppExport SEXP _CDatanet_fhomobeta(SEXP thetaSEXP, SEXP aSEXP, SEXP dxSEXP, SEXP nvecSEXP, SEXP indexSEXP, SEXP indexgrSEXP, SEXP MSEXP, SEXP maxitSEXP, SEXP eps_fSEXP, SEXP eps_gSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type dx(dxSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type nvec(nvecSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type index(indexSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type indexgr(indexgrSEXP);
+    Rcpp::traits::input_parameter< const int& >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const int >::type maxit(maxitSEXP);
+    Rcpp::traits::input_parameter< const double& >::type eps_f(eps_fSEXP);
+    Rcpp::traits::input_parameter< const double& >::type eps_g(eps_gSEXP);
+    rcpp_result_gen = Rcpp::wrap(fhomobeta(theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fhomobetap
+List fhomobetap(Eigen::VectorXd theta, const arma::vec& a, const arma::mat& dx, const arma::vec& nvec, const arma::mat& index, const arma::mat& indexgr, const int& M, const int& maxit, const double& eps_f, const double& eps_g);
+RcppExport SEXP _CDatanet_fhomobetap(SEXP thetaSEXP, SEXP aSEXP, SEXP dxSEXP, SEXP nvecSEXP, SEXP indexSEXP, SEXP indexgrSEXP, SEXP MSEXP, SEXP maxitSEXP, SEXP eps_fSEXP, SEXP eps_gSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type dx(dxSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type nvec(nvecSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type index(indexSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type indexgr(indexgrSEXP);
+    Rcpp::traits::input_parameter< const int& >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const int& >::type maxit(maxitSEXP);
+    Rcpp::traits::input_parameter< const double& >::type eps_f(eps_fSEXP);
+    Rcpp::traits::input_parameter< const double& >::type eps_g(eps_gSEXP);
+    rcpp_result_gen = Rcpp::wrap(fhomobetap(theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fySar
 void fySar(arma::vec& y, arma::vec& Gy, List& G, const arma::vec& eps, const arma::mat& igroup, const int& ngroup, const arma::vec& psi, const double& lambda);
 RcppExport SEXP _CDatanet_fySar(SEXP ySEXP, SEXP GySEXP, SEXP GSEXP, SEXP epsSEXP, SEXP igroupSEXP, SEXP ngroupSEXP, SEXP psiSEXP, SEXP lambdaSEXP) {
@@ -1189,6 +1230,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CDatanet_fmusum", (DL_FUNC) &_CDatanet_fmusum, 6},
     {"_CDatanet_updategparms1", (DL_FUNC) &_CDatanet_updategparms1, 20},
     {"_CDatanet_updategparms2", (DL_FUNC) &_CDatanet_updategparms2, 20},
+    {"_CDatanet_fhomobeta", (DL_FUNC) &_CDatanet_fhomobeta, 10},
+    {"_CDatanet_fhomobetap", (DL_FUNC) &_CDatanet_fhomobetap, 10},
     {"_CDatanet_fySar", (DL_FUNC) &_CDatanet_fySar, 8},
     {"_CDatanet_foptimSAR", (DL_FUNC) &_CDatanet_foptimSAR, 9},
     {"_CDatanet_foptimSAR0", (DL_FUNC) &_CDatanet_foptimSAR0, 9},

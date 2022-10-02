@@ -1,10 +1,16 @@
-// [[Rcpp::depends(RcppArmadillo, RcppProgress, RcppDist)]]
+// [[Rcpp::depends(RcppArmadillo, RcppProgress, RcppDist, RcppEigen, RcppNumerical)]]
 #include <RcppArmadillo.h>
 #include <progress.hpp>
 #include <progress_bar.hpp>
 #include <mvnorm.h>
 #include <wishart.h>
+#include <RcppEigen.h>
+#include <RcppNumerical.h>
 
+typedef Eigen::Map<Eigen::MatrixXd> MapMatr;
+typedef Eigen::Map<Eigen::VectorXd> MapVect;
+
+using namespace Numer;
 using namespace Rcpp;
 using namespace arma;
 using namespace std;
@@ -461,4 +467,375 @@ List updategparms2(const arma::vec& a,
                       Named("sigma2_nu") = Ssnu2,
                       Named("rho")       = Srho);//,
   //Named("loglike")   = Sllh);
+}
+
+
+
+// Estimation using fixed effects
+class llhhomo: public MFuncGrad
+{
+private:
+  const arma::vec& a;
+  const arma::mat& dx;
+  const arma::mat& adx;
+  const arma::vec& d;
+  const arma::vec& b;
+  const arma::mat& index;
+  const arma::mat& indexgr;
+  const arma::vec& nvec;
+  const int& M;
+  const int& n;
+  const int& Kx;
+  const int& nparms;
+public:
+  llhhomo(const arma::vec& a_,
+          const arma::mat& dx_,
+          const arma::mat& adx_,
+          const arma::vec& d_,
+          const arma::vec& b_,
+          const arma::mat& index_,
+          const arma::mat& indexgr_,
+          const arma::vec& nvec_,
+          const int& M_,
+          const int& n_,
+          const int& Kx_,
+          const int& nparms_) : 
+  a(a_),
+  dx(dx_),
+  adx(adx_),
+  d(d_),
+  b(b_),
+  index(index_),
+  indexgr(indexgr_),
+  nvec(nvec_),
+  M(M_),
+  n(n_),
+  Kx(Kx_),
+  nparms(nparms_){}
+  
+  arma::vec Grad;
+  
+  double f_grad(Constvec& theta, Refvec grad)
+  {
+    Eigen::VectorXd theta0 = theta;  //make a copy
+    arma::vec thetaa       = arma::vec(theta0.data(), theta0.size(), false, false); //converte into arma vec
+    
+    // int b1                 = 0;
+    int b2                 = Kx - 1;
+    int m1                 = b2 + 1;
+    int m2                 = m1 + n - 1;
+    int n1                 = m2 + 1;
+    int n2                 = n1 + n - M - 1;
+    
+    arma::vec beta         = thetaa.head(Kx);
+    arma::vec mu           = thetaa.subvec(m1, m2);
+    arma::vec nu           = thetaa.subvec(n1, n2);
+    // cout<< "Beta: "<<endl;
+    // cout<< beta.t() <<endl;
+    
+    arma::vec dXb          = dx*beta;
+    arma::vec adXb         = a%dXb;
+    double llh             = sum(adXb);
+    
+    arma::vec gd(nparms, arma::fill::zeros);
+    gd.head(Kx)            = arma::trans(sum(adx, 0));
+    
+    int igr1, igr2, nm, j(0), j1, j2;
+    arma::vec mum, num, numj, mumj, tmp, ai, exbmn, smunu;
+    arma::mat indexm, dXi;
+    arma::uvec indexi;
+    
+    for (int m(0); m < M; ++ m) {
+      igr1                 = indexgr(m, 0); 
+      igr2                 = indexgr(m, 1); 
+      nm                   = nvec(m);
+      indexm               = index.rows(igr1, igr2); // ith row is the row at each i interacts with others, where the link goes from i
+      mum                  = mu.subvec(igr1, igr2);
+      num                  = nu.subvec(igr1 - m, igr2 - m - 1);
+      num                  = arma::join_cols(num, arma::zeros(1));
+      
+      for(int i(0); i < nm; ++ i){
+        j1                 = index(j, 0);
+        j2                 = index(j, 1);
+        ai                 = a.subvec(j1, j2);
+        dXi                = dx.rows(j1, j2);
+        
+        // nuj when mui is fixed
+        numj               = num;
+        numj.shed_row(i);
+        
+        // muj when nui is fixed
+        mumj               = mum;
+        mumj.shed_row(i);
+        
+        // rows on which nui is used
+        indexi             = arma::conv_to<arma::uvec>::from(indexm.col(0)) + i;
+        indexi.head(i + 1)-= 1;
+        indexi.shed_row(i);  
+        
+        // sum of mu(i) + numj
+        smunu              = mum(i) + numj;
+        
+        exbmn              = exp(dXb.subvec(j1, j2) + smunu);
+        tmp                = exbmn/(1 + exbmn);
+        llh               += sum(ai%smunu - log(1 + exbmn));
+        
+        // grad X
+        gd.head(Kx)       -= arma::trans(arma::sum(dXi.each_col()%tmp, 0));
+        
+        // grad mui
+        gd(m1 + j)         = d(j) - sum(tmp);
+        
+        // grad nui
+        if(i < (nm - 1)){
+          tmp              = exp(dXb.elem(indexi) + mumj + num(i));
+          gd(n1 + j - m)   = b(j) - sum(tmp/(1 + tmp));
+        }
+        ++ j;
+      }
+    }
+    
+    grad                   = -Eigen::Map<Eigen::VectorXd>(gd.memptr(), nparms);
+    Grad                   = gd;
+    
+    cout<< llh <<endl;
+    return -llh;
+  }
+};
+
+//[[Rcpp::export]]
+List fhomobeta(Eigen::VectorXd theta,
+               const arma::vec& a,
+               const arma::mat& dx,
+               const arma::vec& nvec,
+               const arma::mat& index,
+               const arma::mat& indexgr,
+               const int& M,       
+               const int maxit = 300, 
+               const double& eps_f = 1e-6, 
+               const double& eps_g = 1e-5){
+  int n         = sum(nvec);
+  int Kx        = dx.n_cols;
+  
+  int nparms    = Kx + 2*n - M;
+  arma::mat adx = dx.each_col()%a;
+  
+  arma::vec d(n), b(n);
+  int j(0);
+  for (int m(0); m < M; ++ m) {
+    int igr1              = indexgr(m, 0); // group m starts from igr1 in X
+    int igr2              = indexgr(m, 1); // group m ends at igr2 in X
+    int nm                = nvec(m);
+    arma::mat indexm      = index.rows(igr1, igr2); // ith row is the row at each i interacts with others, where the link goes from i
+    
+    for(int i(0); i < nm; ++ i){
+      int j1              = index(j, 0);
+      int j2              = index(j, 1);
+      d(i)                = sum(a.subvec(j1, j2));
+      
+      // rows on which nui is used
+      arma::uvec indexi   = arma::conv_to<arma::uvec>::from(indexm.col(0)) + i;
+      indexi.head(i + 1) -= 1;
+      indexi.shed_row(i);
+      b(i)                = sum(a.elem(indexi));
+      ++ j;
+    }
+  }
+  
+  llhhomo f(a, dx, adx, d, b, index, indexgr, nvec, M, n, Kx, nparms);
+  
+  double fopt;
+  int status = optim_lbfgs(f, theta, fopt, maxit, eps_f, eps_g);
+  
+  return Rcpp::List::create(
+    Rcpp::Named("estimate") = theta,
+    Rcpp::Named("value")    = fopt,
+    Rcpp::Named("gradien")  = f.Grad,
+    Rcpp::Named("status")   = status);
+}
+
+
+// same function where beta is printer
+// Estimation using fixed effects
+class llhhomop: public MFuncGrad
+{
+private:
+  const arma::vec& a;
+  const arma::mat& dx;
+  const arma::mat& adx;
+  const arma::vec& d;
+  const arma::vec& b;
+  const arma::mat& index;
+  const arma::mat& indexgr;
+  const arma::vec& nvec;
+  const int& M;
+  const int& n;
+  const int& Kx;
+  const int& nparms;
+public:
+  llhhomop(const arma::vec& a_,
+          const arma::mat& dx_,
+          const arma::mat& adx_,
+          const arma::vec& d_,
+          const arma::vec& b_,
+          const arma::mat& index_,
+          const arma::mat& indexgr_,
+          const arma::vec& nvec_,
+          const int& M_,
+          const int& n_,
+          const int& Kx_,
+          const int& nparms_) : 
+  a(a_),
+  dx(dx_),
+  adx(adx_),
+  d(d_),
+  b(b_),
+  index(index_),
+  indexgr(indexgr_),
+  nvec(nvec_),
+  M(M_),
+  n(n_),
+  Kx(Kx_),
+  nparms(nparms_){}
+  
+  arma::vec Grad;
+  
+  double f_grad(Constvec& theta, Refvec grad)
+  {
+    Eigen::VectorXd theta0 = theta;  //make a copy
+    arma::vec thetaa       = arma::vec(theta0.data(), theta0.size(), false, false); //converte into arma vec
+    
+    // int b1                 = 0;
+    int b2                 = Kx - 1;
+    int m1                 = b2 + 1;
+    int m2                 = m1 + n - 1;
+    int n1                 = m2 + 1;
+    int n2                 = n1 + n - M - 1;
+    
+    arma::vec beta         = thetaa.head(Kx);
+    arma::vec mu           = thetaa.subvec(m1, m2);
+    arma::vec nu           = thetaa.subvec(n1, n2);
+    cout<< "Beta: "<<endl;
+    cout<< beta.t() <<endl;
+    
+    arma::vec dXb          = dx*beta;
+    arma::vec adXb         = a%dXb;
+    double llh             = sum(adXb);
+    
+    arma::vec gd(nparms, arma::fill::zeros);
+    gd.head(Kx)            = arma::trans(sum(adx, 0));
+    
+    int igr1, igr2, nm, j(0), j1, j2;
+    arma::vec mum, num, numj, mumj, tmp, ai, exbmn, smunu;
+    arma::mat indexm, dXi;
+    arma::uvec indexi;
+    
+    for (int m(0); m < M; ++ m) {
+      igr1                 = indexgr(m, 0); 
+      igr2                 = indexgr(m, 1); 
+      nm                   = nvec(m);
+      indexm               = index.rows(igr1, igr2); // ith row is the row at each i interacts with others, where the link goes from i
+      mum                  = mu.subvec(igr1, igr2);
+      num                  = nu.subvec(igr1 - m, igr2 - m - 1);
+      num                  = arma::join_cols(num, arma::zeros(1));
+      
+      for(int i(0); i < nm; ++ i){
+        j1                 = index(j, 0);
+        j2                 = index(j, 1);
+        ai                 = a.subvec(j1, j2);
+        dXi                = dx.rows(j1, j2);
+        
+        // nuj when mui is fixed
+        numj               = num;
+        numj.shed_row(i);
+        
+        // muj when nui is fixed
+        mumj               = mum;
+        mumj.shed_row(i);
+        
+        // rows on which nui is used
+        indexi             = arma::conv_to<arma::uvec>::from(indexm.col(0)) + i;
+        indexi.head(i + 1)-= 1;
+        indexi.shed_row(i);  
+        
+        // sum of mu(i) + numj
+        smunu              = mum(i) + numj;
+        
+        exbmn              = exp(dXb.subvec(j1, j2) + smunu);
+        tmp                = exbmn/(1 + exbmn);
+        llh               += sum(ai%smunu - log(1 + exbmn));
+        
+        // grad X
+        gd.head(Kx)       -= arma::trans(arma::sum(dXi.each_col()%tmp, 0));
+        
+        // grad mui
+        gd(m1 + j)         = d(j) - sum(tmp);
+        
+        // grad nui
+        if(i < (nm - 1)){
+          tmp              = exp(dXb.elem(indexi) + mumj + num(i));
+          gd(n1 + j - m)   = b(j) - sum(tmp/(1 + tmp));
+        }
+        ++ j;
+      }
+    }
+    
+    grad                    = -Eigen::Map<Eigen::VectorXd>(gd.memptr(), nparms);
+    Grad                    = gd;
+    
+    cout<< llh <<endl;
+    return -llh;
+  }
+};
+
+//[[Rcpp::export]]
+List fhomobetap(Eigen::VectorXd theta,
+               const arma::vec& a,
+               const arma::mat& dx,
+               const arma::vec& nvec,
+               const arma::mat& index,
+               const arma::mat& indexgr,
+               const int& M,       
+               const int& maxit = 300, 
+               const double& eps_f = 1e-6, 
+               const double& eps_g = 1e-5){
+
+  int n         = sum(nvec);
+  int Kx        = dx.n_cols;
+  
+  int nparms    = Kx + 2*n - M;
+  arma::mat adx = dx.each_col()%a;
+  
+  arma::vec d(n), b(n);
+  int j(0);
+  for (int m(0); m < M; ++ m) {
+    int igr1              = indexgr(m, 0); // group m starts from igr1 in X
+    int igr2              = indexgr(m, 1); // group m ends at igr2 in X
+    int nm                = nvec(m);
+    arma::mat indexm      = index.rows(igr1, igr2); // ith row is the row at each i interacts with others, where the link goes from i
+    
+    for(int i(0); i < nm; ++ i){
+      int j1              = index(j, 0);
+      int j2              = index(j, 1);
+      d(i)                = sum(a.subvec(j1, j2));
+      
+      // rows on which nui is used
+      arma::uvec indexi   = arma::conv_to<arma::uvec>::from(indexm.col(0)) + i;
+      indexi.head(i + 1) -= 1;
+      indexi.shed_row(i);
+      b(i)                = sum(a.elem(indexi));
+      ++ j;
+    }
+  }
+
+  llhhomop f(a, dx, adx, d, b, index, indexgr, nvec, M, n, Kx, nparms);
+  
+  double fopt;
+  int status = optim_lbfgs(f, theta, fopt, maxit, eps_f, eps_g);
+  
+  return Rcpp::List::create(
+    Rcpp::Named("estimate") = theta,
+    Rcpp::Named("value")    = fopt,
+    Rcpp::Named("gradien")  = f.Grad,
+    Rcpp::Named("status")   = status);
 }
