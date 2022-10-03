@@ -631,13 +631,13 @@ List fhomobeta(Eigen::VectorXd theta,
     for(int i(0); i < nm; ++ i){
       int j1              = index(j, 0);
       int j2              = index(j, 1);
-      d(i)                = sum(a.subvec(j1, j2));
+      d(j)                = sum(a.subvec(j1, j2));
       
       // rows on which nui is used
       arma::uvec indexi   = arma::conv_to<arma::uvec>::from(indexm.col(0)) + i;
       indexi.head(i + 1) -= 1;
       indexi.shed_row(i);
-      b(i)                = sum(a.elem(indexi));
+      b(j)                = sum(a.elem(indexi));
       ++ j;
     }
   }
@@ -715,7 +715,7 @@ public:
     arma::vec beta         = thetaa.head(Kx);
     arma::vec mu           = thetaa.subvec(m1, m2);
     arma::vec nu           = thetaa.subvec(n1, n2);
-    
+    // cout<<nu.t()<<endl;
     NumericVector betacpp  = wrap(beta);
     betacpp.attr("dim")    = R_NilValue;
     std::printf("beta: \n");
@@ -773,11 +773,12 @@ public:
         
         // grad mui
         gd(m1 + j)         = d(j) - sum(tmp);
-        
+        // gd(m1 + j)         = sum(ai - tmp);
         // grad nui
         if(i < (nm - 1)){
           tmp              = exp(dXb.elem(indexi) + mumj + num(i));
           gd(n1 + j - m)   = b(j) - sum(tmp/(1 + tmp));
+          // gd(n1 + j - m)   = sum(a.elem(indexi)- tmp/(1 + tmp));
         }
         ++ j;
       }
@@ -820,13 +821,13 @@ List fhomobetap(Eigen::VectorXd theta,
     for(int i(0); i < nm; ++ i){
       int j1              = index(j, 0);
       int j2              = index(j, 1);
-      d(i)                = sum(a.subvec(j1, j2));
+      d(j)                = sum(a.subvec(j1, j2));
       
       // rows on which nui is used
       arma::uvec indexi   = arma::conv_to<arma::uvec>::from(indexm.col(0)) + i;
       indexi.head(i + 1) -= 1;
       indexi.shed_row(i);
-      b(i)                = sum(a.elem(indexi));
+      b(j)                = sum(a.elem(indexi));
       ++ j;
     }
   }
