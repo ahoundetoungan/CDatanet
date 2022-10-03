@@ -27,10 +27,12 @@
 #'     \item{n.obs}{number of observations.}
 #'     \item{n.links}{number of links.}
 #'     \item{K}{number of explanatory variables.}
-#'     \item{estimate}{maximizer of the likelihood.}
+#'     \item{estimate}{maximizer of the log-likelihood.}
+#'     \item{loglike}{maximized log-likelihood.}
 #'     \item{optim}{returned value of the optimization solver, which contains details of the optimization. The solver used is `optim_lbfgs` of the 
 #'     package \pkg{RcppNumerical}.}
-#'     \item{init}{returned list of starting values.}
+#'     \item{init}{returned list of starting value.}
+#'     \item{loglike(init)}{log-likelihood at the starting value.}
 #' @importFrom stats glm
 #' @importFrom stats binomial
 #' @examples 
@@ -153,22 +155,26 @@ homophily.FE <- function(network,
   # sumnetwork      <- sapply(1:M, function(m){sum(network[(INDEXgr[m,1] + 1):(INDEXgr[m,2] + 1)])})
   
   #starting value
-  
+  initllh         <- NULL
   quiet(gc())
   if(is.null(init)){
+    if(print) cat("starting point searching\n")
     mylogit       <- glm(network ~ 1 + dX, family = binomial(link = "logit"))
     beta          <- mylogit$coefficients[-1]
     mu            <- rep(mylogit$coefficients[1], n)
     names(mu)     <- NULL
     nu            <- rep(0, n - M)
     init          <- c(beta, mu, nu)
+    initllh       <- -0.5*mylogit$deviance
   } else {
     if(is.list(init)){
       beta        <- c(init$beta)
       mu          <- c(init$mu)
       nu          <- c(init$nu)
       if(is.null(beta) || is.null(mu)){
+        if(print) cat("starting point searching\n")
         mylogit   <- glm(network ~ 1 + dX, family = binomial(link = "logit"))
+        initllh   <- -0.5*mylogit$deviance
         if(is.null(mu)){
           mu      <- rep(mylogit$coefficients[1], n); names(mu) <- NULL
         }
@@ -196,6 +202,9 @@ homophily.FE <- function(network,
   quiet(gc())
   
   if(print) {
+    if(print){
+      cat("maximizer searching")
+    }
     estim         <- fhomobetap(theta, c(network), dX, nvec, index, indexgr, M, maxit, eps_f, eps_g)
   } else {
     estim         <- fhomobeta(theta, c(network), dX, nvec, index, indexgr, M, maxit, eps_f, eps_g)
@@ -222,8 +231,10 @@ homophily.FE <- function(network,
                           "n.links"         = nlinks,
                           "K"               = K,
                           "estimate"        = list(beta = beta, mu = mu, nu = nu),
+                          "loglike"         = -estim$value,
                           "optim"           = estim,
-                          "init"            = init)
+                          "init"            = init,
+                          "loglike(init)"   = initllh)
   
   class(out)      <- "homophily.FE"
   if(print) {

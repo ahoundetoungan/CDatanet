@@ -787,7 +787,7 @@ public:
     grad                    = -Eigen::Map<Eigen::VectorXd>(gd.memptr(), nparms);
     Grad                    = gd;
     
-    Rprintf("log(likelihood) %d\n", llh);
+    std::printf("log-likelihood: %f\n", llh);
     return -llh;
   }
 };
