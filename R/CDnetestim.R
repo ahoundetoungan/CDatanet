@@ -242,7 +242,9 @@ cdnet    <- function(formula,
     thetat    <- c(log(thetat[1]/(1 -thetat[1])), thetat[-1])
     if(Rbar > 1) if(any(Deltat < lmbd0)) stop("Multiple equilibrium issue: Starting lambda is greater than starting delta.")
     if(Deltabart <= 0) stop("Starting deltabar is not positive.")
-    if((rhot <= 0) & estim.rho) stop("Starting rho is not positive.")
+    if(estim.rho){
+      if(rhot <= 0) stop("Starting rho is not positive.")
+    }
   } else {
     Xtmp      <- cbind(f.t.data$Gy, X)
     b         <- solve(t(Xtmp)%*%Xtmp, t(Xtmp)%*%y)
