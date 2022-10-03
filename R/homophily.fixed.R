@@ -203,7 +203,7 @@ homophily.FE <- function(network,
   
   if(print) {
     if(print){
-      cat("maximizer searching")
+      cat("maximizer searching\n")
     }
     estim         <- fhomobetap(theta, c(network), dX, nvec, index, indexgr, M, maxit, eps_f, eps_g)
   } else {

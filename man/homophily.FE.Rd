@@ -36,10 +36,12 @@ A list consisting of:
 \item{n.obs}{number of observations.}
 \item{n.links}{number of links.}
 \item{K}{number of explanatory variables.}
-\item{estimate}{maximizer of the likelihood.}
+\item{estimate}{maximizer of the log-likelihood.}
+\item{loglike}{maximized log-likelihood.}
 \item{optim}{returned value of the optimization solver, which contains details of the optimization. The solver used is \code{optim_lbfgs} of the
 package \pkg{RcppNumerical}.}
-\item{init}{returned list of starting values.}
+\item{init}{returned list of starting value.}
+\item{loglike(init)}{log-likelihood at the starting value.}
 }
 \description{
 \code{homophily.FE} is used to estimate a network formation model with homophily. The model includes degree heterogeneity as fixed effects (see details).
