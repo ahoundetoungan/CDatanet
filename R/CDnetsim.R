@@ -143,6 +143,7 @@ simcdnet   <- function(formula,
   Gyb       <- rep(0, n)
   
   coln      <- c("lambda", colnames(X))
+  thetaWI   <- theta
   if("(Intercept)" %in% coln) {
     thetaWI <- theta[-2]
     coln    <- coln[-2]
