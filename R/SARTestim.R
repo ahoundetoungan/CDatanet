@@ -251,7 +251,7 @@ sart <- function(formula,
           cont        <- TRUE
           t           <- t + 1
           ctr[[par0]] <- thetat
-          steps[[t]]  <- NULL
+          resTO[[t]]  <- NULL
         })
       }
     } else {
@@ -280,7 +280,7 @@ sart <- function(formula,
           cont        <- TRUE
           t           <- t + 1
           ctr[[par0]] <- thetat
-          steps[[t]]  <- NULL
+          resTO[[t]]  <- NULL
         })
       }
       llh           <- -REt[[like]]
