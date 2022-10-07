@@ -221,6 +221,10 @@ fLTBT_NPL <- function(yb, Gyb, G, X, theta, igroup, ngroup, n, K) {
     invisible(.Call(`_CDatanet_fLTBT_NPL`, yb, Gyb, G, X, theta, igroup, ngroup, n, K))
 }
 
+sartLBFGS <- function(par, yidpos, Gyb, X, npos, idpos, idzero, K, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, print = FALSE) {
+    .Call(`_CDatanet_sartLBFGS`, par, yidpos, Gyb, X, npos, idpos, idzero, K, maxit, eps_f, eps_g, print)
+}
+
 fnewybTBT <- function(yb, Gyb, G, igroup, ngroup, X, theta, K, n, tol, maxit) {
     invisible(.Call(`_CDatanet_fnewybTBT`, yb, Gyb, G, igroup, ngroup, X, theta, K, n, tol, maxit))
 }

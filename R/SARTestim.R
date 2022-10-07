@@ -10,11 +10,11 @@
 #' @param theta0 (optional) starting value of \eqn{\theta = (\lambda, \beta, \gamma, \sigma)}. The parameter \eqn{\gamma} should be removed if the model
 #' does not contain contextual effects (see details).
 #' @param yb0 (optional) expectation of y.
-#' @param optimizer is either `nlm` (referring to the function \link[stats]{nlm}) or `optim` (referring to the function \link[stats]{optim}). 
+#' @param optimizer is either `fastlbfgs` (L-BFGS optimization method of the package \pkg{RcppNumerical}), `nlm` (referring to the function \link[stats]{nlm}), or `optim` (referring to the function \link[stats]{optim}). 
 #' Other arguments 
 #' of these functions such as, the control values and the method can be defined through the argument `opt.ctr`.
 #' @param npl.ctr list of controls for the NPL method (see \code{\link{cdnet}}).
-#' @param opt.ctr list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in `optimizer`) such as control, method, ...
+#' @param opt.ctr list of arguments to be passed in `optim_lbfgs` of the package \pkg{RcppNumerical}, \link[stats]{nlm} or \link[stats]{optim} (the solver set in `optimizer`), such as `maxit`, `eps_f`, `eps_g`, `control`, `method`, ...
 #' @param print a Boolean indicating if the estimate should be printed at each step.
 #' @param cov a Boolean indicating if the covariance should be computed.
 #' @param RE a Boolean which indicates if the model if under rational expectation of not.
@@ -104,14 +104,17 @@ sart <- function(formula,
                  Glist,
                  theta0 = NULL,
                  yb0  = NULL,
-                 optimizer = "optim",
+                 optimizer = "fastlbfgs",
                  npl.ctr  = list(), 
                  opt.ctr = list(),
                  print = TRUE,
                  cov = TRUE,
                  RE = FALSE,
                  data) {
-  stopifnot(optimizer %in% c("optim", "nlm"))
+  stopifnot(optimizer %in% c("fastlbfgs", "optim", "nlm"))
+  if(!RE & optimizer == "fastbfgs"){
+    stop("fastlbfgs is only implemented for the rational expectation model in this version. Use another solver.")
+  }
   env.formula <- environment(formula)
   # controls
   npl.print   <- print
@@ -200,8 +203,14 @@ sart <- function(formula,
     yidpos   <- y[indpos]
     ctr      <- c(list("yidpos" = yidpos, "Gyb" = Gybt, "X" = X, "npos" = sum(npos), 
                        "idpos" = idpos, "idzero" = idzero, "K" = K), opt.ctr)
-    
-    if (optimizer == "optim") {
+
+    if (optimizer == "fastlbfgs"){
+      ctr    <- c(ctr, list(par = thetat)); optimizer = "sartLBFGS"
+      
+      par0   <- "par"
+      par1   <- "par"
+      like   <- "value"
+    } else if (optimizer == "optim") {
       ctr    <- c(ctr, list(fn = foptimTBT_NPL, par = thetat))
       
       par0   <- "par"
@@ -216,10 +225,11 @@ sart <- function(formula,
     
     if(npl.print) {
       while(cont) {
-        tryCatch({
+        # tryCatch({
           ybt0        <- ybt + 0    #copy in different memory
           
           # compute theta
+          # print(optimizer)
           REt         <- do.call(get(optimizer), ctr)
           thetat      <- REt[[par1]]
           llh         <- -REt[[like]]
@@ -243,16 +253,16 @@ sart <- function(formula,
           cat(paste0("Likelihood    : ", round(llh,3)), "\n")
           cat("Estimate:", "\n")
           print(theta)
-        },
-        error = function(e){
-          cat("** Non-convergence ** Redefining theta and computing a new yb\n")
-          thetat[1]   <- -4.5
-          fnewybTBT(ybt, Gybt, Glist, igr, M, X, thetat, K, n, npl.tol, npl.maxit)
-          cont        <- TRUE
-          t           <- t + 1
-          ctr[[par0]] <- thetat
-          resTO[[t]]  <- NULL
-        })
+        # },
+        # error = function(e){
+        #   cat("** Non-convergence ** Redefining theta and computing a new yb\n")
+        #   thetat[1]   <- -4.5
+        #   fnewybTBT(ybt, Gybt, Glist, igr, M, X, thetat, K, n, npl.tol, npl.maxit)
+        #   cont        <- TRUE
+        #   t           <- t + 1
+        #   ctr[[par0]] <- thetat
+        #   resTO[[t]]  <- NULL
+        # })
       }
     } else {
       while(cont) {
