@@ -12,11 +12,11 @@
 #' @param starting (optional) starting value of \eqn{\theta = (\lambda, \beta', \gamma')'}, \eqn{\bar{\delta}}{deltabar}, \eqn{\delta = (\delta_2, ..., \delta_{\bar{R}})}{\delta = (\delta_2, ..., \delta_{Rbar})}, and \eqn{\rho}. The parameter \eqn{\gamma} should be removed if the model
 #' does not contain contextual effects (see details).
 #' @param yb0 (optional) expectation of y.
-#' @param optimizer is either `nlm` (referring to the \link[stats]{nlm} function) or `optim` (referring to the \link[stats]{optim} function). 
-#' At every step of the NPL method, the estimation is performed using \link[stats]{nlm} or \link[stats]{optim}. Other arguments 
+#' @param optimizer is either `fastlbfgs` (L-BFGS optimization method of the package \pkg{RcppNumerical}), `nlm` (referring to the function \link[stats]{nlm}), or `optim` (referring to the function \link[stats]{optim}). 
+#' Other arguments 
 #' of these functions such as, `control` and `method` can be defined through the argument `opt.ctr`.
 #' @param npl.ctr list of controls for the NPL method (see details).
-#' @param opt.ctr list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in `optimizer`) such as control, method, ...
+#' @param opt.ctr list of arguments to be passed in `optim_lbfgs` of the package \pkg{RcppNumerical}, \link[stats]{nlm} or \link[stats]{optim} (the solver set in `optimizer`), such as `maxit`, `eps_f`, `eps_g`, `control`, `method`, ...
 #' @param cov a Boolean indicating if the covariance should be computed.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `cdnet` is called.
@@ -120,13 +120,13 @@ cdnet    <- function(formula,
                      estim.rho = FALSE,
                      starting  = list(theta = NULL, deltabar = NULL, delta = NULL, rho = NULL), 
                      yb0       = NULL,
-                     optimizer = "optim", 
+                     optimizer = "fastlbfgs", 
                      npl.ctr   = list(), 
                      opt.ctr   = list(), 
                      cov       = TRUE,
                      data) {
   
-  stopifnot(optimizer %in% c("optim", "nlm"))
+  stopifnot(optimizer %in% c("fastlbfgs", "optim", "nlm"))
   env.formula <- environment(formula)
   
   # controls
@@ -289,7 +289,13 @@ cdnet    <- function(formula,
   # }
   
   # Arguments used in the optimizer
-  if (optimizer == "optim") {
+  if (optimizer == "fastlbfgs"){
+    ctr    <- c(ctr, list(par = thetat)); optimizer = "cdnetLBFGS"
+    
+    par0   <- "par"
+    par1   <- "par"
+    like   <- "value"
+  } else if (optimizer == "optim") {
     # ctr    <- c(ctr, list(fn = ifelse(Ksimu == 0, foptimREM_NPL, 
     #                                   ifelse(Ksimu == 1, foptimREM_NPLncond1, 
     #                                          foptimREM_NPLncond2)), par = thetat))

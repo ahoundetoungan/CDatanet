@@ -12,7 +12,7 @@ cdnet(
   estim.rho = FALSE,
   starting = list(theta = NULL, deltabar = NULL, delta = NULL, rho = NULL),
   yb0 = NULL,
-  optimizer = "optim",
+  optimizer = "fastlbfgs",
   npl.ctr = list(),
   opt.ctr = list(),
   cov = TRUE,
@@ -40,13 +40,13 @@ does not contain contextual effects (see details).}
 
 \item{yb0}{(optional) expectation of y.}
 
-\item{optimizer}{is either \code{nlm} (referring to the \link[stats]{nlm} function) or \code{optim} (referring to the \link[stats]{optim} function).
-At every step of the NPL method, the estimation is performed using \link[stats]{nlm} or \link[stats]{optim}. Other arguments
+\item{optimizer}{is either \code{fastlbfgs} (L-BFGS optimization method of the package \pkg{RcppNumerical}), \code{nlm} (referring to the function \link[stats]{nlm}), or \code{optim} (referring to the function \link[stats]{optim}).
+Other arguments
 of these functions such as, \code{control} and \code{method} can be defined through the argument \code{opt.ctr}.}
 
 \item{npl.ctr}{list of controls for the NPL method (see details).}
 
-\item{opt.ctr}{list of arguments of \link[stats]{nlm} or \link[stats]{optim} (the one set in \code{optimizer}) such as control, method, ...}
+\item{opt.ctr}{list of arguments to be passed in \code{optim_lbfgs} of the package \pkg{RcppNumerical}, \link[stats]{nlm} or \link[stats]{optim} (the solver set in \code{optimizer}), such as \code{maxit}, \code{eps_f}, \code{eps_g}, \code{control}, \code{method}, ...}
 
 \item{cov}{a Boolean indicating if the covariance should be computed.}
 

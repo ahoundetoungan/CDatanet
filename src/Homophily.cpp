@@ -650,7 +650,7 @@ List fhomobeta(Eigen::VectorXd theta,
   return Rcpp::List::create(
     Rcpp::Named("estimate") = theta,
     Rcpp::Named("value")    = fopt,
-    Rcpp::Named("gradien")  = f.Grad,
+    Rcpp::Named("gradient") = f.Grad,
     Rcpp::Named("status")   = status);
 }
 
@@ -840,6 +840,6 @@ List fhomobetap(Eigen::VectorXd theta,
   return Rcpp::List::create(
     Rcpp::Named("estimate") = theta,
     Rcpp::Named("value")    = fopt,
-    Rcpp::Named("gradien")  = f.Grad,
+    Rcpp::Named("gradient") = f.Grad,
     Rcpp::Named("status")   = status);
 }

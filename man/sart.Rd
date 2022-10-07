@@ -38,7 +38,7 @@ does not contain contextual effects (see details).}
 
 \item{optimizer}{is either \code{fastlbfgs} (L-BFGS optimization method of the package \pkg{RcppNumerical}), \code{nlm} (referring to the function \link[stats]{nlm}), or \code{optim} (referring to the function \link[stats]{optim}).
 Other arguments
-of these functions such as, the control values and the method can be defined through the argument \code{opt.ctr}.}
+of these functions such as, \code{control} and \code{method} can be defined through the argument \code{opt.ctr}.}
 
 \item{npl.ctr}{list of controls for the NPL method (see \code{\link{cdnet}}).}
 

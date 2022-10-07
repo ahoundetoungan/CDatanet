@@ -232,7 +232,7 @@ public:
     gdarm(K + 1)           = sum(ZtLsd0%tmp) + serrerrstp - npos;
     gdarm(0)              *= beta(0)*(1 - beta(0));
     grad                   = -Eigen::Map<Eigen::VectorXd>(gdarm.memptr(), K + 2);
-    Grad                   = - grad;
+    Grad                   = -grad;
     
     // cout<< f <<endl;
     return -f;
@@ -275,12 +275,17 @@ public:
   
   double f_grad(Constvec& theta, Refvec grad)
   {
-    // cout << theta.transpose() <<endl;
     Eigen::VectorXd theta0 = theta;  //make a copy
     arma::vec beta         = arma::vec(theta0.data(), K + 2, false, false); //converte into arma vec
     double lsigma          = beta(K + 1);
     beta(K + 1)            = exp(beta(K + 1));
     beta(0)                = 1.0/(exp(-beta(0)) + 1);
+    // cout << theta.transpose() <<endl;
+    NumericVector betacpp  = wrap(beta);
+    betacpp.attr("dim")    = R_NilValue;
+    std::printf("beta: \n");
+    Rcpp::print(betacpp);
+    
     double sigma           = beta(K + 1);
     arma::vec ZtLambdast   = Z*beta.head(K + 1)/sigma;
     arma::vec ZtLsd0       = ZtLambdast.elem(idzero);
@@ -303,9 +308,10 @@ public:
     gdarm(K + 1)           = sum(ZtLsd0%tmp) + serrerrstp - npos;
     gdarm(0)              *= beta(0)*(1 - beta(0));
     grad                   = -Eigen::Map<Eigen::VectorXd>(gdarm.memptr(), K + 2);
-    Grad                   = - grad;
+    Grad                   = -grad;
     
     // cout<< f <<endl;
+    std::printf("log-likelihood: %f\n", f);
     return -f;
   }
 };
@@ -335,11 +341,11 @@ List sartLBFGS(Eigen::VectorXd par,
   Eigen::VectorXd grad;
   
   if(print){
-    sartreg f(yidpos, Z, Z0, Z1, npos, idpos, idzero, K, l2ps2);
+    sartreg_print f(yidpos, Z, Z0, Z1, npos, idpos, idzero, K, l2ps2);
     status = optim_lbfgs(f, par, fopt, maxit, eps_f, eps_g);
     grad  = f.Grad;
   } else {
-    sartreg_print f(yidpos, Z, Z0, Z1, npos, idpos, idzero, K, l2ps2);
+    sartreg f(yidpos, Z, Z0, Z1, npos, idpos, idzero, K, l2ps2);
     status = optim_lbfgs(f, par, fopt, maxit, eps_f, eps_g);
     grad  = f.Grad;
   }
@@ -347,7 +353,7 @@ List sartLBFGS(Eigen::VectorXd par,
   return Rcpp::List::create(
     Rcpp::Named("par")      = par,
     Rcpp::Named("value")    = fopt,
-    Rcpp::Named("gradien")  = grad,
+    Rcpp::Named("gradient") = grad,
     Rcpp::Named("status")   = status);
 }
 

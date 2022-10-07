@@ -65,6 +65,10 @@ flogintphi <- function(n, S, a, b, Mean, simu, igroup, ngroup) {
     .Call(`_CDatanet_flogintphi`, n, S, a, b, Mean, simu, igroup, ngroup)
 }
 
+cdnetLBFGS <- function(par, Gyb, X, Rbar, maxy, K, n, y, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, print = FALSE) {
+    .Call(`_CDatanet_cdnetLBFGS`, par, Gyb, X, Rbar, maxy, K, n, y, maxit, eps_f, eps_g, print)
+}
+
 fcovCDI <- function(n, Gyb, theta, X, Rbar, K, S, G, igroup, ngroup, ccov) {
     .Call(`_CDatanet_fcovCDI`, n, Gyb, theta, X, Rbar, K, S, G, igroup, ngroup, ccov)
 }

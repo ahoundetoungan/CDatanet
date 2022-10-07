@@ -12,7 +12,7 @@
 #' @param yb0 (optional) expectation of y.
 #' @param optimizer is either `fastlbfgs` (L-BFGS optimization method of the package \pkg{RcppNumerical}), `nlm` (referring to the function \link[stats]{nlm}), or `optim` (referring to the function \link[stats]{optim}). 
 #' Other arguments 
-#' of these functions such as, the control values and the method can be defined through the argument `opt.ctr`.
+#' of these functions such as, `control` and `method` can be defined through the argument `opt.ctr`.
 #' @param npl.ctr list of controls for the NPL method (see \code{\link{cdnet}}).
 #' @param opt.ctr list of arguments to be passed in `optim_lbfgs` of the package \pkg{RcppNumerical}, \link[stats]{nlm} or \link[stats]{optim} (the solver set in `optimizer`), such as `maxit`, `eps_f`, `eps_g`, `control`, `method`, ...
 #' @param print a Boolean indicating if the estimate should be printed at each step.
