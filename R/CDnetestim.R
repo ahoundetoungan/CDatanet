@@ -290,7 +290,8 @@ cdnet    <- function(formula,
   
   # Arguments used in the optimizer
   if (optimizer == "fastlbfgs"){
-    ctr    <- c(ctr, list(par = thetat)); optimizer = "cdnetLBFGS"
+    ctr    <- c(ctr, list(par = thetat)); 
+    if(estim.rho){optimizer <- "cdnetLBFGSrho"} else{optimizer <- "cdnetLBFGS"}
     
     par0   <- "par"
     par1   <- "par"

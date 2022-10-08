@@ -225,7 +225,7 @@ sart <- function(formula,
     
     if(npl.print) {
       while(cont) {
-        # tryCatch({
+        tryCatch({
           ybt0        <- ybt + 0    #copy in different memory
           
           # compute theta
@@ -253,16 +253,16 @@ sart <- function(formula,
           cat(paste0("Likelihood    : ", round(llh,3)), "\n")
           cat("Estimate:", "\n")
           print(theta)
-        # },
-        # error = function(e){
-        #   cat("** Non-convergence ** Redefining theta and computing a new yb\n")
-        #   thetat[1]   <- -4.5
-        #   fnewybTBT(ybt, Gybt, Glist, igr, M, X, thetat, K, n, npl.tol, npl.maxit)
-        #   cont        <- TRUE
-        #   t           <- t + 1
-        #   ctr[[par0]] <- thetat
-        #   resTO[[t]]  <- NULL
-        # })
+        },
+        error = function(e){
+          cat("** Non-convergence ** Redefining theta and computing a new yb\n")
+          thetat[1]   <- -4.5
+          fnewybTBT(ybt, Gybt, Glist, igr, M, X, thetat, K, n, npl.tol, npl.maxit)
+          cont        <- TRUE
+          t           <- t + 1
+          ctr[[par0]] <- thetat
+          resTO[[t]]  <- NULL
+        })
       }
     } else {
       while(cont) {

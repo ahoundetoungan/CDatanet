@@ -25,20 +25,27 @@
  * yb      : is the vector of equilibrium outcome expectation.
  */
 
-// [[Rcpp::depends(RcppArmadillo)]]
-#include <RcppArmadillo.h>
+// [[Rcpp::depends(RcppArmadillo, RcppEigen, RcppNumerical)]]
 
+#include <RcppArmadillo.h>
+#include <RcppNumerical.h>
+#include <RcppEigen.h>
+
+typedef Eigen::Map<Eigen::MatrixXd> MapMatr;
+typedef Eigen::Map<Eigen::VectorXd> MapVect;
+
+using namespace Numer;
 using namespace Rcpp;
 using namespace arma;
 using namespace std;
 
 // fgamma select gamma
 double fgamma2(const double& lambda,
-              const arma::vec& delta,
-              const double& bdelta,
-              const double& rho,        
-              const int& r,
-              const int& Rbar){
+               const arma::vec& delta,
+               const double& bdelta,
+               const double& rho,        
+               const int& r,
+               const int& Rbar){
   if (r == 1)    return 0;
   if (r <= Rbar) return delta(r - 2);
   return pow(r - Rbar, rho)*bdelta + lambda;
@@ -70,12 +77,12 @@ arma::vec laverexp2(const arma::mat& x, const int& nc){
 //       = log(p_1) + log(1 + exp(log(p2) - log(p1)) + exp(log(p3) - log(p1)) + ...)
 //       = lF1 + log(1 + sum_r=2^inf exp(lFr - lF1))
 NumericVector flogL2(const NumericVector& ZtLambda,
-                    const double& lambda,
-                    const arma::vec& delta,
-                    const double& bdelta,
-                    const double& rho,
-                    const int& Rbar,
-                    const int& n) {
+                     const double& lambda,
+                     const arma::vec& delta,
+                     const double& bdelta,
+                     const double& rho,
+                     const int& Rbar,
+                     const int& n) {
   int r     = 1;
   double ar = 0;
   bool next = true;
@@ -254,14 +261,14 @@ List fmeffects2(const int& n,
 // flogP returns the log-likelihood of each individual
 // maxy is max(y)
 arma::vec flogp2(const arma::uvec& y,
-                const arma::vec& ZtLambda,
-                const int& maxy,
-                const double& lambda,
-                const arma::vec& delta,
-                const double& bdelta,
-                const double& rho,
-                const int& Rbar,
-                const int& n){
+                 const arma::vec& ZtLambda,
+                 const int& maxy,
+                 const double& lambda,
+                 const arma::vec& delta,
+                 const double& bdelta,
+                 const double& rho,
+                 const int& Rbar,
+                 const int& n){
   // create vector a = [a_0, a_1, ..., a_(maxy + 1)]
   // Rbar <= maxy + 1
   arma::vec a(maxy + 2);
@@ -282,15 +289,15 @@ arma::vec flogp2(const arma::uvec& y,
 
 //non conditional version
 arma::vec flogpncond2(const arma::uvec& y,
-                     const arma::mat& ZtLambda,
-                     const int& maxy,
-                     const double& lambda,
-                     const arma::vec& delta,
-                     const double& bdelta,
-                     const double& rho,
-                     const int& nsimu,
-                     const int& Rbar,
-                     const int& n){
+                      const arma::mat& ZtLambda,
+                      const int& maxy,
+                      const double& lambda,
+                      const arma::vec& delta,
+                      const double& bdelta,
+                      const double& rho,
+                      const int& nsimu,
+                      const int& Rbar,
+                      const int& n){
   // create vector a = [a_0, a_1, ..., a_(maxy + 1)]
   // Rbar <= maxy + 1
   arma::vec a(maxy + 2);
@@ -485,15 +492,15 @@ void fnewyb2(arma::vec& yb,
 // using one factor
 //[[Rcpp::export]]
 double foptimREM_NPLncond12(const arma::vec& Gyb,
-                           const arma::vec& theta,
-                           const arma::mat& X,
-                           const arma::mat& Simu1,
-                           const int& nsimu,
-                           const int& Rbar,
-                           const int& maxy,
-                           const int& K,
-                           const int& n,
-                           const arma::uvec& y) {
+                            const arma::vec& theta,
+                            const arma::mat& X,
+                            const arma::mat& Simu1,
+                            const int& nsimu,
+                            const int& Rbar,
+                            const int& maxy,
+                            const int& K,
+                            const int& n,
+                            const arma::uvec& y) {
   double lambda        = 1.0/(exp(-theta(0)) + 1);
   arma::mat ZtLambda   = Simu1*theta(K+1);
   arma::vec tmp        = lambda*Gyb + X*theta.subvec(1, K);
@@ -512,17 +519,17 @@ double foptimREM_NPLncond12(const arma::vec& Gyb,
 
 //[[Rcpp::export]]
 void fL_NPLncond12(arma::vec& yb,
-                  arma::vec& Gyb,
-                  List& G,
-                  const arma::mat& igroup,
-                  const int& ngroup,
-                  const arma::mat& X,
-                  const arma::vec& theta,
-                  const arma::mat& Simu1,
-                  const int& nsimu,
-                  const int& Rbar,
-                  const int& K,
-                  const int& n) {
+                   arma::vec& Gyb,
+                   List& G,
+                   const arma::mat& igroup,
+                   const int& ngroup,
+                   const arma::mat& X,
+                   const arma::vec& theta,
+                   const arma::mat& Simu1,
+                   const int& nsimu,
+                   const int& Rbar,
+                   const int& K,
+                   const int& n) {
   int n1, n2;
   double lambda        = 1.0/(exp(-theta(0)) + 1);
   arma::mat ZtLambda   = Simu1*theta(K+1);
@@ -549,16 +556,16 @@ void fL_NPLncond12(arma::vec& yb,
 // using two factors
 //[[Rcpp::export]]
 double foptimREM_NPLncond22(const arma::vec& Gyb,
-                           const arma::vec& theta,
-                           const arma::mat& X,
-                           const arma::mat& Simu1,
-                           const arma::mat& Simu2,
-                           const int& nsimu,
-                           const int& Rbar,
-                           const int& maxy,
-                           const int& K,
-                           const int& n,
-                           const arma::uvec& y) {
+                            const arma::vec& theta,
+                            const arma::mat& X,
+                            const arma::mat& Simu1,
+                            const arma::mat& Simu2,
+                            const int& nsimu,
+                            const int& Rbar,
+                            const int& maxy,
+                            const int& K,
+                            const int& n,
+                            const arma::uvec& y) {
   double lambda        = 1.0/(exp(-theta(0)) + 1);
   arma::mat ZtLambda   = Simu1*theta(K+1) + Simu2*theta(K+2);
   arma::vec tmp        = lambda*Gyb + X*theta.subvec(1, K);
@@ -577,18 +584,18 @@ double foptimREM_NPLncond22(const arma::vec& Gyb,
 
 //[[Rcpp::export]]
 void fL_NPLncond22(arma::vec& yb,
-                  arma::vec& Gyb,
-                  List& G,
-                  const arma::mat& igroup,
-                  const int& ngroup,
-                  const arma::mat& X,
-                  const arma::vec& theta,
-                  const arma::mat& Simu1,
-                  const arma::mat& Simu2,
-                  const int& nsimu,
-                  const int& Rbar,
-                  const int& K,
-                  const int& n) {
+                   arma::vec& Gyb,
+                   List& G,
+                   const arma::mat& igroup,
+                   const int& ngroup,
+                   const arma::mat& X,
+                   const arma::vec& theta,
+                   const arma::mat& Simu1,
+                   const arma::mat& Simu2,
+                   const int& nsimu,
+                   const int& Rbar,
+                   const int& K,
+                   const int& n) {
   int n1, n2;
   double lambda        = 1.0/(exp(-theta(0)) + 1);
   arma::mat ZtLambda   = Simu1*theta(K+1) + Simu2*theta(K+2);
@@ -613,13 +620,13 @@ void fL_NPLncond22(arma::vec& yb,
 
 //This function computes log of integral of phi(x) from a to b using IS
 arma::vec flogintphi2(const int& n,
-                     const int& S,
-                     const double& a,
-                     const double& b,
-                     const arma::vec& Mean,
-                     const arma::rowvec& simu,
-                     const arma::mat& igroup,
-                     const int& ngroup){
+                      const int& S,
+                      const double& a,
+                      const double& b,
+                      const arma::vec& Mean,
+                      const arma::rowvec& simu,
+                      const arma::mat& igroup,
+                      const int& ngroup){
   arma::vec out(n);
   for(int m(0); m < ngroup; ++m){
     int n1              = igroup(m,0);
@@ -630,6 +637,290 @@ arma::vec flogintphi2(const int& n,
     out.subvec(n1, n2)  = laverexp2(logphis, S);
   }
   return out + log(b - a);
+}
+
+// numerical optimization
+class cdnetregrho_print: public MFuncGrad
+{
+private:
+  const arma::mat& Z;
+  const arma::mat& X;
+  const int& Rbar;
+  const int& maxy;
+  const int& K;
+  const int& n;
+  const arma::uvec& y;
+  const double& l2ps2;
+  List& lidy;
+public:
+  cdnetregrho_print(const arma::mat& Z_,
+                    const arma::mat& X_,
+                    const int& Rbar_,
+                    const int& maxy_,
+                    const int& K_,
+                    const int& n_,
+                    const arma::uvec& y_,
+                    const double& l2ps2_,
+                    List& lidy_) : 
+  Z(Z_),
+  X(X_),
+  Rbar(Rbar_),
+  maxy(maxy_),
+  K(K_),
+  n(n_),
+  y(y_),
+  l2ps2(l2ps2_),
+  lidy(lidy_){}
+  
+  Eigen::VectorXd Grad;
+  
+  double f_grad(Constvec& theta, Refvec grad)
+  {
+    Eigen::VectorXd theta0  = theta;  //make a copy
+    arma::vec beta          = arma::vec(theta0.data(), K + Rbar + 2, false, false); //converte into arma vec
+    
+    beta(0)                 = 1.0/(exp(-beta(0)) + 1);
+    double lambda           = beta(0);
+    arma::vec deltat        = exp(beta.tail(Rbar + 1));
+    arma::vec delta         = deltat; delta.head(Rbar - 1) += lambda;
+    beta.tail(Rbar + 1)     = delta;
+    double bdelta           = delta(Rbar - 1);
+    double rho              = delta(Rbar);
+    
+    // print
+    NumericVector betacpp   = wrap(beta);
+    betacpp.attr("dim")     = R_NilValue;
+    std::printf("beta: \n");
+    Rcpp::print(betacpp);
+    
+    // create vector a = [a_0, a_1, ..., a_(maxy + 1)]
+    // Rbar <= maxy + 1
+    arma::vec a(maxy + 2);
+    a(0)   = R_NegInf; a(1) = 0;
+    for(int r(2); r <= (maxy + 1); ++r) {
+      a(r) = a(r - 1) + fgamma2(lambda, delta, bdelta, rho, r, Rbar);
+    }
+    
+    // log(0, 1, 2, ...)
+    arma::vec tmp0          = arma::regspace<arma::vec>(1, maxy + 1 - Rbar);
+    arma::vec ddd           = pow(tmp0, rho);
+    arma::vec ddr           = bdelta*ddd%log(tmp0);
+    
+    // compute Ztlambda - ar as tmp1 and Ztlambda - ar+1 as tmp2 
+    arma::vec ZtLambda      = Z*beta.head(K + 1);
+    arma::vec Zba1          = ZtLambda - a.elem(y);
+    arma::vec Zba2          = ZtLambda - a.elem(y + 1);
+    NumericVector Zba1r     = wrap(Zba1);
+    NumericVector Zba2r     = wrap(Zba2);
+    
+    arma::vec lfZba1        = -0.5*Zba1%Zba1 - l2ps2;
+    arma::vec lfZba2        = -0.5*Zba2%Zba2 - l2ps2;
+    
+    NumericVector lFZba1    = Rcpp::pnorm5(Zba1r, 0, 1, true, true);
+    NumericVector lFZba2    = Rcpp::pnorm5(Zba2r, 0, 1, true, true);
+    
+    // log likelihood
+    NumericVector ldF       = lFZba1 + log(1 - exp(lFZba2 - lFZba1));
+    double f                = sum(ldF);
+    
+    if(f > 1e293) {
+      f                     = 1e293;
+    }
+    
+    // gradient
+    arma::vec ldFa         = as<arma::vec>(ldF);
+    arma::vec tmp1         = exp(lfZba1 - ldFa);
+    arma::vec tmp2         = exp(lfZba2 - ldFa);
+    arma::vec gdarm(K + Rbar + 2);
+    gdarm.head(K + 1)      = arma::trans(arma::sum(Z.each_col()%(tmp1 - tmp2), 0));
+    for(int r(2); r <= Rbar; ++ r){
+      arma::uvec id2       = lidy[r - 2]; // greater than r - 1
+      arma::uvec id1       = lidy[r - 1]; // greater than r
+      double tmp3          = sum(tmp2.elem(id2)) - sum(tmp1.elem(id1));
+      gdarm(0)            += tmp3;
+      gdarm(K + r - 1)     = tmp3;
+    }
+    arma::uvec id2         = lidy[Rbar - 1]; // greater than Rbar
+    arma::uvec id1         = lidy[Rbar];    // greater than Rbar + 1
+    gdarm(0)              += sum(tmp2.elem(id2)%(y.elem(id2) + 1 - Rbar)) - sum(tmp1.elem(id1)%(y.elem(id1) - Rbar));
+    gdarm(K + Rbar)        = sum(tmp2.elem(id2)%ddd.elem(y.elem(id2) - Rbar)) - 
+      sum(tmp1.elem(id1)%ddd.elem(y.elem(id1) - Rbar - 1));
+    gdarm(K + Rbar + 1)    = sum(tmp2.elem(id2)%ddr.elem(y.elem(id2) - Rbar)) - 
+      sum(tmp1.elem(id1)%ddr.elem(y.elem(id1) - Rbar - 1));
+    
+    gdarm.tail(Rbar + 1)  %= deltat;
+    gdarm(0)              *= lambda*(1 - lambda);
+    grad                   = -Eigen::Map<Eigen::VectorXd>(gdarm.memptr(), K + Rbar + 1);
+    Grad                   = -grad;
+    
+    // cout<< f <<endl;
+    std::printf("log-likelihood: %f\n", f);
+    return -f;
+  }
+};
+
+class cdnetregrho: public MFuncGrad
+{
+private:
+  const arma::mat& Z;
+  const arma::mat& X;
+  const int& Rbar;
+  const int& maxy;
+  const int& K;
+  const int& n;
+  const arma::uvec& y;
+  const double& l2ps2;
+  List& lidy;
+public:
+  cdnetregrho(const arma::mat& Z_,
+              const arma::mat& X_,
+              const int& Rbar_,
+              const int& maxy_,
+              const int& K_,
+              const int& n_,
+              const arma::uvec& y_,
+              const double& l2ps2_,
+              List& lidy_) : 
+  Z(Z_),
+  X(X_),
+  Rbar(Rbar_),
+  maxy(maxy_),
+  K(K_),
+  n(n_),
+  y(y_),
+  l2ps2(l2ps2_),
+  lidy(lidy_){}
+  
+  Eigen::VectorXd Grad;
+  
+  double f_grad(Constvec& theta, Refvec grad)
+  {
+    Eigen::VectorXd theta0  = theta;  //make a copy
+    arma::vec beta          = arma::vec(theta0.data(), K + Rbar + 2, false, false); //converte into arma vec
+    
+    beta(0)                 = 1.0/(exp(-beta(0)) + 1);
+    double lambda           = beta(0);
+    arma::vec deltat        = exp(beta.tail(Rbar + 1));
+    arma::vec delta         = deltat; delta.head(Rbar - 1) += lambda;
+    beta.tail(Rbar + 1)     = delta;
+    double bdelta           = delta(Rbar - 1);
+    double rho              = delta(Rbar);
+    
+    // print
+    NumericVector betacpp   = wrap(beta);
+    betacpp.attr("dim")     = R_NilValue;
+    std::printf("beta: \n");
+    Rcpp::print(betacpp);
+    
+    // create vector a = [a_0, a_1, ..., a_(maxy + 1)]
+    // Rbar <= maxy + 1
+    arma::vec a(maxy + 2);
+    a(0)   = R_NegInf; a(1) = 0;
+    for(int r(2); r <= (maxy + 1); ++r) {
+      a(r) = a(r - 1) + fgamma2(lambda, delta, bdelta, rho, r, Rbar);
+    }
+    
+    // log(0, 1, 2, ...)
+    arma::vec tmp0          = arma::regspace<arma::vec>(1, maxy + 1 - Rbar);
+    arma::vec ddd           = pow(tmp0, rho);
+    arma::vec ddr           = bdelta*ddd%log(tmp0);
+    arma::vec dad           = cumsum(ddd);
+    arma::vec dar           = cumsum(ddr);
+    
+    // compute Ztlambda - ar as tmp1 and Ztlambda - ar+1 as tmp2 
+    arma::vec ZtLambda      = Z*beta.head(K + 1);
+    arma::vec Zba1          = ZtLambda - a.elem(y);
+    arma::vec Zba2          = ZtLambda - a.elem(y + 1);
+    NumericVector Zba1r     = wrap(Zba1);
+    NumericVector Zba2r     = wrap(Zba2);
+    
+    arma::vec lfZba1        = -0.5*Zba1%Zba1 - l2ps2;
+    arma::vec lfZba2        = -0.5*Zba2%Zba2 - l2ps2;
+    
+    NumericVector lFZba1    = Rcpp::pnorm5(Zba1r, 0, 1, true, true);
+    NumericVector lFZba2    = Rcpp::pnorm5(Zba2r, 0, 1, true, true);
+    
+    // log likelihood
+    NumericVector ldF       = lFZba1 + log(1 - exp(lFZba2 - lFZba1));
+    double f                = sum(ldF);
+    
+    if(f > 1e293) {
+      f                     = 1e293;
+    }
+    
+    // gradient
+    arma::vec ldFa         = as<arma::vec>(ldF);
+    arma::vec tmp1         = exp(lfZba1 - ldFa);
+    arma::vec tmp2         = exp(lfZba2 - ldFa);
+    arma::vec gdarm(K + Rbar + 2);
+    gdarm.head(K + 1)      = arma::trans(arma::sum(Z.each_col()%(tmp1 - tmp2), 0));
+    for(int r(2); r <= Rbar; ++ r){
+      arma::uvec id2       = lidy[r - 2]; // greater than r - 1
+      arma::uvec id1       = lidy[r - 1]; // greater than r
+      double tmp3          = sum(tmp2.elem(id2)) - sum(tmp1.elem(id1));
+      gdarm(0)            += tmp3;
+      gdarm(K + r - 1)     = tmp3;
+    }
+    arma::uvec id2         = lidy[Rbar - 1]; // greater than Rbar
+    arma::uvec id1         = lidy[Rbar];    // greater than Rbar + 1
+    gdarm(0)              += sum(tmp2.elem(id2)%(y.elem(id2) + 1 - Rbar)) - sum(tmp1.elem(id1)%(y.elem(id1) - Rbar));
+    gdarm(K + Rbar)        = sum(tmp2.elem(id2)%dad.elem(y.elem(id2) - Rbar)) - 
+      sum(tmp1.elem(id1)%dad.elem(y.elem(id1) - Rbar - 1));
+    gdarm(K + Rbar + 1)    = sum(tmp2.elem(id2)%dar.elem(y.elem(id2) - Rbar)) - 
+      sum(tmp1.elem(id1)%dar.elem(y.elem(id1) - Rbar - 1));
+    
+    gdarm.tail(Rbar + 1)  %= deltat;
+    gdarm(0)              *= lambda*(1 - lambda);
+    grad                   = -Eigen::Map<Eigen::VectorXd>(gdarm.memptr(), K + Rbar + 2);
+    Grad                   = -grad;
+    
+    // cout<< f <<endl;
+    std::printf("log-likelihood: %f\n", f);
+    return -f;
+  }
+};
+
+
+//[[Rcpp::export]]
+List cdnetLBFGSrho(Eigen::VectorXd par,
+                   const arma::vec& Gyb,
+                   const arma::mat& X,
+                   const int& Rbar,
+                   const int& maxy,
+                   const int& K,
+                   const int& n,
+                   const arma::uvec& y,
+                   const int& maxit = 300, 
+                   const double& eps_f = 1e-6, 
+                   const double& eps_g = 1e-5,
+                   const bool& print = false) {
+  double l2ps2     = 0.5*log(2*acos(-1));
+  arma::mat Z      = arma::join_rows(Gyb, X);
+  List lidy(Rbar + 1);
+  for(int r(0); r <= Rbar; ++ r){
+    arma::uvec id  = arma::find(y >= (r + 1));   
+    lidy(r)        = id;
+  }
+  
+  double fopt;
+  int status;
+  Eigen::VectorXd grad;
+  
+  if(print){
+    cdnetregrho_print f(Z, X, Rbar, maxy, K, n, y, l2ps2, lidy);
+    status = optim_lbfgs(f, par, fopt, maxit, eps_f, eps_g);
+    grad  = f.Grad;
+  } else {
+    cdnetregrho f(Z, X, Rbar, maxy, K, n, y, l2ps2, lidy);
+    status = optim_lbfgs(f, par, fopt, maxit, eps_f, eps_g);
+    grad  = f.Grad;
+  }
+  
+  return Rcpp::List::create(
+    Rcpp::Named("par")      = par,
+    Rcpp::Named("value")    = fopt,
+    Rcpp::Named("gradient") = grad,
+    Rcpp::Named("status")   = status);
 }
 
 // variance

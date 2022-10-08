@@ -681,6 +681,28 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// cdnetLBFGSrho
+List cdnetLBFGSrho(Eigen::VectorXd par, const arma::vec& Gyb, const arma::mat& X, const int& Rbar, const int& maxy, const int& K, const int& n, const arma::uvec& y, const int& maxit, const double& eps_f, const double& eps_g, const bool& print);
+RcppExport SEXP _CDatanet_cdnetLBFGSrho(SEXP parSEXP, SEXP GybSEXP, SEXP XSEXP, SEXP RbarSEXP, SEXP maxySEXP, SEXP KSEXP, SEXP nSEXP, SEXP ySEXP, SEXP maxitSEXP, SEXP eps_fSEXP, SEXP eps_gSEXP, SEXP printSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type par(parSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type Gyb(GybSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const int& >::type Rbar(RbarSEXP);
+    Rcpp::traits::input_parameter< const int& >::type maxy(maxySEXP);
+    Rcpp::traits::input_parameter< const int& >::type K(KSEXP);
+    Rcpp::traits::input_parameter< const int& >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const int& >::type maxit(maxitSEXP);
+    Rcpp::traits::input_parameter< const double& >::type eps_f(eps_fSEXP);
+    Rcpp::traits::input_parameter< const double& >::type eps_g(eps_gSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type print(printSEXP);
+    rcpp_result_gen = Rcpp::wrap(cdnetLBFGSrho(par, Gyb, X, Rbar, maxy, K, n, y, maxit, eps_f, eps_g, print));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fcovCDI2
 List fcovCDI2(const int& n, const arma::vec& Gyb, const arma::vec& theta, const arma::mat& X, const int& Rbar, const int& K, const int& S, List& G, const arma::mat& igroup, const int& ngroup, const bool& ccov);
 RcppExport SEXP _CDatanet_fcovCDI2(SEXP nSEXP, SEXP GybSEXP, SEXP thetaSEXP, SEXP XSEXP, SEXP RbarSEXP, SEXP KSEXP, SEXP SSEXP, SEXP GSEXP, SEXP igroupSEXP, SEXP ngroupSEXP, SEXP ccovSEXP) {
@@ -1270,6 +1292,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CDatanet_fL_NPLncond12", (DL_FUNC) &_CDatanet_fL_NPLncond12, 12},
     {"_CDatanet_foptimREM_NPLncond22", (DL_FUNC) &_CDatanet_foptimREM_NPLncond22, 11},
     {"_CDatanet_fL_NPLncond22", (DL_FUNC) &_CDatanet_fL_NPLncond22, 13},
+    {"_CDatanet_cdnetLBFGSrho", (DL_FUNC) &_CDatanet_cdnetLBFGSrho, 12},
     {"_CDatanet_fcovCDI2", (DL_FUNC) &_CDatanet_fcovCDI2, 11},
     {"_CDatanet_fdummies", (DL_FUNC) &_CDatanet_fdummies, 4},
     {"_CDatanet_fmusum", (DL_FUNC) &_CDatanet_fmusum, 6},

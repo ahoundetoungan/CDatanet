@@ -133,6 +133,10 @@ fL_NPLncond22 <- function(yb, Gyb, G, igroup, ngroup, X, theta, Simu1, Simu2, ns
     invisible(.Call(`_CDatanet_fL_NPLncond22`, yb, Gyb, G, igroup, ngroup, X, theta, Simu1, Simu2, nsimu, Rbar, K, n))
 }
 
+cdnetLBFGSrho <- function(par, Gyb, X, Rbar, maxy, K, n, y, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, print = FALSE) {
+    .Call(`_CDatanet_cdnetLBFGSrho`, par, Gyb, X, Rbar, maxy, K, n, y, maxit, eps_f, eps_g, print)
+}
+
 fcovCDI2 <- function(n, Gyb, theta, X, Rbar, K, S, G, igroup, ngroup, ccov) {
     .Call(`_CDatanet_fcovCDI2`, n, Gyb, theta, X, Rbar, K, S, G, igroup, ngroup, ccov)
 }
