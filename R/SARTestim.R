@@ -112,7 +112,7 @@ sart <- function(formula,
                  RE = FALSE,
                  data) {
   stopifnot(optimizer %in% c("fastlbfgs", "optim", "nlm"))
-  if(!RE & optimizer == "fastbfgs"){
+  if(!RE & optimizer == "fastlbfgs"){
     stop("fastlbfgs is only implemented for the rational expectation model in this version. Use another solver.")
   }
   env.formula <- environment(formula)
@@ -225,7 +225,7 @@ sart <- function(formula,
     
     if(npl.print) {
       while(cont) {
-        tryCatch({
+        # tryCatch({
           ybt0        <- ybt + 0    #copy in different memory
           
           # compute theta
@@ -240,7 +240,8 @@ sart <- function(formula,
           fLTBT_NPL(ybt, Gybt, Glist, X, thetat, igr, M, n, K)
           
           # distance
-          dist        <- max(abs(c(ctr[[par0]]/thetat, ybt0/(ybt + 1e-50)) - 1), na.rm = TRUE)
+          # dist        <- max(abs(c(ctr[[par0]]/thetat, ybt0/(ybt + 1e-50)) - 1), na.rm = TRUE)
+          dist        <- max(abs(c((ctr[[par0]] - thetat)/thetat, (ybt0 - ybt)/ybt)), na.rm = TRUE)
           cont        <- (dist > npl.tol & t < (npl.maxit - 1))
           t           <- t + 1
           REt$dist    <- dist
@@ -253,20 +254,20 @@ sart <- function(formula,
           cat(paste0("Likelihood    : ", round(llh,3)), "\n")
           cat("Estimate:", "\n")
           print(theta)
-        },
-        error = function(e){
-          cat("** Non-convergence ** Redefining theta and computing a new yb\n")
-          thetat[1]   <- -4.5
-          fnewybTBT(ybt, Gybt, Glist, igr, M, X, thetat, K, n, npl.tol, npl.maxit)
-          cont        <- TRUE
-          t           <- t + 1
-          ctr[[par0]] <- thetat
-          resTO[[t]]  <- NULL
-        })
+        # },
+        # error = function(e){
+        #   cat("** Non-convergence ** Redefining theta and computing a new yb\n")
+        #   thetat[1]   <- -4.5
+        #   fnewybTBT(ybt, Gybt, Glist, igr, M, X, thetat, K, n, npl.tol, npl.maxit)
+        #   cont        <- TRUE
+        #   t           <- t + 1
+        #   ctr[[par0]] <- thetat
+        #   resTO[[t]]  <- NULL
+        # })
       }
     } else {
       while(cont) {
-        tryCatch({
+        # tryCatch({
           ybt0        <- ybt + 0    #copy in different memory
           
           # compute theta
@@ -277,21 +278,22 @@ sart <- function(formula,
           fLTBT_NPL(ybt, Gybt, Glist, X, thetat, igr, M, n, K)
           
           # distance
-          dist        <- max(abs(c(ctr[[par0]]/thetat, ybt0/(ybt + 1e-50)) - 1), na.rm = TRUE)
+          # dist        <- max(abs(c(ctr[[par0]]/thetat, ybt0/(ybt + 1e-50)) - 1), na.rm = TRUE)
+          dist        <- max(abs(c((ctr[[par0]] - thetat)/thetat, (ybt0 - ybt)/ybt)), na.rm = TRUE)
           cont        <- (dist > npl.tol & t < (npl.maxit - 1))
           t           <- t + 1
           REt$dist    <- dist
           ctr[[par0]] <- thetat
           resTO[[t]]  <- REt
-        },
-        error = function(e){
-          thetat[1]   <- -4.5
-          fnewybTBT(ybt, Gybt, Glist, igr, M, X, thetat, K, n, npl.tol, npl.maxit)
-          cont        <- TRUE
-          t           <- t + 1
-          ctr[[par0]] <- thetat
-          resTO[[t]]  <- NULL
-        })
+        # },
+        # error = function(e){
+        #   thetat[1]   <- -4.5
+        #   fnewybTBT(ybt, Gybt, Glist, igr, M, X, thetat, K, n, npl.tol, npl.maxit)
+        #   cont        <- TRUE
+        #   t           <- t + 1
+        #   ctr[[par0]] <- thetat
+        #   resTO[[t]]  <- NULL
+        # })
       }
       llh           <- -REt[[like]]
       theta         <- c(1/(1 + exp(-thetat[1])), thetat[2:(K +1)], exp(thetat[K + 2]))
@@ -300,7 +302,6 @@ sart <- function(formula,
     if (npl.maxit == t) {
       warning("The maximum number of iterations of the NPL algorithm has been reached.")
     }
-    
     covt       <- fcovSTI(n = n, Gyb = Gybt, theta = thetat, X = X, K = K, G = Glist,
                           igroup = igr, ngroup = M, ccov = cov)
   } else{

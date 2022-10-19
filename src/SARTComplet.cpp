@@ -174,7 +174,7 @@ arma::vec fgradvecTobit(arma::vec& theta,
   arma::vec tmp        = y - alpha*Gy - xb;
   NumericVector tmpcpp = wrap(tmp);
   
-  NumericVector irmcpp = Rcpp::dnorm(tmpcpp/sigma, 0, 1, false)/Rcpp::pnorm(tmpcpp/sigma, 0, 1, true, false);
+  NumericVector irmcpp = exp(Rcpp::dnorm(tmpcpp/sigma, 0, 1, true) - Rcpp::pnorm(tmpcpp/sigma, 0, 1, true, true));
   arma::vec     irm    = as<arma::vec>(irmcpp);
   
   arma::vec rvec(n);
@@ -227,7 +227,7 @@ List fcovSTC(const arma::vec& theta,
   if(ccov) {
     arma::vec tmp        = y - ZtL;
     NumericVector tmpcpp = wrap(tmp);
-    NumericVector irmcpp = Rcpp::dnorm(tmpcpp/sigma, 0, 1, false)/Rcpp::pnorm(tmpcpp/sigma, 0, 1, true, false);
+    NumericVector irmcpp = exp(Rcpp::dnorm(tmpcpp/sigma, 0, 1, true) - Rcpp::pnorm(tmpcpp/sigma, 0, 1, true, true));
     arma::vec     irm    = as<arma::vec>(irmcpp);
     
     arma::vec rvec(n);

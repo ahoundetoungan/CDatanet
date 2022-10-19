@@ -338,7 +338,7 @@ cdnet    <- function(formula,
   dist0    <- Inf
   if(npl.print) {
     while(cont) {
-      tryCatch({
+      # tryCatch({
         ybt0        <- ybt + 0    #copy in different memory
         # compute theta
         REt         <- do.call(get(optimizer), ctr)
@@ -351,7 +351,8 @@ cdnet    <- function(formula,
         # compute y
         fL_NPLR(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n)
         # distance
-        dist        <- max(abs(c(ctr[[par0]]/thetat, ybt0/(ybt + 1e-50)) - 1), na.rm = TRUE)
+        print(theta)
+        dist        <- max(abs(c((ctr[[par0]] - thetat)/thetat, (ybt0 - ybt)/ybt)), na.rm = TRUE)
         ninc.d      <- (ninc.d + 1)*(dist > dist0) #counts the successive number of times distance increases
         dist0       <- dist
         cont        <- (dist > npl.tol & t < (npl.maxit - 1))
@@ -377,25 +378,25 @@ cdnet    <- function(formula,
           }
           ctr[[par0]] <- thetat
         }
-      },
-      error = function(e){
-        cat("** Non-convergence ** Redefining theta and computing a new yb\n")
-        thetat[1]   <- -4.5
-        dist0       <- Inf
-        if(estim.rho){
-          fnewyb2(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
-        } else{
-          fnewyb(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
-        }
-        cont        <- TRUE
-        t           <- t + 1
-        ctr[[par0]] <- thetat
-        steps[[t]]  <- NULL
-      })
+      # },
+      # error = function(e){
+      #   cat("** Non-convergence ** Redefining theta and computing a new yb\n")
+      #   thetat[1]   <- -4.5
+      #   dist0       <- Inf
+      #   if(estim.rho){
+      #     fnewyb2(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
+      #   } else{
+      #     fnewyb(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
+      #   }
+      #   cont        <- TRUE
+      #   t           <- t + 1
+      #   ctr[[par0]] <- thetat
+      #   steps[[t]]  <- NULL
+      # })
     }
   } else {
     while(cont) {
-      tryCatch({
+      # tryCatch({
         ybt0        <- ybt + 0    #copy in different memory
         
         # compute theta
@@ -407,7 +408,7 @@ cdnet    <- function(formula,
         fL_NPLR(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n)
         
         # distance
-        dist        <- max(abs(c(ctr[[par0]]/thetat, ybt0/(ybt + 1e-50)) - 1), na.rm = TRUE)
+        dist        <- max(abs(c((ctr[[par0]] - thetat)/thetat, (ybt0 - ybt)/ybt)), na.rm = TRUE)
         ninc.d      <- (ninc.d + 1)*(dist > dist0) #counts the successive number of times distance increases
         dist0       <- dist
         cont        <- (dist > npl.tol & t < (npl.maxit - 1))
@@ -426,20 +427,20 @@ cdnet    <- function(formula,
           }
           ctr[[par0]] <- thetat
         }
-      },
-      error = function(e){
-        thetat[1]   <- -4.5
-        dist0       <- Inf
-        if(estim.rho){
-          fnewyb2(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
-        } else{
-          fnewyb(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
-        }
-        cont        <- TRUE
-        t           <- t + 1
-        ctr[[par0]] <- thetat
-        steps[[t]]  <- NULL
-      })
+      # },
+      # error = function(e){
+      #   thetat[1]   <- -4.5
+      #   dist0       <- Inf
+      #   if(estim.rho){
+      #     fnewyb2(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
+      #   } else{
+      #     fnewyb(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n, npl.tol, npl.maxit)
+      #   }
+      #   cont        <- TRUE
+      #   t           <- t + 1
+      #   ctr[[par0]] <- thetat
+      #   steps[[t]]  <- NULL
+      # })
     }
     theta           <- c(1/(1 + exp(-thetat[1])), thetat[2:(K +1)], exp(thetat[-(1:(K +1))]))
     if(Rbar > 1){

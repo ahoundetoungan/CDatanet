@@ -152,7 +152,8 @@ int fyb2(arma::vec& yb,
   computeL: ++t;
   ZtLambda       = lambda*Gyb + psi;
   arma::vec ybst = fL2(ZtLambda, lambda, delta, bdelta, rho, Rbar, n);
-  double dist    = max(arma::abs(ybst/(yb + 1e-50) - 1));
+  // double dist    = max(arma::abs(ybst/(yb + 1e-50) - 1));
+  double dist    = max(arma::abs((ybst - yb)/yb));
   yb             = ybst;
   
   for (int m(0); m < ngroup; ++ m) {
@@ -188,7 +189,8 @@ int fybncond2(arma::vec& yb,
   computeL: ++t;
   ZtLambda       = psi.each_col() + lambda*Gyb;
   arma::vec ybst = fLncond2(ZtLambda, lambda, delta, bdelta, rho, Rbar, n, nsimu);
-  double dist    = max(arma::abs(ybst/(yb + 1e-50) - 1));
+  // double dist    = max(arma::abs(ybst/(yb + 1e-50) - 1));
+  double dist    = max(arma::abs((ybst - yb)/yb));
   yb             = ybst;
   
   for (int m(0); m < ngroup; ++ m) {
@@ -690,7 +692,8 @@ public:
     // print
     NumericVector betacpp   = wrap(beta);
     betacpp.attr("dim")     = R_NilValue;
-    std::printf("beta: \n");
+    // std::printf("beta: \n");
+    Rcpp::Rcout << "beta: \n";
     Rcpp::print(betacpp);
     
     // create vector a = [a_0, a_1, ..., a_(maxy + 1)]
@@ -756,7 +759,8 @@ public:
     Grad                   = -grad;
     
     // cout<< f <<endl;
-    std::printf("log-likelihood: %f\n", f);
+    // std::printf("log-likelihood: %f\n", f);
+    Rcpp::Rcout << "log-likelihood: " << f << "\n";
     return -f;
   }
 };

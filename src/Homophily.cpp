@@ -718,7 +718,7 @@ public:
     // cout<<nu.t()<<endl;
     NumericVector betacpp  = wrap(beta);
     betacpp.attr("dim")    = R_NilValue;
-    std::printf("beta: \n");
+    Rcpp::Rcout << "beta: \n";
     Rcpp::print(betacpp);
     
     arma::vec dXb          = dx*beta;
@@ -787,7 +787,7 @@ public:
     grad                    = -Eigen::Map<Eigen::VectorXd>(gd.memptr(), nparms);
     Grad                    = gd;
     
-    std::printf("log-likelihood: %f\n", llh);
+    Rcpp::Rcout << "log-likelihood: " << llh << "\n";
     return -llh;
   }
 };

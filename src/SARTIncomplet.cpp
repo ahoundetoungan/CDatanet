@@ -43,7 +43,7 @@ using namespace std;
 arma::vec fLTBT(const NumericVector& ZtLambda,
                  const double sigma) {
   return ZtLambda*Rcpp::pnorm5(ZtLambda/sigma, 0, 1, true, false) + 
-    sigma*Rcpp::dnorm4(ZtLambda/sigma, 0, 1, false);;
+    sigma*Rcpp::dnorm4(ZtLambda/sigma, 0, 1, false);
 }
 
 // fyb: Takes an initial value of yb and finds the equilibrium
@@ -66,7 +66,8 @@ int fybtbit(arma::vec& yb,
   computeL: ++t;
   ZtLambda       = lambda*Gyb + psi;
   arma::vec ybst = fLTBT(wrap(ZtLambda), sigma);
-  double dist    = max(arma::abs(ybst/(yb + 1e-50) - 1));
+  // double dist    = max(arma::abs(ybst/(yb + 1e-50) - 1));
+  double dist    = max(arma::abs((ybst - yb)/yb));
   yb             = ybst;
   
   for (int m(0); m < ngroup; ++ m) {
@@ -283,7 +284,8 @@ public:
     // cout << theta.transpose() <<endl;
     NumericVector betacpp  = wrap(beta);
     betacpp.attr("dim")    = R_NilValue;
-    std::printf("beta: \n");
+    // std::printf("beta: \n");
+    Rcpp::Rcout << "beta: \n";
     Rcpp::print(betacpp);
     
     double sigma           = beta(K + 1);
@@ -311,7 +313,8 @@ public:
     Grad                   = -grad;
     
     // cout<< f <<endl;
-    std::printf("log-likelihood: %f\n", f);
+    // std::("log-likelihood: %f\n", f);
+    Rcpp::Rcout << "log-likelihood: " << f << "\n";
     return -f;
   }
 };
@@ -395,19 +398,22 @@ List fcovSTI(const int& n,
   double sigma           = exp(theta(K + 1));
   arma::vec ZtL          = lambda*Gyb + X*theta.subvec(1, K); 
   NumericVector ZtLst    = wrap(ZtL/sigma);
-  NumericVector PhiZtLst = Rcpp::pnorm(ZtLst, 0, 1, true, false);
+  NumericVector LHhiZtLst= Rcpp::pnorm(ZtLst, 0, 1, false, true);
+  NumericVector PhiZtLst = 1 - exp(LHhiZtLst);
   double avPhiZtLst      = sum(PhiZtLst)/n;
   arma::vec lbeta        = arma::join_cols(arma::ones(1)*lambda, theta.subvec(1, K));
   arma::vec meffects     = avPhiZtLst*lbeta;
   
   if(ccov){
     arma::mat Z                = arma::join_rows(Gyb, X);
-    NumericVector phiZtLst     = Rcpp::dnorm4(ZtLst, 0, 1, false); 
+    NumericVector lphiZtLst    = Rcpp::dnorm4(ZtLst, 0, 1, true);
+    NumericVector phiZtLst     = exp(lphiZtLst); 
     NumericVector Zst1phiZtLst = ZtLst*phiZtLst;
     NumericVector Zst2phiZtLst = ZtLst*Zst1phiZtLst;
     NumericVector Zst3phiZtLst = ZtLst*Zst2phiZtLst;
-    NumericVector RphiPhi      = phiZtLst/(1 - PhiZtLst);
+    NumericVector RphiPhi      = exp(lphiZtLst - LHhiZtLst);
     
+    // cout<<sum(RphiPhi)<<endl;
     // compute GinvSW
     arma::mat GinvSW(n, K + 2);
     {// Compute b and d
@@ -426,6 +432,7 @@ List fcovSTI(const int& n,
         GinvSW.rows(n1, n2) = Gm * arma::solve(Sm, W.rows(n1, n2));
       }
     }
+    // cout<<arma::accu(GinvSW)<<endl;
   
     // Compute Sigma0 and Omega0
     arma::mat Sigma(K + 2, K + 2), Omega(K + 2, K + 2);
@@ -445,7 +452,7 @@ List fcovSTI(const int& n,
     Sigma(K + 1, K + 1)              = sum(Zst1phiZtLst + Zst3phiZtLst - Zst2phiZtLst*RphiPhi - 2*PhiZtLst);
     }
     
-    Omega          = Omega*lambda/sigma;
+    Omega          = Omega*lambda/sigma;//cout<<Omega<<endl;cout<<Sigma<<endl;
     // covt
     arma::mat covt = arma::inv(Sigma + Omega);
     covt           = -covt*Sigma*covt.t();
