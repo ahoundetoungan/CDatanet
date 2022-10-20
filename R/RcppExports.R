@@ -65,7 +65,7 @@ flogintphi <- function(n, S, a, b, Mean, simu, igroup, ngroup) {
     .Call(`_CDatanet_flogintphi`, n, S, a, b, Mean, simu, igroup, ngroup)
 }
 
-cdnetLBFGS <- function(par, Gyb, X, Rbar, maxy, K, n, y, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, print = FALSE) {
+cdnetLBFGS <- function(par, Gyb, X, Rbar, maxy, K, n, y, maxit = 300L, eps_f = 1e-13, eps_g = 1e-13, print = FALSE) {
     .Call(`_CDatanet_cdnetLBFGS`, par, Gyb, X, Rbar, maxy, K, n, y, maxit, eps_f, eps_g, print)
 }
 
@@ -133,7 +133,7 @@ fL_NPLncond22 <- function(yb, Gyb, G, igroup, ngroup, X, theta, Simu1, Simu2, ns
     invisible(.Call(`_CDatanet_fL_NPLncond22`, yb, Gyb, G, igroup, ngroup, X, theta, Simu1, Simu2, nsimu, Rbar, K, n))
 }
 
-cdnetLBFGSrho <- function(par, Gyb, X, Rbar, maxy, K, n, y, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, print = FALSE) {
+cdnetLBFGSrho <- function(par, Gyb, X, Rbar, maxy, K, n, y, maxit = 300L, eps_f = 1e-13, eps_g = 1e-13, print = FALSE) {
     .Call(`_CDatanet_cdnetLBFGSrho`, par, Gyb, X, Rbar, maxy, K, n, y, maxit, eps_f, eps_g, print)
 }
 
@@ -161,7 +161,7 @@ fhomobeta <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f
     .Call(`_CDatanet_fhomobeta`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g)
 }
 
-fhomobetap <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5) {
+fhomobetap <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-15, eps_g = 1e-15) {
     .Call(`_CDatanet_fhomobetap`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g)
 }
 

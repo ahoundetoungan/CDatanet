@@ -220,7 +220,7 @@ homophily.FE <- function(network,
   nu              <- unlist(lapply(1:M, function(x) c(nu[(indexgr[x, 1] + 2 - x):(indexgr[x, 2] + 1 - x)], 0))) 
   
   estim$estimate  <- c(estim$estimate)
-  estim$gradien   <- c(estim$gradien)
+  estim$gradient  <- c(estim$gradient)
   
   t2              <- Sys.time()
   timer           <- as.numeric(difftime(t2, t1, units = "secs"))
