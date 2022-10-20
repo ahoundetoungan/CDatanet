@@ -1,4 +1,5 @@
 #' @importFrom Formula as.Formula
+#' @importFrom formula.tools env
 #' @importFrom stats model.frame
 #' @importFrom stats terms
 #' @importFrom stats update
@@ -19,7 +20,7 @@ formula.to.data <- function(formula,
   
   ## Extract data from the formula
   if (missing(data)) {
-    data           <- environment(formula)
+    data           <- env(formula)
   }
   formula          <- as.Formula(formula)
   
