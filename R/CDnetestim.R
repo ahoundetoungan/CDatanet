@@ -351,7 +351,7 @@ cdnet    <- function(formula,
         # compute y
         fL_NPLR(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n)
         # distance
-        print(theta)
+        # print(theta)
         dist        <- max(abs(c((ctr[[par0]] - thetat)/thetat, (ybt0 - ybt)/ybt)), na.rm = TRUE)
         ninc.d      <- (ninc.d + 1)*(dist > dist0) #counts the successive number of times distance increases
         dist0       <- dist

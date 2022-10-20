@@ -836,8 +836,8 @@ List cdnetLBFGS(Eigen::VectorXd par,
                 const int& n,
                 const arma::uvec& y,
                 const int& maxit = 300, 
-                const double& eps_f = 1e-6, 
-                const double& eps_g = 1e-5,
+                const double& eps_f = 1e-13, 
+                const double& eps_g = 1e-13,
                 const bool& print = false) {
   double l2ps2     = 0.5*log(2*acos(-1));
   arma::mat Z      = arma::join_rows(Gyb, X);
