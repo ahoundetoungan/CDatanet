@@ -12,11 +12,11 @@ Network formation models, such as that studied by Yan et al. (2019), are also im
 To make the computations faster \pkg{CDatanet} uses \code{C++} through the \pkg{Rcpp} package (Eddelbuettel et al., 2011).
 }
 \references{
-Eddelbuettel, D., & François, R. (2011). \pkg{Rcpp}: Seamless \R and \code{C++} integration. \emph{Journal of Statistical Software}, 40(8), 1-18, \doi{10.18637/jss.v040.i08}.
+Eddelbuettel, D., & Francois, R. (2011). \pkg{Rcpp}: Seamless \R and \code{C++} integration. \emph{Journal of Statistical Software}, 40(8), 1-18, \doi{10.18637/jss.v040.i08}.
 
 Houndetoungan, E. A. (2022). Count Data Models with Social Interactions under Rational Expectations. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
 
-Lee, L. F. (2004). Asymptotic distributions of quasi‐maximum likelihood estimators for spatial autoregressive models. \emph{Econometrica}, 72(6), 1899-1925, \doi{10.1111/j.1468-0262.2004.00558.x}.
+Lee, L. F. (2004). Asymptotic distributions of quasi-maximum likelihood estimators for spatial autoregressive models. \emph{Econometrica}, 72(6), 1899-1925, \doi{10.1111/j.1468-0262.2004.00558.x}.
 
 Xu, X., & Lee, L. F. (2015). Maximum likelihood estimation of a spatial autoregressive Tobit model. \emph{Journal of Econometrics}, 188(1), 264-280, \doi{10.1016/j.jeconom.2015.05.004}.
 
@@ -31,6 +31,6 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Elysée Aristide Houndetoungan \email{ariel92and@gmail.com}
+\strong{Maintainer}: Elysee Aristide Houndetoungan \email{ariel92and@gmail.com}
 
 }

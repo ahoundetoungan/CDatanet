@@ -14,7 +14,7 @@
 #' @description
 #' `simsar` is used to simulate continuous variables with social interactions (see details). The model is presented in Lee(2004). 
 #' @references  
-#' Lee, L. F. (2004). Asymptotic distributions of quasi‐maximum likelihood estimators for spatial autoregressive models. \emph{Econometrica}, 72(6), 1899-1925, \doi{10.1111/j.1468-0262.2004.00558.x}.
+#' Lee, L. F. (2004). Asymptotic distributions of quasi-maximum likelihood estimators for spatial autoregressive models. \emph{Econometrica}, 72(6), 1899-1925, \doi{10.1111/j.1468-0262.2004.00558.x}.
 #' @details 
 #' The variable \eqn{\mathbf{y}}{y} is given for all i as
 #' \deqn{y_i = \lambda \mathbf{g}_i y + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{y_i = \lambda g_i*y + x_i'\beta + g_i*X\gamma + \epsilon_i,}

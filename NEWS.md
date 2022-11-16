@@ -22,5 +22,5 @@ This version follows the major revision of the paper in September 2022.
 - I also implement a network formation model with degree heterogeneity as fixed effects (see [Yan et al., 2019](https://doi.org/10.1080/01621459.2018.1448829)).
 - Models under incomplete information are now estimated using LBFGS algorithm of the package RcppNumerical. Thus, the optimization is performed in C++ and is very fast compared to the version 1.0.1.
 
-# Changes in version 2.0.2
+# Changes in versions 2.0.2 and 2.0.3
 Note and Warning found in the check for MACOS have been fixed

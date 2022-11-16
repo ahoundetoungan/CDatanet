@@ -26,7 +26,7 @@ in the model. If not found in data, the variables are taken from \code{environme
 \code{mu} an n-dimensional vector, and \code{nu} an n-dimensional vector,
 where K is the number of explanatory variables and n is the number of individuals; or a vector of starting value for \code{c(beta, mu, nu)}.}
 
-\item{opt.ctr}{(optimal) is a list of \code{maxit}, \code{eps_f}, and \code{eps_g}, which are control parameters used by the solver \code{optim_lbfgs}, of the package \pkg{RcppNumerical}.}
+\item{opt.ctr}{(optional) is a list of \code{maxit}, \code{eps_f}, and \code{eps_g}, which are control parameters used by the solver \code{optim_lbfgs}, of the package \pkg{RcppNumerical}.}
 
 \item{print}{Boolean indicating if the estimation progression should be printed.}
 }

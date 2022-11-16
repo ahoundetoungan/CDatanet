@@ -118,7 +118,7 @@ summary(out)
 }
 }
 \references{
-Lee, L. F. (2004). Asymptotic distributions of quasi‐maximum likelihood estimators for spatial autoregressive models. \emph{Econometrica}, 72(6), 1899-1925, \doi{10.1111/j.1468-0262.2004.00558.x}.
+Lee, L. F. (2004). Asymptotic distributions of quasi-maximum likelihood estimators for spatial autoregressive models. \emph{Econometrica}, 72(6), 1899-1925, \doi{10.1111/j.1468-0262.2004.00558.x}.
 }
 \seealso{
 \code{\link{sart}}, \code{\link{cdnet}}, \code{\link{simsar}}.

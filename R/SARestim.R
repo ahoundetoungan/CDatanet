@@ -25,7 +25,7 @@
 #' \deqn{y_i = \lambda \mathbf{g}_i y + \mathbf{x}_i'\beta + \mathbf{g}_i\mathbf{X}\gamma + \epsilon_i,}{y_i = \lambda g_i*y + x_i'\beta + g_i*X\gamma + \epsilon_i,}
 #' where \eqn{\epsilon_i \sim N(0, \sigma^2)}{\epsilon_i --> N(0, \sigma^2)}.
 #' @references  
-#' Lee, L. F. (2004). Asymptotic distributions of quasi‐maximum likelihood estimators for spatial autoregressive models. \emph{Econometrica}, 72(6), 1899-1925, \doi{10.1111/j.1468-0262.2004.00558.x}.
+#' Lee, L. F. (2004). Asymptotic distributions of quasi-maximum likelihood estimators for spatial autoregressive models. \emph{Econometrica}, 72(6), 1899-1925, \doi{10.1111/j.1468-0262.2004.00558.x}.
 #' @seealso \code{\link{sart}}, \code{\link{cdnet}}, \code{\link{simsar}}.
 #' @examples 
 #' \donttest{
