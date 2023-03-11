@@ -1,6 +1,6 @@
 // [[Rcpp::depends(RcppArmadillo, RcppProgress, RcppDist, RcppEigen, RcppNumerical)]]
 #include <RcppArmadillo.h>
-#define NDEBUG
+//#define NDEBUG
 #include <progress.hpp>
 #include <progress_bar.hpp>
 #include <mvnorm.h>

@@ -1,8 +1,8 @@
 Package: CDatanet
 Type: Package
 Title: Modeling Count Data with Peer Effects
-Version: 2.0.3
-Date: 2022-11-15
+Version: 2.1.0
+Date: 2023-03-10
 Authors@R: person("Elysee Aristide", "Houndetoungan", role = c("cre","aut"), email =  "ariel92and@gmail.com")
 Description: Likelihood-based estimation and data generation from a class of models used to estimate peer effects on count data by controlling for the network endogeneity. This class includes count data models with social interactions (Houndetoungan 2022; <doi:10.2139/ssrn.3721250>), spatial tobit models (Xu and Lee 2015; <doi:10.1016/j.jeconom.2015.05.004>), and spatial linear-in-means models (Lee 2004; <doi:10.1111/j.1468-0262.2004.00558.x>).  
 License: GPL-3
@@ -14,7 +14,7 @@ LazyData: true
 Depends: R (>= 3.5.0)
 Imports: Rcpp (>= 1.0.0), Formula, formula.tools, ddpcr, Matrix
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress, RcppDist, RcppNumerical, RcppEigen
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)
 Suggests: 
     ggplot2,

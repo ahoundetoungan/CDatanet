@@ -24,3 +24,6 @@ This version follows the major revision of the paper in September 2022.
 
 # Changes in versions 2.0.2 and 2.0.3
 Note and Warning found in the check for MACOS have been fixed
+
+# Changes in version 2.1.0
+R defaulted to C++11 in R 4.0.0, to C++14 in R 4.2.0 and to C++17.

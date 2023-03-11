@@ -28,7 +28,7 @@
 // [[Rcpp::depends(RcppArmadillo, RcppEigen, RcppNumerical)]]
 
 #include <RcppArmadillo.h>
-#define NDEBUG
+//#define NDEBUG
 #include <RcppNumerical.h>
 #include <RcppEigen.h>
 
@@ -327,8 +327,7 @@ double foptimREM(arma::vec& yb,
   
   arma::vec psi   = X * theta.subvec(1, K);
   double lambda   = 1.0/(exp(-theta(0)) + 1);
-  arma::vec delta = exp(theta.tail(Rbar)) + lambda;  /*bar delta is in the vector delta. so theta as delta2 to deltaRbar and bardelta*/
-  
+  arma::vec delta = exp(theta.tail(Rbar)) + lambda + 1e-323;  /*bar delta is in the vector delta. so theta as delta2 to deltaRbar and bardelta*/
   // compute ybar
   fyb(yb, Gyb, G, igroup, ngroup, psi, lambda, delta, n, Rbar, tol, maxit);
   
@@ -368,7 +367,7 @@ double foptimREMncond1(arma::vec& yb,
   arma::mat psi   = Simu1*theta(K+1);
   arma::vec tmp   = X*theta.subvec(1, K);
   psi.each_col() += tmp;
-  arma::vec delta = exp(theta.tail(Rbar)) + lambda;
+  arma::vec delta = exp(theta.tail(Rbar)) + lambda + 1e-323;
   
   // compute ybar
   fybncond(yb, Gyb, G, igroup, ngroup, psi, lambda, delta, n, nsimu, Rbar, tol, maxit);
@@ -396,7 +395,7 @@ double foptimREM_NPL(const arma::vec& Gyb,
                      const arma::uvec& y) {
   double lambda      = 1.0/(exp(-theta(0)) + 1);
   arma::vec ZtLambda = lambda*Gyb + X*theta.subvec(1, K);
-  arma::vec delta    = exp(theta.tail(Rbar)) + lambda;
+  arma::vec delta    = exp(theta.tail(Rbar)) + lambda + 1e-323;
   arma::vec logp     = flogp(y, ZtLambda, maxy, lambda, delta, Rbar, n);
   double llh         = sum(logp);
   //cout<<llh<<endl;
@@ -421,7 +420,7 @@ void fL_NPL(arma::vec& yb,
   int n1, n2;
   double lambda      = 1.0/(exp(-theta(0)) + 1);
   arma::vec ZtLambda = lambda*Gyb + X*theta.subvec(1, K);
-  arma::vec delta    = exp(theta.tail(Rbar)) + lambda;
+  arma::vec delta    = exp(theta.tail(Rbar)) + lambda + 1e-323;
   
   // new yb
   yb.subvec(0, n-1)  = fL(ZtLambda, delta, Rbar, n);
@@ -450,7 +449,7 @@ void fnewyb(arma::vec& yb,
             const int& maxit) {
   arma::vec psi = X*theta.subvec(1, K);
   double lambda      = 1.0/(exp(-theta(0)) + 1);
-  arma::vec delta    = exp(theta.tail(Rbar)) + lambda;
+  arma::vec delta    = exp(theta.tail(Rbar)) + lambda + 1e-323;
   fyb(yb, Gyb, G, igroup, ngroup, psi, lambda, delta, n,Rbar, tol, maxit);
 }
 
@@ -471,7 +470,7 @@ double foptimREM_NPLncond1(const arma::vec& Gyb,
   arma::mat ZtLambda   = Simu1*theta(K+1);
   arma::vec tmp        = lambda*Gyb + X*theta.subvec(1, K);
   ZtLambda.each_col() += tmp;
-  arma::vec delta      = exp(theta.tail(Rbar)) + lambda;
+  arma::vec delta      = exp(theta.tail(Rbar)) + lambda + 1e-323;
   arma::vec logp       = flogpncond(y, ZtLambda, maxy, lambda, delta, nsimu, Rbar, n);
   double llh           = sum(logp);
   // if(llh < -1e293) {
@@ -498,7 +497,7 @@ void fL_NPLncond1(arma::vec& yb,
   arma::mat ZtLambda   = Simu1*theta(K+1);
   arma::vec tmp        = lambda*Gyb + X*theta.subvec(1, K);
   ZtLambda.each_col() += tmp;
-  arma::vec delta      = exp(theta.tail(Rbar)) + lambda;
+  arma::vec delta      = exp(theta.tail(Rbar)) + lambda + 1e-323;
   
   // new yb
   yb.subvec(0, n-1)    = fLncond(ZtLambda, delta, Rbar, n, nsimu);
@@ -530,7 +529,7 @@ double foptimREM_NPLncond2(const arma::vec& Gyb,
   arma::mat ZtLambda   = Simu1*theta(K+1) + Simu2*theta(K+2);
   arma::vec tmp        = lambda*Gyb + X*theta.subvec(1, K);
   ZtLambda.each_col() += tmp;
-  arma::vec delta      = exp(theta.tail(Rbar)) + lambda;
+  arma::vec delta      = exp(theta.tail(Rbar)) + lambda + 1e-323;
   arma::vec logp       = flogpncond(y, ZtLambda, maxy, lambda, delta, nsimu, Rbar, n);
   double llh           = sum(logp);
   // if(llh < -1e293) {
@@ -558,7 +557,7 @@ void fL_NPLncond2(arma::vec& yb,
   arma::mat ZtLambda   = Simu1*theta(K+1) + Simu2*theta(K+2);
   arma::vec tmp        = lambda*Gyb + X*theta.subvec(1, K);
   ZtLambda.each_col() += tmp;
-  arma::vec delta      = exp(theta.tail(Rbar)) + lambda;
+  arma::vec delta      = exp(theta.tail(Rbar)) + lambda + 1e-323;
   
   // new yb
   yb.subvec(0, n-1)    = fLncond(ZtLambda, delta, Rbar, n, nsimu);
@@ -601,30 +600,24 @@ class cdnetreg: public MFuncGrad
 {
 private:
   const arma::mat& Z;
-  const arma::mat& X;
   const int& Rbar;
   const int& maxy;
   const int& K;
-  const int& n;
   const arma::uvec& y;
   const double& l2ps2;
   List& lidy;
 public:
   cdnetreg(const arma::mat& Z_,
-                 const arma::mat& X_,
-                 const int& Rbar_,
-                 const int& maxy_,
-                 const int& K_,
-                 const int& n_,
-                 const arma::uvec& y_,
-                 const double& l2ps2_,
-                 List& lidy_) : 
+           const int& Rbar_,
+           const int& maxy_,
+           const int& K_,
+           const arma::uvec& y_,
+           const double& l2ps2_,
+           List& lidy_) : 
   Z(Z_),
-  X(X_),
   Rbar(Rbar_),
   maxy(maxy_),
   K(K_),
-  n(n_),
   y(y_),
   l2ps2(l2ps2_),
   lidy(lidy_){}
@@ -638,7 +631,7 @@ public:
     
     beta(0)                 = 1.0/(exp(-beta(0)) + 1);
     double lambda           = beta(0);
-    arma::vec deltat        = exp(beta.tail(Rbar));
+    arma::vec deltat        = exp(beta.tail(Rbar)) + 1e-323;
     beta.tail(Rbar)         = deltat + lambda;
     arma::vec delta         = beta.tail(Rbar);
     
@@ -716,30 +709,24 @@ class cdnetreg_print: public MFuncGrad
 {
 private:
   const arma::mat& Z;
-  const arma::mat& X;
   const int& Rbar;
   const int& maxy;
   const int& K;
-  const int& n;
   const arma::uvec& y;
   const double& l2ps2;
   List& lidy;
 public:
   cdnetreg_print(const arma::mat& Z_,
-                 const arma::mat& X_,
                  const int& Rbar_,
                  const int& maxy_,
                  const int& K_,
-                 const int& n_,
                  const arma::uvec& y_,
                  const double& l2ps2_,
                  List& lidy_) : 
   Z(Z_),
-  X(X_),
   Rbar(Rbar_),
   maxy(maxy_),
   K(K_),
-  n(n_),
   y(y_),
   l2ps2(l2ps2_),
   lidy(lidy_){}
@@ -753,7 +740,7 @@ public:
     
     beta(0)                 = 1.0/(exp(-beta(0)) + 1);
     double lambda           = beta(0);
-    arma::vec deltat        = exp(beta.tail(Rbar));
+    arma::vec deltat        = exp(beta.tail(Rbar)) + 1e-323;
     beta.tail(Rbar)         = deltat + lambda;
     arma::vec delta         = beta.tail(Rbar);
     
@@ -853,11 +840,11 @@ List cdnetLBFGS(Eigen::VectorXd par,
   Eigen::VectorXd grad;
   
   if(print){
-    cdnetreg_print f(Z, X, Rbar, maxy, K, n, y, l2ps2, lidy);
+    cdnetreg_print f(Z, Rbar, maxy, K, y, l2ps2, lidy);
     status = optim_lbfgs(f, par, fopt, maxit, eps_f, eps_g);
     grad  = f.Grad;
   } else {
-    cdnetreg f(Z, X, Rbar, maxy, K, n, y, l2ps2, lidy);
+    cdnetreg f(Z, Rbar, maxy, K, y, l2ps2, lidy);
     status = optim_lbfgs(f, par, fopt, maxit, eps_f, eps_g);
     grad  = f.Grad;
   }
@@ -887,7 +874,7 @@ List fcovCDI(const int& n,
   double lambda          = 1.0/(exp(-theta(0)) + 1);
   arma::vec beta         = theta.subvec(1, K);
   arma::vec lbeta        = arma::join_cols(arma::ones(1)*lambda, beta);
-  arma::vec tdelta       = exp(theta.tail(Rbar));
+  arma::vec tdelta       = exp(theta.tail(Rbar)) + 1e-323;
   arma::vec delta        = tdelta + lambda;
   arma::vec ZtLambdavec  = Gyb*lambda + X*beta;       
   NumericVector ZtLambda = wrap(ZtLambdavec);

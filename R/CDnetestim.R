@@ -56,10 +56,10 @@
 #' Houndetoungan, E. A. (2022). Count Data Models with Social Interactions under Rational Expectations. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
 #' @seealso \code{\link{sart}}, \code{\link{sar}}, \code{\link{simcdnet}}.
 #' @examples 
-#' \donttest{
+#' set.seed(123)
 #' # Groups' size
-#' M      <- 5 # Number of sub-groups
-#' nvec   <- round(runif(M, 100, 1000))
+#' nvec   <- sample(100:500, 2)
+#' M      <- length(nvec)
 #' n      <- sum(nvec)
 #' 
 #' # Parameters
@@ -106,9 +106,8 @@
 #' rm(list = ls()[!(ls() %in% c("Glist", "data"))])
 #' 
 #' out   <- cdnet(formula = yt ~ x1 + x2, contextual = TRUE, Glist = Glist, 
-#'                data = data, Rbar = 6, estim.rho = TRUE)
+#'                data = data, Rbar = 10, estim.rho = TRUE, optimizer = "nlm")
 #' summary(out)
-#' }
 #' @importFrom stats quantile
 #' @importFrom utils head
 #' @importFrom utils tail
@@ -352,7 +351,11 @@ cdnet    <- function(formula,
         fL_NPLR(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n)
         # distance
         # print(theta)
-        dist        <- max(abs(c((ctr[[par0]] - thetat)/thetat, (ybt0 - ybt)/ybt)), na.rm = TRUE)
+        var.eps     <- abs(c((ctr[[par0]] - thetat)/thetat, (ybt0 - ybt)/ybt))
+        if(all(!is.finite(var.eps))){
+          var.eps   <- abs(c(ctr[[par0]] - thetat, ybt0 - ybt))
+        }
+        dist        <- max(var.eps, na.rm = TRUE)
         ninc.d      <- (ninc.d + 1)*(dist > dist0) #counts the successive number of times distance increases
         dist0       <- dist
         cont        <- (dist > npl.tol & t < (npl.maxit - 1))
@@ -408,7 +411,11 @@ cdnet    <- function(formula,
         fL_NPLR(ybt, Gybt, Glist, igr, M, X, thetat, Rbar, K, n)
         
         # distance
-        dist        <- max(abs(c((ctr[[par0]] - thetat)/thetat, (ybt0 - ybt)/ybt)), na.rm = TRUE)
+        var.eps     <- abs(c((ctr[[par0]] - thetat)/thetat, (ybt0 - ybt)/ybt))
+        if(all(!is.finite(var.eps))){
+          var.eps   <- abs(c(ctr[[par0]] - thetat, ybt0 - ybt))
+        }
+        dist        <- max(var.eps, na.rm = TRUE)
         ninc.d      <- (ninc.d + 1)*(dist > dist0) #counts the successive number of times distance increases
         dist0       <- dist
         cont        <- (dist > npl.tol & t < (npl.maxit - 1))

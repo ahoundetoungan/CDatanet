@@ -1,7 +1,7 @@
 doc/*.R
 doc/*.Rmd
-scr/*.o
-scr/*.so
+*.so
+*.o
 # doc
 Meta
 
