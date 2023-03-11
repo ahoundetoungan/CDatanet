@@ -27,7 +27,7 @@
 // [[Rcpp::depends(RcppArmadillo, RcppEigen, RcppNumerical)]]
 
 #include <RcppArmadillo.h>
-#define NDEBUG
+//#define NDEBUG
 #include <RcppNumerical.h>
 #include <RcppEigen.h>
 
