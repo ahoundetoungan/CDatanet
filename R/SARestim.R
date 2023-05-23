@@ -258,7 +258,8 @@ sar <- function(formula,
   nfr                  <- x$info$nlinks
   cat("SAR Model\n\n")
   cat("Call:\n")
-  print(formula)
+  cat(paste0(formula, ", fixed.effects = ", x$info$fixed.effects), "\n")
+  # print(formula)
   cat("\nMethod: Maximum Likelihood (ML)", "\n\n")
   
   cat("Network:\n")
