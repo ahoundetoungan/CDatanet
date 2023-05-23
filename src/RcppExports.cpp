@@ -871,8 +871,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // foptimSAR
-double foptimSAR(const double& alphatilde, const arma::mat& X, const arma::mat& invXX, List& G, List& I, const int& n, const arma::vec& y, const arma::vec& Gy, const int& ngroup);
-RcppExport SEXP _CDatanet_foptimSAR(SEXP alphatildeSEXP, SEXP XSEXP, SEXP invXXSEXP, SEXP GSEXP, SEXP ISEXP, SEXP nSEXP, SEXP ySEXP, SEXP GySEXP, SEXP ngroupSEXP) {
+double foptimSAR(const double& alphatilde, const arma::mat& X, const arma::mat& invXX, List& G, List& I, const int& n, const arma::vec& y, const arma::vec& Gy, const int& ngroup, const bool& FE, const bool& print);
+RcppExport SEXP _CDatanet_foptimSAR(SEXP alphatildeSEXP, SEXP XSEXP, SEXP invXXSEXP, SEXP GSEXP, SEXP ISEXP, SEXP nSEXP, SEXP ySEXP, SEXP GySEXP, SEXP ngroupSEXP, SEXP FESEXP, SEXP printSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -885,32 +885,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type Gy(GySEXP);
     Rcpp::traits::input_parameter< const int& >::type ngroup(ngroupSEXP);
-    rcpp_result_gen = Rcpp::wrap(foptimSAR(alphatilde, X, invXX, G, I, n, y, Gy, ngroup));
-    return rcpp_result_gen;
-END_RCPP
-}
-// foptimSAR0
-double foptimSAR0(const double& alphatilde, const arma::mat& X, const arma::mat& invXX, List& G, List& I, const int& n, const arma::vec& y, const arma::vec& Gy, const int& ngroup);
-RcppExport SEXP _CDatanet_foptimSAR0(SEXP alphatildeSEXP, SEXP XSEXP, SEXP invXXSEXP, SEXP GSEXP, SEXP ISEXP, SEXP nSEXP, SEXP ySEXP, SEXP GySEXP, SEXP ngroupSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const double& >::type alphatilde(alphatildeSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type invXX(invXXSEXP);
-    Rcpp::traits::input_parameter< List& >::type G(GSEXP);
-    Rcpp::traits::input_parameter< List& >::type I(ISEXP);
-    Rcpp::traits::input_parameter< const int& >::type n(nSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type Gy(GySEXP);
-    Rcpp::traits::input_parameter< const int& >::type ngroup(ngroupSEXP);
-    rcpp_result_gen = Rcpp::wrap(foptimSAR0(alphatilde, X, invXX, G, I, n, y, Gy, ngroup));
+    Rcpp::traits::input_parameter< const bool& >::type FE(FESEXP);
+    Rcpp::traits::input_parameter< const bool& >::type print(printSEXP);
+    rcpp_result_gen = Rcpp::wrap(foptimSAR(alphatilde, X, invXX, G, I, n, y, Gy, ngroup, FE, print));
     return rcpp_result_gen;
 END_RCPP
 }
 // fSARjac
-arma::mat fSARjac(const double& lambda, const double& s2, const arma::mat& X, const arma::mat& XX, const arma::vec& Xbeta, List& G, List& I, const arma::mat igroup, const int& ngroup, const int& n, const int& K);
-RcppExport SEXP _CDatanet_fSARjac(SEXP lambdaSEXP, SEXP s2SEXP, SEXP XSEXP, SEXP XXSEXP, SEXP XbetaSEXP, SEXP GSEXP, SEXP ISEXP, SEXP igroupSEXP, SEXP ngroupSEXP, SEXP nSEXP, SEXP KSEXP) {
+arma::mat fSARjac(const double& lambda, const double& s2, const arma::mat& X, const arma::mat& XX, const arma::vec& Xbeta, List& G, List& I, const arma::mat igroup, const int& ngroup, const int& n, const int& K, const bool& FE);
+RcppExport SEXP _CDatanet_fSARjac(SEXP lambdaSEXP, SEXP s2SEXP, SEXP XSEXP, SEXP XXSEXP, SEXP XbetaSEXP, SEXP GSEXP, SEXP ISEXP, SEXP igroupSEXP, SEXP ngroupSEXP, SEXP nSEXP, SEXP KSEXP, SEXP FESEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -925,7 +908,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int& >::type ngroup(ngroupSEXP);
     Rcpp::traits::input_parameter< const int& >::type n(nSEXP);
     Rcpp::traits::input_parameter< const int& >::type K(KSEXP);
-    rcpp_result_gen = Rcpp::wrap(fSARjac(lambda, s2, X, XX, Xbeta, G, I, igroup, ngroup, n, K));
+    Rcpp::traits::input_parameter< const bool& >::type FE(FESEXP);
+    rcpp_result_gen = Rcpp::wrap(fSARjac(lambda, s2, X, XX, Xbeta, G, I, igroup, ngroup, n, K, FE));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1301,9 +1285,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CDatanet_fhomobeta", (DL_FUNC) &_CDatanet_fhomobeta, 10},
     {"_CDatanet_fhomobetap", (DL_FUNC) &_CDatanet_fhomobetap, 10},
     {"_CDatanet_fySar", (DL_FUNC) &_CDatanet_fySar, 8},
-    {"_CDatanet_foptimSAR", (DL_FUNC) &_CDatanet_foptimSAR, 9},
-    {"_CDatanet_foptimSAR0", (DL_FUNC) &_CDatanet_foptimSAR0, 9},
-    {"_CDatanet_fSARjac", (DL_FUNC) &_CDatanet_fSARjac, 11},
+    {"_CDatanet_foptimSAR", (DL_FUNC) &_CDatanet_foptimSAR, 11},
+    {"_CDatanet_fSARjac", (DL_FUNC) &_CDatanet_fSARjac, 12},
     {"_CDatanet_fybsar", (DL_FUNC) &_CDatanet_fybsar, 7},
     {"_CDatanet_foptimSAR_RE", (DL_FUNC) &_CDatanet_foptimSAR_RE, 10},
     {"_CDatanet_foptimSAR0_RE", (DL_FUNC) &_CDatanet_foptimSAR0_RE, 10},

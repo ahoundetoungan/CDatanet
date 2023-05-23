@@ -169,16 +169,12 @@ fySar <- function(y, Gy, G, eps, igroup, ngroup, psi, lambda) {
     invisible(.Call(`_CDatanet_fySar`, y, Gy, G, eps, igroup, ngroup, psi, lambda))
 }
 
-foptimSAR <- function(alphatilde, X, invXX, G, I, n, y, Gy, ngroup) {
-    .Call(`_CDatanet_foptimSAR`, alphatilde, X, invXX, G, I, n, y, Gy, ngroup)
+foptimSAR <- function(alphatilde, X, invXX, G, I, n, y, Gy, ngroup, FE, print) {
+    .Call(`_CDatanet_foptimSAR`, alphatilde, X, invXX, G, I, n, y, Gy, ngroup, FE, print)
 }
 
-foptimSAR0 <- function(alphatilde, X, invXX, G, I, n, y, Gy, ngroup) {
-    .Call(`_CDatanet_foptimSAR0`, alphatilde, X, invXX, G, I, n, y, Gy, ngroup)
-}
-
-fSARjac <- function(lambda, s2, X, XX, Xbeta, G, I, igroup, ngroup, n, K) {
-    .Call(`_CDatanet_fSARjac`, lambda, s2, X, XX, Xbeta, G, I, igroup, ngroup, n, K)
+fSARjac <- function(lambda, s2, X, XX, Xbeta, G, I, igroup, ngroup, n, K, FE) {
+    .Call(`_CDatanet_fSARjac`, lambda, s2, X, XX, Xbeta, G, I, igroup, ngroup, n, K, FE)
 }
 
 fybsar <- function(yb, Gyb, G, igroup, ngroup, psi, lambda) {

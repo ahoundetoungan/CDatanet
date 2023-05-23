@@ -27,3 +27,6 @@ Note and Warning found in the check for MACOS have been fixed
 
 # Changes in version 2.1.0
 R defaulted to C++11 in R 4.0.0, to C++14 in R 4.2.0 and to C++17.
+
+# Changes in version 2.1.1
+Fixed effect is allowed in the model SAR.

@@ -9,6 +9,7 @@ sar(
   contextual,
   Glist,
   lambda0 = NULL,
+  fixed.effects = FALSE,
   optimizer = "optim",
   opt.ctr = list(),
   print = TRUE,
@@ -30,6 +31,8 @@ without intercept or \code{ y ~ x1 + x2 | x2 + x3} to allow the contextual varia
 
 \item{lambda0}{(optional) starting value of \eqn{\lambda}. The parameter \eqn{\gamma} should be removed if the model
 does not contain contextual effects (see details).}
+
+\item{fixed.effects}{logical; if true, group heterogeneity is included as fixed effects.}
 
 \item{optimizer}{is either \code{nlm} (referring to the function \link[stats]{nlm}) or \code{optim} (referring to the function \link[stats]{optim}).
 Other arguments

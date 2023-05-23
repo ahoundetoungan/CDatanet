@@ -9,6 +9,7 @@
 #' @param Glist the adjacency matrix or list sub-adjacency matrix.
 #' @param lambda0 (optional) starting value of \eqn{\lambda}. The parameter \eqn{\gamma} should be removed if the model
 #' does not contain contextual effects (see details).
+#' @param fixed.effects logical; if true, group heterogeneity is included as fixed effects.
 #' @param optimizer is either `nlm` (referring to the function \link[stats]{nlm}) or `optim` (referring to the function \link[stats]{optim}). 
 #' Other arguments 
 #' of these functions such as, the control values and the method can be defined through the argument `opt.ctr`.
@@ -90,11 +91,12 @@
 sar <- function(formula,
                 contextual,
                 Glist, 
-                lambda0   = NULL, 
-                optimizer = "optim",
-                opt.ctr   = list(), 
-                print     = TRUE, 
-                cov       = TRUE,
+                lambda0       = NULL, 
+                fixed.effects = FALSE,
+                optimizer     = "optim",
+                opt.ctr       = list(), 
+                print         = TRUE, 
+                cov           = TRUE,
                 data) {
   stopifnot(optimizer %in% c("optim", "nlm"))
   env.formula <- environment(formula)
@@ -109,21 +111,19 @@ sar <- function(formula,
   nvec       <- unlist(lapply(Glist, nrow))
   n          <- sum(nvec)
   igr        <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
-  
-  f.t.data   <- formula.to.data(formula, contextual, Glist, M, igr, data, theta0 = lambda0)
+
+  f.t.data   <- formula.to.data(formula, contextual, Glist, M, igr, data, 
+                                theta0 = NULL, fixed.effects = fixed.effects)
   formula    <- f.t.data$formula
   y          <- f.t.data$y
+  Gy         <- f.t.data$Gy
   X          <- f.t.data$X
   coln       <- c("lambda", colnames(X), "sigma")
   
   K          <- ncol(X)
-  
+
   # variables
-  ylist      <- lapply(1:M, function(x) y[(igr[x,1]:igr[x,2]) + 1])
-  
-  Nvec       <- unlist(lapply(ylist, length))
-  
-  Gy         <- unlist(lapply(1:M, function(w) Glist[[w]] %*% ylist[[w]]))
+  Nvec       <- sapply(Glist, nrow)
   
   XX         <- t(X)%*%X
   invXX      <- solve(XX)
@@ -146,29 +146,19 @@ sar <- function(formula,
                      "upper"  = 37,
                      "lower"  = -710)
   }
-  ctr        <- c(list(X = X,invXX = invXX, G = Glist, I = Ilist, n = n,
-                       y = y, Gy = Gy, ngroup = M), opt.ctr)
+  ctr        <- c(list(X = X,invXX = invXX, G = Glist, I = Ilist, n = n, y = y, Gy = Gy, 
+                       ngroup = M, FE = fixed.effects, print = print), opt.ctr)
   
   if (optimizer == "optim") {
-    ctr      <- c(ctr, list(par = lambdat))
+    ctr      <- c(ctr, list(par = lambdat, fn = foptimSAR))
     par0     <- "par"
     par1     <- "par"
     like     <- "value"
-    if (print) {
-      ctr    <- c(ctr, list(fn = foptimSAR))  
-    } else {
-      ctr    <- c(ctr, list(fn = foptimSAR0))  
-    }
   } else {
-    ctr     <- c(ctr, list(p = lambdat))
+    ctr     <- c(ctr, list(p = lambdat, f = foptimSAR))
     par0    <- "p"
     par1    <- "estimate"
     like    <- "minimum"
-    if (print) {
-      ctr   <- c(ctr, list(f = foptimSAR))  
-    } else {
-      ctr   <- c(ctr, list(f = foptimSAR0))  
-    }
   }
   
   resSAR    <- do.call(get(optimizer), ctr)
@@ -177,7 +167,7 @@ sar <- function(formula,
   
   lambda    <- 1/(1 + exp(-lambdat))
   
-  hessian   <- jacobSAR(lambda, X, invXX, XX, y, n, Glist, Ilist, Gy, M, igr, cov)
+  hessian   <- jacobSAR(lambda, X, invXX, XX, y, n, Glist, Ilist, Gy, M, igr, cov, fixed.effects)
   
   
   beta      <- hessian$beta
@@ -190,8 +180,8 @@ sar <- function(formula,
     rownames(covout) <- coln
   }
   
-  theta           <- c(lambda, beta, sqrt(sigma2))
-  names(theta)    <- coln
+  theta             <- c(lambda, beta, sqrt(sigma2))
+  names(theta)     <- coln
   
   environment(formula) <- env.formula
   sdata                <- list(
@@ -204,11 +194,12 @@ sar <- function(formula,
   }  
   
   
-  INFO                 <- list("M"          = M,
-                               "n"          = n,
-                               "nlinks"     = unlist(lapply(Glist, function(u) sum(u > 0))),
-                               "formula"    = formula,
-                               "log.like"   = llh)
+  INFO                 <- list("M"             = M,
+                               "n"             = n,
+                               "fixed.effects" = fixed.effects,
+                               "nlinks"        = unlist(lapply(Glist, function(u) sum(u > 0))),
+                               "formula"       = formula,
+                               "log.like"      = llh)
   
   out                  <- list("info"       = INFO,
                                "estimate"   = theta, 

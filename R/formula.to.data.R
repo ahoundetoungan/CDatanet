@@ -15,8 +15,9 @@ formula.to.data <- function(formula,
                             M, 
                             igr, 
                             data, 
-                            type   = "model",
-                            theta0 = NULL) {
+                            type          = "model",
+                            theta0        = NULL,
+                            fixed.effects = FALSE) {
   
   ## Extract data from the formula
   if (missing(data)) {
@@ -72,8 +73,13 @@ formula.to.data <- function(formula,
     X              <- X[,-1, drop = FALSE]
   }  
   
+  if("(Intercept)" %in% cnames){
+    Xone           <- Xone[, -1, drop = FALSE]
+    cnames         <- cnames[-1]
+  }
+  
   # GX and Gy
-  Gy               <- NULL
+  Gy                 <- NULL
   if (is.null(theta0)) {
     if(!is.null(X)) {
       GXlist         <- list()
@@ -83,12 +89,23 @@ formula.to.data <- function(formula,
         n2           <- igr[m,2] + 1
         GXlist[[m]]  <- Glist[[m]] %*% X[n1:n2,]
         Gylist[[m]]  <- Glist[[m]] %*% y[n1:n2]
+        
+        if(fixed.effects){
+          if("(Intercept)" %in% cnames){
+            Xone       <- Xone[, -1, drop = FALSE]
+            cnames     <- cnames[-1]
+          }
+          y[n1:n2]     <- y[n1:n2] - mean(y[n1:n2])
+          Gylist[[m]]  <- Gylist[[m]] - mean(Gylist[[m]])
+          GXlist[[m]]  <- apply(GXlist[[m]], 2, function(x) x - mean(x))
+          Xone[n1:n2,] <- apply(Xone[n1:n2,], 2, function(x) x - mean(x))
+        }
       }
       
-      GX             <- do.call("rbind", GXlist)
-      Gy             <- unlist(Gylist)
-      Xone           <- cbind(Xone, GX)
-      cnames         <- c(cnames,  paste0("G: ", colnames(X)))
+      GX           <- do.call("rbind", GXlist)
+      Gy           <- unlist(Gylist)
+      Xone         <- cbind(Xone, GX)
+      cnames       <- c(cnames,  paste0("G: ", colnames(X)))
     } else {
       Gylist         <- list()
       for (m in 1:M) {
@@ -97,7 +114,14 @@ formula.to.data <- function(formula,
         Gylist[[m]]  <- Glist[[m]] %*% y[n1:n2]
       }
       
-      Gy             <- unlist(Gylist)
+      if(fixed.effects){
+        y[n1:n2]     <- y[n1:n2] - mean(y[n1:n2])
+        Gylist[[m]]  <- Gylist[[m]] - mean(Gylist[[m]])
+        
+        Gy           <- unlist(Gylist)
+      }  else {
+        Gy           <- unlist(Gylist)
+      }
     }
   } else {
     if(!is.null(X)) {
@@ -113,7 +137,7 @@ formula.to.data <- function(formula,
       cnames         <- c(cnames,  paste0("G: ", colnames(X)))
     }
   }
-
+  
   if(type != "network") {
     if(rankMatrix(Xone)[1] != ncol(Xone))  {
       stop("X or [X, GX] is not a full rank matrix. May be there is an intercept in X and in GX.")

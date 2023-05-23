@@ -69,14 +69,26 @@ double foptimSAR(const double& alphatilde,
                  const int& n,
                  const arma::vec& y,
                  const arma::vec& Gy,
-                 const int& ngroup){
-  double lambda         = 1.0/(1.0 + exp(-alphatilde));
-  Rcpp::Rcout<<"---------------"<< endl;
-  Rcpp::Rcout<<"Estimate:   "<< lambda << endl;
+                 const int& ngroup,
+                 const bool& FE,
+                 const bool& print){
+  double lambda        = 1.0/(1.0 + exp(-alphatilde));
+  int nst              = n;
+  double tmp           = 0;
+  if(FE){
+    nst                = n - ngroup;
+    tmp                = ngroup*log(1 - lambda);
+  }
+  
+  if(print){
+    Rcpp::Rcout<<"---------------"<< endl;
+    Rcpp::Rcout<<"Estimate:   "<< lambda << endl;
+  }
   arma::vec yrem       = y - lambda*Gy;
   arma::vec beta       = invXX*(X.t()*yrem);
   arma::vec e          = yrem - X*beta;
-  double s2            = sum(e%e)/n;
+  double s2            = sum(e%e)/nst;
+
   
   double logdetA(0);
   for (int i(0); i < ngroup; ++ i) {
@@ -88,43 +100,11 @@ double foptimSAR(const double& alphatilde,
     logdetA      += log(signi);
   }
   
-  double llh      = - 0.5*n*(log(2*acos(-1)*s2)) + logdetA - 0.5*n;
-  Rcpp::Rcout <<"Likelihood: "<< llh << endl;
-  
-  if(llh < -1e293) {
-    llh           = -1e293;
-  }
-  return -llh;
-}
-
-
-// [[Rcpp::export]]
-double foptimSAR0(const double& alphatilde,
-                  const arma::mat& X,
-                  const arma::mat& invXX,
-                  List& G,
-                  List& I,
-                  const int& n,
-                  const arma::vec& y,
-                  const arma::vec& Gy,
-                  const int& ngroup){
-  double lambda         = 1.0/(1.0 + exp(-alphatilde));
-  arma::vec yrem       = y - lambda*Gy;
-  arma::vec beta       = invXX*(X.t()*yrem);
-  arma::vec e          = yrem - X*beta;
-  double s2            = sum(e%e)/n;
-  
-  double logdetA(0);
-  for (int i(0); i < ngroup; ++ i) {
-    double vali, signi;
-    arma::mat Gi  = G[i];
-    arma::mat Ii  = I[i];
-    log_det(vali, signi, Ii - lambda*Gi);
-    logdetA      += vali;
-    logdetA      += log(signi);
+  double llh      = - 0.5*nst*(log(2*acos(-1)*s2)) + logdetA - 0.5*nst - tmp;
+  if(print){
+    Rcpp::Rcout <<"Likelihood: "<< llh << endl;
   }
   
-  double llh      = - 0.5*n*(log(2*acos(-1)*s2)) + logdetA - 0.5*n;
   if(llh < -1e293) {
     llh           = -1e293;
   }
@@ -144,8 +124,12 @@ arma::mat fSARjac(const double& lambda,
                   const arma::mat igroup,
                   const int& ngroup,
                   const int& n,
-                  const int& K){
-  
+                  const int& K,
+                  const bool& FE){
+  int nst              = n;
+  if(FE){
+    nst                = n - ngroup;
+  }
   arma::vec GXbeta(n);
   double trGsG(0);
   double trG(0);
@@ -156,20 +140,25 @@ arma::mat fSARjac(const double& lambda,
     arma::mat Im    = I[m];
     arma::mat tGm   = arma::solve(Im - lambda*tWm, tWm);
     arma::mat Gm    = tGm.t();
-    trGsG          += arma::trace((Gm + tGm)*Gm);
+    arma::mat Gmc   = Gm;
+    if(FE){
+      Gmc.each_row() -= arma::mean(Gmc, 0);
+    }
+    trGsG          += arma::trace((Gm + tGm)*Gmc);
     trG            += arma::trace(Gm);
-    GXbeta.subvec(igroup(m,0), igroup(m,1)) = Gm*Xbeta.subvec(igroup(m,0), igroup(m,1));
+    GXbeta.subvec(igroup(m,0), igroup(m,1)) = Gmc*Xbeta.subvec(igroup(m,0), igroup(m,1));
   }
   
-  arma::mat out(K + 2, K + 2, arma::fill::zeros);
-  out(0, 0) = sum(GXbeta%GXbeta)/s2 + trGsG;
-  out.submat(0, 1, 0, K)  = GXbeta.t()*X/s2;
-  out(0, K + 1) = trG/s2;
-  out.col(0)  = arma::trans(out.row(0));
-  out.submat(1, 1, K, K) = XX/s2;
-  out(K + 1, K + 1) = n/(2*pow(s2, 2));
+  arma::mat Sig(K + 2, K + 2, arma::fill::zeros);
+  Sig(0, 0)               = sum(GXbeta%GXbeta)/s2 + trGsG;
+  Sig.submat(0, 1, 0, K)  = GXbeta.t()*X/s2;
+  Sig(0, K + 1)           = trG/s2;
+  Sig.col(0)              = arma::trans(Sig.row(0));
+  Sig.submat(1, 1, K, K)  = XX/s2;
+  Sig(K + 1, K + 1)       = nst/(2*pow(s2, 2));
   
-  return arma::inv(out);
+  
+  return arma::inv(Sig);
 }
 
 // imcomplet information
