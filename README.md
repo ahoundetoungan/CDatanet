@@ -13,6 +13,6 @@ install.packages("CDatanet")
 ### GitHub version
 It may be possible that I updated the package without submitting the new version to CRAN. The latest version (*but not necessary stable*) of **CDatanet** can be installed from this GitHub repos using the `install_github` function of the [**devtools**](https://cran.r-project.org/package=devtools) package. All the dependencies will also be installed automatically.
 ```R
-library(devtools)
+library(remotes)
 install_github("ahoundetoungan/CDatanet", build_vignettes = TRUE)
 ```
