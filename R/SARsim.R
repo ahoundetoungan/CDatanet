@@ -91,7 +91,7 @@ simsar   <- function(formula,
   
   f.t.data <- formula.to.data(formula, contextual, Glist, M, igr, data, "sim", 0)
   X        <- f.t.data$X
-  
+  # print(colnames(X))
   K        <- length(theta)
   if(K != (ncol(X) + 2)) {
     stop("Length of theta is not suited.")
