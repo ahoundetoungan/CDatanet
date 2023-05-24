@@ -127,7 +127,8 @@ simcdnet   <- function(formula,
   }
   # if((Rbar^rho + deltabar) < abs(lambda)) warning("Potential multiple equilibrium issue: (Rbar^rho + deltabar) < abs(lambda)")
   
-  f.t.data  <- formula.to.data(formula, contextual, Glist, M, igr, data, "sim", 0)
+  f.t.data  <- formula.to.data(formula = formula, contextual = contextual, Glist = Glist, M = M, igr = igr, 
+                               data = data, type = "sim", theta = 0)
   X         <- f.t.data$X
   
   K         <- length(theta)

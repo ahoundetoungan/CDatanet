@@ -73,7 +73,7 @@ formula.to.data <- function(formula,
     X              <- X[,-1, drop = FALSE]
   }  
   
-  if("(Intercept)" %in% cnames){
+  if(("(Intercept)" %in% cnames) & fixed.effects){
     Xone           <- Xone[, -1, drop = FALSE]
     cnames         <- cnames[-1]
   }
