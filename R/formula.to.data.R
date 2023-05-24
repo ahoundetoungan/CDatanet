@@ -91,10 +91,6 @@ formula.to.data <- function(formula,
         Gylist[[m]]  <- Glist[[m]] %*% y[n1:n2]
         
         if(fixed.effects){
-          if("(Intercept)" %in% cnames){
-            Xone       <- Xone[, -1, drop = FALSE]
-            cnames     <- cnames[-1]
-          }
           y[n1:n2]     <- y[n1:n2] - mean(y[n1:n2])
           Gylist[[m]]  <- Gylist[[m]] - mean(Gylist[[m]])
           GXlist[[m]]  <- apply(GXlist[[m]], 2, function(x) x - mean(x))
