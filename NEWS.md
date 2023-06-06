@@ -30,3 +30,6 @@ R defaulted to C++11 in R 4.0.0, to C++14 in R 4.2.0 and to C++17.
 
 # Changes in version 2.1.1
 Fixed effect is allowed in the model SAR.
+
+# Changes in version 2.1.2
+Address the case where a subnet consists of a single agent.

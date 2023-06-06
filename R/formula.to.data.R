@@ -94,7 +94,7 @@ formula.to.data <- function(formula,
           y[n1:n2]     <- y[n1:n2] - mean(y[n1:n2])
           Gylist[[m]]  <- Gylist[[m]] - mean(Gylist[[m]])
           GXlist[[m]]  <- apply(GXlist[[m]], 2, function(x) x - mean(x))
-          Xone[n1:n2,] <- apply(Xone[n1:n2,], 2, function(x) x - mean(x))
+          Xone[n1:n2,] <- apply(Xone[n1:n2, ,drop = FALSE], 2, function(x) x - mean(x))
         }
       }
       
