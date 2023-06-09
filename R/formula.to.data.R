@@ -112,6 +112,7 @@ formula.to.data <- function(formula,
         if(fixed.effects){
           y[n1:n2]     <- y[n1:n2] - mean(y[n1:n2])
           Gylist[[m]]  <- Gylist[[m]] - mean(Gylist[[m]])
+          Xone[n1:n2,] <- apply(Xone[n1:n2, ,drop = FALSE], 2, function(x) x - mean(x))
         }  
       }
       Gy             <- unlist(Gylist)
