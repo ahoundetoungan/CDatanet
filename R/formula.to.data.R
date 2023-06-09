@@ -47,12 +47,12 @@ formula.to.data <- function(formula,
   ## extract response, terms, model matrices
   y                <- model.response(mf, "numeric")
   mtXone           <- terms(formula, data = data, rhs = 1)
-  Xone             <- model.matrix(mtXone, mf)
+  Xone             <- model.matrix(mtXone, mf) ## X before pipe
   cnames           <- colnames(Xone)
   
   mtX              <- NULL
   X                <- NULL
-  if(length(formula)[2] >= 2L) {
+  if(length(formula)[2] >= 2L) { ## X after pipe
     mtX            <- delete.response(terms(formula, data = data, rhs = 2))
     X              <- model.matrix(mtX, mf)
   }
@@ -108,16 +108,13 @@ formula.to.data <- function(formula,
         n1           <- igr[m,1] + 1
         n2           <- igr[m,2] + 1
         Gylist[[m]]  <- Glist[[m]] %*% y[n1:n2]
-      }
-      
-      if(fixed.effects){
-        y[n1:n2]     <- y[n1:n2] - mean(y[n1:n2])
-        Gylist[[m]]  <- Gylist[[m]] - mean(Gylist[[m]])
         
-        Gy           <- unlist(Gylist)
-      }  else {
-        Gy           <- unlist(Gylist)
+        if(fixed.effects){
+          y[n1:n2]     <- y[n1:n2] - mean(y[n1:n2])
+          Gylist[[m]]  <- Gylist[[m]] - mean(Gylist[[m]])
+        }  
       }
+      Gy             <- unlist(Gylist)
     }
   } else {
     if(!is.null(X)) {
