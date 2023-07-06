@@ -10,7 +10,7 @@ homophily.FE(
   data,
   init = NULL,
   opt.ctr = list(maxit = 300, eps_f = 1e-06, eps_g = 1e-05),
-  print = TRUE
+  print = ifelse(tolower(model) == "logit", TRUE, FALSE)
 )
 }
 \arguments{
@@ -29,6 +29,10 @@ where K is the number of explanatory variables and n is the number of individual
 \item{opt.ctr}{(optional) is a list of \code{maxit}, \code{eps_f}, and \code{eps_g}, which are control parameters used by the solver \code{optim_lbfgs}, of the package \pkg{RcppNumerical}.}
 
 \item{print}{Boolean indicating if the estimation progression should be printed.}
+
+\item{model}{indicates whether the model is \code{logit} or \code{linear} (a linear-in-mean model).}
+
+\item{rem.FE}{indicates whether the fixed effects should be removed by taking the model in differences.}
 }
 \value{
 A list consisting of:

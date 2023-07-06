@@ -4,6 +4,8 @@
 #' where `x1`, `x2` are explanatory variable of links formation
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `homophily` is called.
+##' @param model indicates whether the model is `logit` or `linear` (a linear-in-mean model).
+##' @param rem.FE indicates whether the fixed effects should be removed by taking the model in differences.
 #' @param init (optional) either a list of starting values containing `beta`, an K-dimensional vector of the explanatory variables parameter, 
 #' `mu` an n-dimensional vector, and `nu` an n-dimensional vector, 
 #' where K is the number of explanatory variables and n is the number of individuals; or a vector of starting value for `c(beta, mu, nu)`.  
@@ -89,24 +91,20 @@
 homophily.FE <- function(network,
                          formula,
                          data,
+                         #model     = "logit",
+                         #rem.FE    = FALSE,
                          init      = NULL,
                          opt.ctr   = list(maxit = 300, eps_f = 1e-6, eps_g = 1e-5),
-                         print     = TRUE) {
+                         print     = ifelse(tolower(model) == "logit", TRUE, FALSE)){
   
   t1              <- Sys.time()
+  model           <- "logit"
+  rem.FE          <- FALSE
   stopifnot(is.null(init) || is.vector(init) || is.list(init))
-  maxit           <- opt.ctr$maxit;
-  eps_f           <- opt.ctr$eps_f
-  eps_g           <- opt.ctr$eps_g
-  if(is.null(maxit)){
-    maxit         <- 500
-  }
-  if(is.null(eps_f)){
-    eps_f         <- 1e-6
-  }
-  if(is.null(eps_g)){
-    eps_g         <- 1e-5
-  }
+  model           <- tolower(model)[1]          
+  stopifnot(model %in% c("logit", "linear"))
+  if((model == "logit") & rem.FE) stop("Fixed effects cannot be removed from the logit model.")
+
   # Data and dimensions
   if (!is.list(network)) {
     network       <- list(network)
@@ -129,10 +127,10 @@ homophily.FE <- function(network,
   } 
   tmp1            <- cumsum(unlist(lapply(nvec, function(x) rep(x - 1, x)))) - 1
   tmp2            <- c(0, tmp1[-n] + 1)
-  index           <- cbind(tmp2, tmp1)
+  index           <- cbind(tmp2, tmp1) 
   rm(list = c("tmp1", "tmp2"))
   quiet(gc())
-  indexgr         <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
+  indexgr         <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2) #start group, end group
   # INDEXgr         <- matrix(c(cumsum(c(0, Nvec[-M])), cumsum(Nvec) - 1), ncol = 2)
   # Formula to data
   f.t.data        <- formula.to.data(formula, FALSE, NULL, NULL, NULL, data,
@@ -149,11 +147,52 @@ homophily.FE <- function(network,
   coln            <- colnames(dX)
   if("(Intercept)" %in% coln){stop("fixed effect model cannot include intercept")}
   K               <- length(coln)
+  nlinks          <- sum(network)
+  out             <- list()
+  if(model == "logit"){
+    out           <- homophily.LogitFE(network, M, nvec, n, N, Nvec, index, indexgr,
+                                         formula, dX, coln, K, init, nlinks, opt.ctr, print)
+  }
+
+  t2              <- Sys.time()
+  timer           <- as.numeric(difftime(t2, t1, units = "secs"))
+  if(print) {
+    cat("\n\n")
+    cat("The program successfully executed \n")
+    cat("\n")
+    cat("********SUMMARY******** \n")
+    cat("n.obs          : ", N, "\n")
+    cat("n.links        : ", nlinks, "\n")
+    cat("K              : ", K, "\n")
+    
+    
+    # Print the processing time
+    nhours       <- floor(timer/3600)
+    nminutes     <- floor((timer-3600*nhours)/60)%%60
+    nseconds     <- timer-3600*nhours-60*nminutes
+    cat("Elapsed time   : ", nhours, " HH ", nminutes, " mm ", round(nseconds), " ss \n \n")
+  }
   
-  # dXdX            <- crossprod(dX)
-  # invdXdX         <- solve(as.matrix(dXdX))
-  # sumnetwork      <- sapply(1:M, function(m){sum(network[(INDEXgr[m,1] + 1):(INDEXgr[m,2] + 1)])})
-  
+  out
+}
+
+
+
+homophily.LogitFE <- function(network, M, nvec, n, N, Nvec, index, indexgr,
+                              formula, dX, coln, K, init, nlinks, opt.ctr, print){
+  maxit           <- opt.ctr$maxit
+  eps_f           <- opt.ctr$eps_f
+  eps_g           <- opt.ctr$eps_g
+  if(is.null(maxit)){
+    maxit         <- 500
+  }
+  if(is.null(eps_f)){
+    eps_f         <- 1e-6
+  }
+  if(is.null(eps_g)){
+    eps_g         <- 1e-5
+  }
+
   #starting value
   initllh         <- NULL
   quiet(gc())
@@ -222,11 +261,8 @@ homophily.FE <- function(network,
   estim$estimate  <- c(estim$estimate)
   estim$gradient  <- c(estim$gradient)
   
-  t2              <- Sys.time()
-  timer           <- as.numeric(difftime(t2, t1, units = "secs"))
-  
-  nlinks          <- sum(network)
-  out             <- list("n"               = nvec,
+  out             <- list("model"           = "logit",
+                          "n"               = nvec,
                           "n.obs"           = N,
                           "n.links"         = nlinks,
                           "K"               = K,
@@ -237,22 +273,11 @@ homophily.FE <- function(network,
                           "loglike(init)"   = initllh)
   
   class(out)      <- "homophily.FE"
-  if(print) {
-    cat("\n\n")
-    cat("The program successfully executed \n")
-    cat("\n")
-    cat("********SUMMARY******** \n")
-    cat("n.obs          : ", N, "\n")
-    cat("n.links        : ", nlinks, "\n")
-    cat("K              : ", K, "\n")
-    
-    
-    # Print the processing time
-    nhours       <- floor(timer/3600)
-    nminutes     <- floor((timer-3600*nhours)/60)%%60
-    nseconds     <- timer-3600*nhours-60*nminutes
-    cat("Elapsed time   : ", nhours, " HH ", nminutes, " mm ", round(nseconds), " ss \n \n")
-  }
-  
   out
 }
+
+
+homophily.LinFE.keep <- function(){
+  
+}
+  

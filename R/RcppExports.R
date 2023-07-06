@@ -145,6 +145,10 @@ fdummies <- function(out, limit, M, n) {
     invisible(.Call(`_CDatanet_fdummies`, out, limit, M, n))
 }
 
+fdatar <- function(X, ftovar, nvar, K) {
+    .Call(`_CDatanet_fdatar`, X, ftovar, nvar, K)
+}
+
 fmusum <- function(mu, nu, index, indexgr, M, N) {
     .Call(`_CDatanet_fmusum`, mu, nu, index, indexgr, M, N)
 }

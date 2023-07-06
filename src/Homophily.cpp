@@ -27,6 +27,116 @@ void fdummies(arma::mat& out,
   }
 }
 
+// this function organizes the data in the suitable shape
+// We first compute intermediate function
+// Use i characteristics
+arma::mat fdatai(const arma::vec& Xk, const int& n){return arma::repmat(Xk, 1, n);}
+
+// Use j characteristics
+arma::mat fdataj(const arma::vec& Xk, const int& n){return arma::repmat(Xk.t(), n, 1);}
+
+// sum
+arma::mat fdatasum(const arma::vec& Xk, const int& n){
+  arma::mat out(n, n, arma::fill::zeros);
+  for(int i(0); i < (n - 1); ++ i){
+    out.submat(i + 1, i, n - 1, i) = (Xk.subvec(i + 1, n - 1) + Xk(i));
+  }
+  return out + out.t();
+}
+
+// prod
+arma::mat fdataprod(const arma::vec& Xk, const int& n){
+  arma::mat out(n, n, arma::fill::zeros);
+  for(int i(0); i < (n - 1); ++ i){
+    out.submat(i + 1, i, n - 1, i) = (Xk.subvec(i + 1, n - 1)*Xk(i));
+  }
+  return out + out.t();
+}
+
+// Use Xi = Xj
+arma::umat fdatasame(const arma::vec& Xk, const int& n){
+  arma::umat out(n, n, arma::fill::zeros);
+  for(int i(0); i < (n - 1); ++ i){
+    out.submat(i + 1, i, n - 1, i) = (Xk.subvec(i + 1, n - 1) == Xk(i));
+  }
+  return out + out.t();
+}
+
+// abs(Xi - Xj)
+arma::mat fdatadiff(const arma::vec& Xk, const int& n){
+  arma::mat out(n, n, arma::fill::zeros);
+  for(int i(0); i < (n - 1); ++ i){
+    out.submat(i + 1, i, n - 1, i) = abs(Xk.subvec(i + 1, n - 1) - Xk(i));
+  }
+  return out + out.t();
+}
+
+// Xi < Xj
+arma::umat fdatalower(const arma::vec& Xk, const int& n){
+  arma::umat out(n, n, arma::fill::zeros);
+  for(int i(0); i < n; ++ i){
+    out.col(i) = (Xk < Xk(i));
+  }
+  return out;
+}
+
+// Xi > Xj
+arma::umat fdatagreater(const arma::vec& Xk, const int& n){
+  arma::umat out(n, n, arma::fill::zeros);
+  for(int i(0); i < n; ++ i){
+    out.col(i) = (Xk > Xk(i));
+  }
+  return out;
+}
+
+
+//[[Rcpp::export]]
+arma::cube fdatar(const arma::mat X, List ftovar, const int& nvar, const int& K){
+  int n(X.n_rows);
+  arma::cube out(n, n, nvar);
+  int s(0);
+  for(int k(0); k < K; ++ k){
+    arma::uvec ftv = ftovar[k];
+    int L          = ftv.n_elem;
+    for(int l(0); l < L; ++ l){
+      switch(ftv(l)) {
+      case 1: //Xi
+        out.slice(s) = fdatai(X.col(k), n);
+        ++ s;
+        break;
+      case 2: //Xj
+        out.slice(s) = fdataj(X.col(k), n);
+        ++ s;
+        break;
+      case 3: //Xi + Xj
+        out.slice(s) = fdatasum(X.col(k), n);
+        ++ s;
+        break;
+      case 4: //Xi*Xj
+        out.slice(s) = fdataprod(X.col(k), n);
+        ++ s;
+        break;
+      case 5: //Same
+        out.slice(s) = arma::conv_to<arma::mat>::from(fdatasame(X.col(k), n));
+        ++ s;
+        break;
+      case 6: //Adiff
+        out.slice(s) = fdatadiff(X.col(k), n);
+        ++ s;
+        break;
+      case 7: //1{Xi < Xj}
+        out.slice(s) = arma::conv_to<arma::mat>::from(fdatalower(X.col(k), n));
+        ++ s;
+        break;
+      case 8: //1{Xi > Xj}
+        out.slice(s) = arma::conv_to<arma::mat>::from(fdatagreater(X.col(k), n));
+        ++ s;
+      }
+    }
+  }
+  return out;
+}
+
 // /*
 //  * Fmvnorm samples one vector fastly from numtivariate normal
 //  * dim   : is the vector dimension
@@ -844,3 +954,76 @@ List fhomobetap(Eigen::VectorXd theta,
     Rcpp::Named("gradient") = f.Grad,
     Rcpp::Named("status")   = status);
 }
+
+// /////////////////////////////
+// // Linear model compute X´X with fixed effects
+// List Object_LinearFE(const arma::vec& a,
+//                      const arma::mat& dx,
+//                      const arma::vec& nvec,
+//                      const arma::mat& index,
+//                      const arma::mat& indexgr,
+//                      const int& Kx,
+//                      const int& n,
+//                      const int& N,
+//                      const int& M){
+// 
+//   int b2                 = Kx - 1;
+//   int m1                 = b2 + 1;
+//   int m2                 = m1 + n - 1;
+//   int n1                 = m2 + 1;
+//   int n2                 = n1 + n - M - 1;
+//   
+//   
+//   int igr1, igr2, nm, j(0), j1, j2;
+//   arma::vec ai, Xpa(N, arma::fill::zeros);
+//   arma::mat indexm, dXi, XpX(n2 + 1, n2 + 1, arma::fill::zeros);
+//   arma::uvec indexi;
+//   
+//   XpX.submat(0, 0, b2, b2) = dx.t()*dx;
+//   Xpa.subvec(0, b2)        = arma::trans(sum(dx, 0))
+//   for (int m(0); m < M; ++ m) {
+//     igr1                   = indexgr(m, 0); 
+//     igr2                   = indexgr(m, 1); 
+//     nm                     = nvec(m);
+//     indexm                 = index.rows(igr1, igr2); // ith row is the row at each i interacts with others, where the link goes from i
+// 
+//     for(int i(0); i < nm; ++ i){
+//       j1                   = index(j, 0);
+//       j2                   = index(j, 1);
+//       ai                   = a.subvec(j1, j2);
+//       dXi                  = dx.rows(j1, j2);
+//       XpX(m1 + j, m1 + j)  =         
+//       // rows on which nui is used
+//       indexi             = arma::conv_to<arma::uvec>::from(indexm.col(0)) + i;
+//       indexi.head(i + 1)-= 1;
+//       indexi.shed_row(i);  
+//       
+//       // sum of mu(i) + numj
+//       smunu              = mum(i) + numj;
+//       
+//       exbmn              = exp(dXb.subvec(j1, j2) + smunu);
+//       tmp                = exbmn/(1 + exbmn);
+//       llh               += sum(ai%smunu - log(1 + exbmn));
+//       
+//       // grad X
+//       gd.head(Kx)       -= arma::trans(arma::sum(dXi.each_col()%tmp, 0));
+//       
+//       // grad mui
+//       gd(m1 + j)         = d(j) - sum(tmp);
+//       // gd(m1 + j)         = sum(ai - tmp);
+//       // grad nui
+//       if(i < (nm - 1)){
+//         tmp              = exp(dXb.elem(indexi) + mumj + num(i));
+//         gd(n1 + j - m)   = b(j) - sum(tmp/(1 + tmp));
+//         // gd(n1 + j - m)   = sum(a.elem(indexi)- tmp/(1 + tmp));
+//       }
+//       ++ j;
+//     }
+//   }
+//   
+//   grad                    = -Eigen::Map<Eigen::VectorXd>(gd.memptr(), nparms);
+//   Grad                    = gd;
+//   
+//   Rcpp::Rcout << "log-likelihood: " << llh << "\n";
+//   return -llh;
+// }

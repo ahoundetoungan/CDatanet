@@ -737,6 +737,20 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// fdatar
+arma::cube fdatar(const arma::mat X, List ftovar, const int& nvar, const int& K);
+RcppExport SEXP _CDatanet_fdatar(SEXP XSEXP, SEXP ftovarSEXP, SEXP nvarSEXP, SEXP KSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< List >::type ftovar(ftovarSEXP);
+    Rcpp::traits::input_parameter< const int& >::type nvar(nvarSEXP);
+    Rcpp::traits::input_parameter< const int& >::type K(KSEXP);
+    rcpp_result_gen = Rcpp::wrap(fdatar(X, ftovar, nvar, K));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fmusum
 arma::vec fmusum(const arma::vec& mu, const arma::vec& nu, const arma::mat& index, const arma::mat& indexgr, const int& M, const int& N);
 RcppExport SEXP _CDatanet_fmusum(SEXP muSEXP, SEXP nuSEXP, SEXP indexSEXP, SEXP indexgrSEXP, SEXP MSEXP, SEXP NSEXP) {
@@ -1279,6 +1293,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CDatanet_cdnetLBFGSrho", (DL_FUNC) &_CDatanet_cdnetLBFGSrho, 12},
     {"_CDatanet_fcovCDI2", (DL_FUNC) &_CDatanet_fcovCDI2, 11},
     {"_CDatanet_fdummies", (DL_FUNC) &_CDatanet_fdummies, 4},
+    {"_CDatanet_fdatar", (DL_FUNC) &_CDatanet_fdatar, 4},
     {"_CDatanet_fmusum", (DL_FUNC) &_CDatanet_fmusum, 6},
     {"_CDatanet_updategparms1", (DL_FUNC) &_CDatanet_updategparms1, 20},
     {"_CDatanet_updategparms2", (DL_FUNC) &_CDatanet_updategparms2, 20},
