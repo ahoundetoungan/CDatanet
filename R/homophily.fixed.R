@@ -4,8 +4,8 @@
 #' where `x1`, `x2` are explanatory variable of links formation
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `homophily` is called.
-##' @param model indicates whether the model is `logit` or `linear` (a linear-in-mean model).
-##' @param rem.FE indicates whether the fixed effects should be removed by taking the model in differences.
+# @param model indicates whether the model is `logit` or `linear` (a linear-in-mean model).
+# @param rem.FE indicates whether the fixed effects should be removed by taking the model in differences.
 #' @param init (optional) either a list of starting values containing `beta`, an K-dimensional vector of the explanatory variables parameter, 
 #' `mu` an n-dimensional vector, and `nu` an n-dimensional vector, 
 #' where K is the number of explanatory variables and n is the number of individuals; or a vector of starting value for `c(beta, mu, nu)`.  
@@ -95,7 +95,7 @@ homophily.FE <- function(network,
                          #rem.FE    = FALSE,
                          init      = NULL,
                          opt.ctr   = list(maxit = 300, eps_f = 1e-6, eps_g = 1e-5),
-                         print     = ifelse(tolower(model) == "logit", TRUE, FALSE)){
+                         print     = TRUE){
   
   t1              <- Sys.time()
   model           <- "logit"
