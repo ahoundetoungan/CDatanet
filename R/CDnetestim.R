@@ -56,9 +56,10 @@
 #' Houndetoungan, E. A. (2022). Count Data Models with Social Interactions under Rational Expectations. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
 #' @seealso \code{\link{sart}}, \code{\link{sar}}, \code{\link{simcdnet}}.
 #' @examples 
+#' \donttest{
 #' set.seed(123)
 #' # Groups' size
-#' nvec   <- sample(100:500, 2)
+#' nvec   <- rep(100, 2)
 #' M      <- length(nvec)
 #' n      <- sum(nvec)
 #' 
@@ -106,8 +107,8 @@
 #' rm(list = ls()[!(ls() %in% c("Glist", "data"))])
 #' 
 #' out   <- cdnet(formula = yt ~ x1 + x2, contextual = TRUE, Glist = Glist, 
-#'                data = data, Rbar = 10, estim.rho = TRUE, optimizer = "nlm")
-#' summary(out)
+#'                data = data, Rbar = 5, estim.rho = TRUE, optimizer = "nlm")
+#' summary(out)}
 #' @importFrom stats quantile
 #' @importFrom utils head
 #' @importFrom utils tail
@@ -704,7 +705,7 @@ cdnet    <- function(formula,
   cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
   cat("Rbar: ", Rbar, sep = "", "\n")
   if(Rbar > 1){
-    cat("delta: ", delta[1:(Rbar - 1)], sep = "", "\n")
+    cat("delta:", delta[1:(Rbar - 1)], sep = " ", "\n")
   }
   cat("deltabar: ", delta[Rbar], sep = "")
   if(estim.rho){
