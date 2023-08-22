@@ -97,9 +97,11 @@ sar <- function(formula,
                 opt.ctr       = list(), 
                 print         = TRUE, 
                 cov           = TRUE,
+                # RE            = FALSE,
                 data) {
   stopifnot(optimizer %in% c("optim", "nlm"))
-  env.formula <- environment(formula)
+  # if(RE & fixed.effects) stop("Rational expectations with fixed effects are not allowed in this version.")
+  env.formula  <- environment(formula)
   #size 
   if (missing(contextual)) {
     contextual <- FALSE
@@ -181,7 +183,7 @@ sar <- function(formula,
   }
   
   theta             <- c(lambda, beta, sqrt(sigma2))
-  names(theta)     <- coln
+  names(theta)      <- coln
   
   environment(formula) <- env.formula
   sdata                <- list(

@@ -43,7 +43,7 @@ void fySar(arma::vec& y,
            const arma::vec& psi,
            const double& lambda) {
   int nm;
-  arma::vec Gym, ym, tmp0, tmp1, t(ngroup);
+  arma::vec ym;
   arma::mat Am;
   //loop over group
   for (int m(0); m < ngroup; ++ m) {
@@ -57,6 +57,31 @@ void fySar(arma::vec& y,
   }
 }
 
+//[[Rcpp::export]]
+void fySarRE(arma::vec& y,
+           arma::vec& Gye,
+           arma::vec& ye,
+           List& G,
+           const arma::vec& eps,
+           const arma::mat& igroup,
+           const int& ngroup,
+           const arma::vec& psi,
+           const double& lambda) {
+  int nm;
+  arma::vec yem;
+  arma::mat Am;
+  //loop over group
+  for (int m(0); m < ngroup; ++ m) {
+    nm            = igroup(m,1) - igroup(m,0) + 1;
+    arma::mat Gm  = G[m];
+    Am            = arma::diagmat(arma::ones(nm)) - lambda*Gm;
+    yem           = arma::solve(Am, psi.subvec(igroup(m, 0), igroup(m, 1)));
+
+    y.rows(igroup(m,0), igroup(m,1))    = yem + eps.subvec(igroup(m,0), igroup(m,1));
+    ye.rows(igroup(m,0), igroup(m,1))   = yem;
+    Gye.rows(igroup(m,0), igroup(m,1))  = Gm * yem;
+  }
+}
 
 
 

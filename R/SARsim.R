@@ -9,6 +9,7 @@
 #' @param Glist the adjacency matrix or list sub-adjacency matrix.
 #' @param theta the parameter value as \eqn{\theta = (\lambda, \beta, \gamma, \sigma)}. The parameter \eqn{\gamma} should be removed if the model
 #' does not contain contextual effects (see details).
+#' @param RE a Boolean which indicates if the model if under rational expectation of not.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `mcmcARD` is called.
 #' @description
@@ -71,10 +72,11 @@
 #' @importFrom Rcpp sourceCpp
 #' @export
 simsar   <- function(formula,
-                          contextual,
-                          Glist,
-                          theta,
-                          data) {
+                     contextual,
+                     Glist,
+                     theta,
+                     RE = FALSE,
+                     data) {
   if (missing(contextual)) {
     contextual <- FALSE
   }
@@ -105,12 +107,20 @@ simsar   <- function(formula,
   xb       <- c(X %*% b)
   eps      <- rnorm(n, 0, sigma)
   
-  y        <- rep(0, n)
-  Gy       <- numeric(n)
-  
-  fySar(y, Gy, Glist, eps, igr, M, xb, lambda)
-  
-  
-  list("y"         = y,
-       "Gy"        = Gy)
+  out      <- NULL
+  if(RE){
+    y      <- rep(0, n)
+    ye     <- rep(0, n)
+    Gye    <- numeric(n)
+    fySarRE(y, Gye, ye, Glist, eps, igr, M, xb, lambda)
+    out    <- list("y"  = y,
+                   "Gy" = Gy)
+  } else {
+    y      <- rep(0, n)
+    Gy     <- numeric(n)
+    fySar(y, Gy, Glist, eps, igr, M, xb, lambda)
+    out    <- list("y"  = y,
+                   "Gy" = Gy)
+  }
+  out
 }
