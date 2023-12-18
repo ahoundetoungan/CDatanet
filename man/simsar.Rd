@@ -4,7 +4,7 @@
 \alias{simsar}
 \title{Simulate data from the linear-in-mean Model with Social Interactions}
 \usage{
-simsar(formula, contextual, Glist, theta, data)
+simsar(formula, contextual, Glist, theta, RE = FALSE, data)
 }
 \arguments{
 \item{formula}{an object of class \link[stats]{formula}: a symbolic description of the model. The \code{formula} should be as for example \code{y ~ x1 + x2 | x1 + x2}
@@ -20,6 +20,8 @@ without intercept or \code{y ~ x1 + x2 | x2 + x3} to allow the contextual variab
 
 \item{theta}{the parameter value as \eqn{\theta = (\lambda, \beta, \gamma, \sigma)}. The parameter \eqn{\gamma} should be removed if the model
 does not contain contextual effects (see details).}
+
+\item{RE}{a Boolean which indicates if the model if under rational expectation of not.}
 
 \item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{mcmcARD} is called.}

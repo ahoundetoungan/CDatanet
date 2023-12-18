@@ -6,6 +6,8 @@
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `homophily` is called.
 # @param model indicates whether the model is `logit` or `linear` (a linear-in-mean model).
 # @param rem.FE indicates whether the fixed effects should be removed by taking the model in differences.
+#' @param symmetry indicates whether the network model is symmetric (see details).
+#' @param fixed.effects indicates the type of fixed effects: `"one way"` or `"two sides"` (see details).
 #' @param init (optional) either a list of starting values containing `beta`, an K-dimensional vector of the explanatory variables parameter, 
 #' `mu` an n-dimensional vector, and `nu` an n-dimensional vector, 
 #' where K is the number of explanatory variables and n is the number of individuals; or a vector of starting value for `c(beta, mu, nu)`.  
@@ -15,20 +17,21 @@
 #' `homophily.FE` is used to estimate a network formation model with homophily. The model includes degree heterogeneity as fixed effects (see details).
 #' @details
 #' Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.
-#' This probability is specified as
+#' This probability is specified for the two-side fixed effect model as
 #' \deqn{p_{ij} = F(\mathbf{x}_{ij}'\beta + \mu_j + \nu_j)}{Pij = F(Xij'*\beta + \mu_i + \nu_j),}
 #' where \eqn{F} is the cumulative of the standard normal distribution. Unobserved degree heterogeneity is captured by
 #' \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as fixed effects. As shown by Yan et al. (2019), the estimator of 
 #' the parameter \eqn{\beta} is biased. A bias correction is then necessary and is not implemented in this version. However
-#' the estimator of \eqn{\mu_i} and \eqn{\nu_j} are consistent.
-#' @seealso \code{\link{homophily}}.
+#' the estimator of \eqn{\mu_i} and \eqn{\nu_j} are consistent.\cr
+#' 
+#' For one-way-fixed effect models, \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the 
+#' fixed effects need to be `"one way"`.
+#' @seealso \code{\link{homophily.re}}.
 #' @references 
 #' Yan, T., Jiang, B., Fienberg, S. E., & Leng, C. (2019). Statistical inference in a directed network model with covariates. \emph{Journal of the American Statistical Association}, 114(526), 857-868, \doi{https://doi.org/10.1080/01621459.2018.1448829}.
 #' @return A list consisting of:
-#'     \item{n}{number of individuals in each network.}
-#'     \item{n.obs}{number of observations.}
-#'     \item{n.links}{number of links.}
-#'     \item{K}{number of explanatory variables.}
+#'     \item{model.info}{list of model information, such as the type of fixed effects, whether the model is symmetric,
+#'      number of observations, etc.}
 #'     \item{estimate}{maximizer of the log-likelihood.}
 #'     \item{loglike}{maximized log-likelihood.}
 #'     \item{optim}{returned value of the optimization solver, which contains details of the optimization. The solver used is `optim_lbfgs` of the 
@@ -37,6 +40,7 @@
 #'     \item{loglike(init)}{log-likelihood at the starting value.}
 #' @importFrom stats glm
 #' @importFrom stats binomial
+#' @importFrom matrixcalc is.symmetric.matrix
 #' @examples 
 #' \donttest{
 #' set.seed(1234)
@@ -83,23 +87,30 @@
 #' mu  <- unlist(mu)
 #' nu  <- unlist(nu)
 #' 
-#' out   <- homophily.FE(network =  Glist, formula = ~ -1 + dX)
+#' out   <- homophily.fe(network =  Glist, formula = ~ -1 + dX, fixed.effects = "two sides")
 #' muhat <- out$estimate$mu
 #' nuhat <- out$estimate$nu
+#' plot(mu, muhat)
+#' plot(nu, nuhat)
 #' }
 #' @export
-homophily.FE <- function(network,
+homophily.fe <- function(network,
                          formula,
                          data,
                          #model     = "logit",
                          #rem.FE    = FALSE,
-                         init      = NULL,
-                         opt.ctr   = list(maxit = 300, eps_f = 1e-6, eps_g = 1e-5),
-                         print     = TRUE){
+                         symmetry      = FALSE,
+                         fixed.effects = c("one way", "two sides"),
+                         init          = NULL,
+                         opt.ctr       = list(maxit = 1e4, eps_f = 1e-9, eps_g = 1e-9),
+                         print         = TRUE){
   
   t1              <- Sys.time()
   model           <- "logit"
   rem.FE          <- FALSE
+  fixed.effects   <- tolower(fixed.effects[1])
+  if(symmetry & fixed.effects == "two sides") stop("Two side fixed effects are not allowed for symmetric networks.")
+  stopifnot(fixed.effects %in% c("one way", "two sides"))
   stopifnot(is.null(init) || is.vector(init) || is.list(init))
   model           <- tolower(model)[1]          
   stopifnot(model %in% c("logit", "linear"))
@@ -113,24 +124,36 @@ homophily.FE <- function(network,
   M               <- length(network)
   nvec            <- unlist(lapply(network, nrow))
   n               <- sum(nvec)
-  Nvec            <- nvec*(nvec- 1)
+  Nvec            <- NULL
+  if(symmetry){
+    Nvec          <- nvec*(nvec- 1)/2
+    stopifnot(sapply(network, is.symmetric.matrix))
+    network       <- frMtoVbyCOLsym(network, nvec, M)
+  } else {
+    Nvec          <- nvec*(nvec- 1)
+    # network         <- unlist(lapply(network, function(x){diag(x) = NA; x}))
+    # network         <- network[!is.na(network)]
+    network       <- frMtoVbyCOL(network, nvec, M)
+  }
   N               <- sum(Nvec)
   
-  network         <- unlist(lapply(network, function(x){diag(x) = NA; x}))
-  network         <- network[!is.na(network)]
   quiet(gc())
-  if (length(network) != N) {
-    stop("network should contain only 0 and 1 (as numeric)")
-  }
   if (sum(!((network == 0) | (network == 1))) != 0) {
     stop("network should contain only 0 and 1")
-  } 
-  tmp1            <- cumsum(unlist(lapply(nvec, function(x) rep(x - 1, x)))) - 1
-  tmp2            <- c(0, tmp1[-n] + 1)
-  index           <- cbind(tmp2, tmp1) 
+  }
+  
+  tmp1    <- NULL
+  if(symmetry){
+    tmp1  <- cumsum(unlist(lapply(nvec, function(x) (x - 1):0))) - 1
+  } else {
+    tmp1  <- cumsum(unlist(lapply(nvec, function(x) rep(x - 1, x)))) - 1
+  }
+  tmp2    <- c(0, tmp1[-n] + 1)
+  index   <- cbind(tmp2, tmp1) 
   rm(list = c("tmp1", "tmp2"))
+
   quiet(gc())
-  indexgr         <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2) #start group, end group
+  indexgr <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2) #start group, end group
   # INDEXgr         <- matrix(c(cumsum(c(0, Nvec[-M])), cumsum(Nvec) - 1), ncol = 2)
   # Formula to data
   f.t.data        <- formula.to.data(formula, FALSE, NULL, NULL, NULL, data,
@@ -142,18 +165,23 @@ homophily.FE <- function(network,
   
   formula         <- f.t.data$formula
   dX              <- f.t.data$X
+  if(nrow(dX) != N) stop("The number of observations in X does not match the network.")
   rm("f.t.data")
   quiet(gc())
   coln            <- colnames(dX)
-  if("(Intercept)" %in% coln){stop("fixed effect model cannot include intercept")}
+  if("(Intercept)" %in% coln){stop("Fixed effect model cannot include intercept")}
   K               <- length(coln)
   nlinks          <- sum(network)
   out             <- list()
-  if(model == "logit"){
-    out           <- homophily.LogitFE(network, M, nvec, n, N, Nvec, index, indexgr,
+  if(model == "logit" & !symmetry){
+    out           <- homophily.LogitFE(network, fixed.effects, M, nvec, n, N, Nvec, index, indexgr,
                                          formula, dX, coln, K, init, nlinks, opt.ctr, print)
   }
-
+  if(model == "logit" & symmetry){
+    out           <- homophily.LogitFESym(network, M, nvec, n, N, Nvec, index, indexgr,
+                                       formula, dX, coln, K, init, nlinks, opt.ctr, print)
+  }
+  
   t2              <- Sys.time()
   timer           <- as.numeric(difftime(t2, t1, units = "secs"))
   if(print) {
@@ -178,11 +206,12 @@ homophily.FE <- function(network,
 
 
 
-homophily.LogitFE <- function(network, M, nvec, n, N, Nvec, index, indexgr,
+homophily.LogitFE <- function(network, fixed.effects, M, nvec, n, N, Nvec, index, indexgr,
                               formula, dX, coln, K, init, nlinks, opt.ctr, print){
   maxit           <- opt.ctr$maxit
   eps_f           <- opt.ctr$eps_f
   eps_g           <- opt.ctr$eps_g
+  twoside         <- fixed.effects == "two sides"
   if(is.null(maxit)){
     maxit         <- 500
   }
@@ -202,7 +231,10 @@ homophily.LogitFE <- function(network, M, nvec, n, N, Nvec, index, indexgr,
     beta          <- mylogit$coefficients[-1]
     mu            <- rep(mylogit$coefficients[1], n)
     names(mu)     <- NULL
-    nu            <- rep(0, n - M)
+    nu            <- NULL
+    if(twoside){
+      nu          <- rep(0, n - M)
+    }
     init          <- c(beta, mu, nu)
     initllh       <- -0.5*mylogit$deviance
   } else {
@@ -221,15 +253,21 @@ homophily.LogitFE <- function(network, M, nvec, n, N, Nvec, index, indexgr,
           beta    <- mylogit$coefficients[-1]
         }
       }
-      if(is.null(nu)){
+      if(is.null(nu) & twoside){
         nu        <- rep(0, n - M)
       }
       stopifnot(length(beta) == K)
       stopifnot(length(mu) == n)
-      stopifnot(length(nu) == (n - M))
+      if(twoside){
+        stopifnot(length(nu) == (n - M))
+      }
       init        <- c(beta, mu, nu)
     } else if(is.vector(init)){
-      stopifnot(length(init) == (K + 2*n - M))
+      if(twoside){
+        stopifnot(length(init) == (K + 2*n - M))
+      } else {
+        stopifnot(length(init) == (K + n))
+      }
     } 
   }
   
@@ -241,31 +279,39 @@ homophily.LogitFE <- function(network, M, nvec, n, N, Nvec, index, indexgr,
   quiet(gc())
   
   if(print) {
-    if(print){
-      cat("maximizer searching\n")
-    }
-    estim         <- fhomobetap(theta, c(network), dX, nvec, index, indexgr, M, maxit, eps_f, eps_g)
+    cat("maximizer searching\n")
+  } 
+  estim           <- NULL
+  if(twoside){
+    estim         <- fhomobeta2f(theta, c(network), dX, nvec, index, indexgr, M, maxit, eps_f, eps_g, print)
   } else {
-    estim         <- fhomobeta(theta, c(network), dX, nvec, index, indexgr, M, maxit, eps_f, eps_g)
+    estim         <- fhomobeta1f(theta, c(network), dX, nvec, index, indexgr, M, maxit, eps_f, eps_g, print)
   }
+
   
   # export degree
   theta           <- c(estim$estimate)
   names(theta)    <- names(init)
   beta            <- head(theta, K)
-  mu              <- theta[(K + 1):(K + n)]
-  nu              <- tail(theta, n - M)
   names(beta)     <- coln
-  nu              <- unlist(lapply(1:M, function(x) c(nu[(indexgr[x, 1] + 2 - x):(indexgr[x, 2] + 1 - x)], 0))) 
+  mu              <- theta[(K + 1):(K + n)]
+  nu              <- NULL
+  if(twoside){
+    nu            <- tail(theta, n - M)
+    nu            <- unlist(lapply(1:M, function(x) c(nu[(indexgr[x, 1] + 2 - x):(indexgr[x, 2] + 1 - x)], 0))) 
+    
+  }
   
   estim$estimate  <- c(estim$estimate)
   estim$gradient  <- c(estim$gradient)
   
-  out             <- list("model"           = "logit",
-                          "n"               = nvec,
-                          "n.obs"           = N,
-                          "n.links"         = nlinks,
-                          "K"               = K,
+  out             <- list("model.info"     = list("model"           = "logit", 
+                                                  "sym.network"     = FALSE,
+                                                  "fixed.effects"   = fixed.effects, 
+                                                  "n"               = nvec,
+                                                  "n.obs"           = N,
+                                                  "n.links"         = nlinks,
+                                                  "K"               = K),
                           "estimate"        = list(beta = beta, mu = mu, nu = nu),
                           "loglike"         = -estim$value,
                           "optim"           = estim,
@@ -277,7 +323,91 @@ homophily.LogitFE <- function(network, M, nvec, n, N, Nvec, index, indexgr,
 }
 
 
-homophily.LinFE.keep <- function(){
+homophily.LogitFESym <- function(network, M, nvec, n, N, Nvec, index, indexgr,
+                              formula, dX, coln, K, init, nlinks, opt.ctr, print){
+  maxit           <- opt.ctr$maxit
+  eps_f           <- opt.ctr$eps_f
+  eps_g           <- opt.ctr$eps_g
+  if(is.null(maxit)){
+    maxit         <- 500
+  }
+  if(is.null(eps_f)){
+    eps_f         <- 1e-6
+  }
+  if(is.null(eps_g)){
+    eps_g         <- 1e-5
+  }
   
+  #starting value
+  initllh         <- NULL
+  quiet(gc())
+  if(is.null(init)){
+    if(print) cat("starting point searching\n")
+    mylogit       <- glm(network ~ 1 + dX, family = binomial(link = "logit"))
+    beta          <- mylogit$coefficients[-1]
+    mu            <- rep(mylogit$coefficients[1], n)
+    names(mu)     <- NULL
+    init          <- c(beta, mu)
+    initllh       <- -0.5*mylogit$deviance
+  } else {
+    if(is.list(init)){
+      beta        <- c(init$beta)
+      mu          <- c(init$mu)
+      if(is.null(beta) || is.null(mu)){
+        if(print) cat("starting point searching\n")
+        mylogit   <- glm(network ~ 1 + dX, family = binomial(link = "logit"))
+        initllh   <- -0.5*mylogit$deviance
+        if(is.null(mu)){
+          mu      <- rep(mylogit$coefficients[1], n); names(mu) <- NULL
+        }
+        if(is.null(beta)){
+          beta    <- mylogit$coefficients[-1]
+        }
+      }
+      stopifnot(length(beta) == K)
+      stopifnot(length(mu) == n)
+      init        <- c(beta, mu)
+    } else if(is.vector(init)){
+      stopifnot(length(init) == (K + n))
+    } 
+  }
+  
+  quiet(gc())
+  
+  theta           <- init
+  
+  estim           <- NULL
+  quiet(gc())
+  
+  if(print) {
+    cat("maximizer searching\n")
+  } 
+  estim           <- fhomobetasym(theta, c(network), dX, nvec, index, indexgr, M, maxit, eps_f, eps_g, print)
+  
+  
+  # export degree
+  theta           <- c(estim$estimate)
+  names(theta)    <- names(init)
+  beta            <- head(theta, K)
+  names(beta)     <- coln
+  mu              <- tail(theta, n)
+  
+  estim$estimate  <- c(estim$estimate)
+  estim$gradient  <- c(estim$gradient)
+  
+  out             <- list("model.info"     = list("model"           = "logit", 
+                                                  "sym.network"     = TRUE,
+                                                  "n"               = nvec,
+                                                  "n.obs"           = N,
+                                                  "n.links"         = nlinks,
+                                                  "K"               = K),
+                          "estimate"        = list(beta = beta, mu = mu),
+                          "loglike"         = -estim$value,
+                          "optim"           = estim,
+                          "init"            = init,
+                          "loglike(init)"   = initllh)
+  
+  class(out)      <- "homophily.FE"
+  out
 }
   

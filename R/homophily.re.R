@@ -1,7 +1,7 @@
 #' @title Estimate Network Formation Model with Degree Heterogeneity as Random Effects
-#' @param network matrix or list of sub-matrix of social interactions containing 0 and 1, where links are represented by 1
+#' @param network matrix or list of sub-matrix of social interactions containing 0 and 1, where links are represented by 1.
 #' @param formula an object of class \link[stats]{formula}: a symbolic description of the model. The `formula` should be as for example \code{~ x1 + x2}
-#' where `x1`, `x2` are explanatory variable of links formation
+#' where `x1`, `x2` are explanatory variable of links formation.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `homophily` is called.
 #' @param fixed.effects boolean indicating if sub-network heterogeneity as fixed effects should be included.
@@ -27,7 +27,7 @@
 #' \deqn{p_{ij} = F(\mathbf{x}_{ij}'\beta + \mu_j + \nu_j)}{Pij = F(Xij'*\beta + \mu_i + \nu_j),}
 #' where \eqn{F} is the cumulative of the standard normal distribution. Unobserved degree heterogeneity is captured by
 #' \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as random effects.  
-#' @seealso \code{\link{homophily.FE}}.
+#' @seealso \code{\link{homophily.fe}}.
 #' @importFrom ddpcr quiet
 #' @importFrom stats lm
 #' @importFrom stats var
@@ -82,7 +82,7 @@
 #' mu  <- unlist(mu)
 #' nu  <- unlist(nu)
 #' 
-#' out   <- homophily(network =  Glist, formula = ~ dX, fixed.effects = TRUE, 
+#' out   <- homophily.re(network =  Glist, formula = ~ dX, fixed.effects = TRUE, 
 #'                    iteration = 1e3)
 #' 
 #' # plot simulations
@@ -114,7 +114,7 @@
 #' abline(h = nu[i], col = "red")
 #' }
 #' @export
-homophily <- function(network,
+homophily.re <- function(network,
                       formula,
                       data,
                       fixed.effects = FALSE,
@@ -243,15 +243,8 @@ homophily <- function(network,
                           smu2    = smu2,
                           snu2    = snu2,
                           rho     = rho)
-  estim           <- NULL
-  quiet(gc())
-  if(print) {
-    estim         <- updategparms1(network, dX, invdXdX, beta, mu, nu, smu2, snu2, rho, index, indexgr,
-                                   INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration)
-  } else {
-    estim         <- updategparms2(network, dX, invdXdX, beta, mu, nu, smu2, snu2, rho, index, indexgr,
-                                   INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration)
-  }
+  estim           <- updategparms(network, dX, invdXdX, beta, mu, nu, smu2, snu2, rho, index, indexgr,
+                                INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, print)
   
   colnames(estim$beta)     <- coln
   

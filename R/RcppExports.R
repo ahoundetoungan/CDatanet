@@ -149,28 +149,52 @@ fdatar <- function(X, ftovar, nvar, K) {
     .Call(`_CDatanet_fdatar`, X, ftovar, nvar, K)
 }
 
+frMtoVbyCOL <- function(u, N, M) {
+    .Call(`_CDatanet_frMtoVbyCOL`, u, N, M)
+}
+
+frMtoVbyCOLsym <- function(u, N, M) {
+    .Call(`_CDatanet_frMtoVbyCOLsym`, u, N, M)
+}
+
 fmusum <- function(mu, nu, index, indexgr, M, N) {
     .Call(`_CDatanet_fmusum`, mu, nu, index, indexgr, M, N)
 }
 
-updategparms1 <- function(a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration) {
-    .Call(`_CDatanet_updategparms1`, a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration)
+updategparms <- function(a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, Print) {
+    .Call(`_CDatanet_updategparms`, a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, Print)
 }
 
-updategparms2 <- function(a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration) {
-    .Call(`_CDatanet_updategparms2`, a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration)
+fhomobeta2f <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, Print = TRUE) {
+    .Call(`_CDatanet_fhomobeta2f`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, Print)
 }
 
-fhomobeta <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5) {
-    .Call(`_CDatanet_fhomobeta`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g)
+fhomobeta1f <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, Print = TRUE) {
+    .Call(`_CDatanet_fhomobeta1f`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, Print)
 }
 
-fhomobetap <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-15, eps_g = 1e-15) {
-    .Call(`_CDatanet_fhomobetap`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g)
+fhomobetasym <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, Print = TRUE) {
+    .Call(`_CDatanet_fhomobetasym`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, Print)
+}
+
+hdataF2L <- function(data, nvec, index, M) {
+    .Call(`_CDatanet_hdataF2L`, data, nvec, index, M)
+}
+
+hdataF2U <- function(data, nvec, index, indexgr, M) {
+    .Call(`_CDatanet_hdataF2U`, data, nvec, index, indexgr, M)
+}
+
+hdata2S <- function(data, nvec, index, indexgr, M) {
+    .Call(`_CDatanet_hdata2S`, data, nvec, index, indexgr, M)
 }
 
 fySar <- function(y, Gy, G, eps, igroup, ngroup, psi, lambda) {
     invisible(.Call(`_CDatanet_fySar`, y, Gy, G, eps, igroup, ngroup, psi, lambda))
+}
+
+fySarRE <- function(y, Gye, ye, G, eps, igroup, ngroup, psi, lambda) {
+    invisible(.Call(`_CDatanet_fySarRE`, y, Gye, ye, G, eps, igroup, ngroup, psi, lambda))
 }
 
 foptimSAR <- function(alphatilde, X, invXX, G, I, n, y, Gy, ngroup, FE, print) {
