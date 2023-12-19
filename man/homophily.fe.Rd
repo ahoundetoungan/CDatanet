@@ -9,7 +9,7 @@ homophily.fe(
   formula,
   data,
   symmetry = FALSE,
-  fixed.effects = c("one way", "two sides"),
+  fe.way = 1,
   init = NULL,
   opt.ctr = list(maxit = 10000, eps_f = 1e-09, eps_g = 1e-09),
   print = TRUE
@@ -26,7 +26,7 @@ in the model. If not found in data, the variables are taken from \code{environme
 
 \item{symmetry}{indicates whether the network model is symmetric (see details).}
 
-\item{fixed.effects}{indicates the type of fixed effects: \code{"one way"} or \code{"two sides"} (see details).}
+\item{fe.way}{indicates  fixed effect way. Expected value is 1 or 2 (see details).}
 
 \item{init}{(optional) either a list of starting values containing \code{beta}, an K-dimensional vector of the explanatory variables parameter,
 \code{mu} an n-dimensional vector, and \code{nu} an n-dimensional vector,
@@ -52,15 +52,15 @@ package \pkg{RcppNumerical}.}
 }
 \details{
 Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.
-This probability is specified for the two-side fixed effect model as
+This probability is specified for two-way effect models (\code{fe.way = 2}) as
 \deqn{p_{ij} = F(\mathbf{x}_{ij}'\beta + \mu_j + \nu_j)}{Pij = F(Xij'*\beta + \mu_i + \nu_j),}
-where \eqn{F} is the cumulative of the standard normal distribution. Unobserved degree heterogeneity is captured by
+where \eqn{F} is the cumulative of the standard logistic distribution. Unobserved degree heterogeneity is captured by
 \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as fixed effects. As shown by Yan et al. (2019), the estimator of
 the parameter \eqn{\beta} is biased. A bias correction is then necessary and is not implemented in this version. However
 the estimator of \eqn{\mu_i} and \eqn{\nu_j} are consistent.\cr
 
-For one-way-fixed effect models, \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the
-fixed effects need to be \code{"one way"}.
+For one-way fixed effect models (\code{fe.way = 1}), \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the
+fixed effects need to be one way.
 }
 \examples{
 \donttest{
@@ -108,7 +108,7 @@ for (m in 1:M) {
 mu  <- unlist(mu)
 nu  <- unlist(nu)
 
-out   <- homophily.fe(network =  Glist, formula = ~ -1 + dX, fixed.effects = "two sides")
+out   <- homophily.fe(network =  Glist, formula = ~ -1 + dX, fe.way = 2)
 muhat <- out$estimate$mu
 nuhat <- out$estimate$nu
 plot(mu, muhat)

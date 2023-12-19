@@ -7,7 +7,7 @@
 # @param model indicates whether the model is `logit` or `linear` (a linear-in-mean model).
 # @param rem.FE indicates whether the fixed effects should be removed by taking the model in differences.
 #' @param symmetry indicates whether the network model is symmetric (see details).
-#' @param fixed.effects indicates the type of fixed effects: `"one way"` or `"two sides"` (see details).
+#' @param fe.way indicates  fixed effect way. Expected value is 1 or 2 (see details).
 #' @param init (optional) either a list of starting values containing `beta`, an K-dimensional vector of the explanatory variables parameter, 
 #' `mu` an n-dimensional vector, and `nu` an n-dimensional vector, 
 #' where K is the number of explanatory variables and n is the number of individuals; or a vector of starting value for `c(beta, mu, nu)`.  
@@ -17,15 +17,15 @@
 #' `homophily.FE` is used to estimate a network formation model with homophily. The model includes degree heterogeneity as fixed effects (see details).
 #' @details
 #' Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.
-#' This probability is specified for the two-side fixed effect model as
+#' This probability is specified for two-way effect models (`fe.way = 2`) as
 #' \deqn{p_{ij} = F(\mathbf{x}_{ij}'\beta + \mu_j + \nu_j)}{Pij = F(Xij'*\beta + \mu_i + \nu_j),}
-#' where \eqn{F} is the cumulative of the standard normal distribution. Unobserved degree heterogeneity is captured by
+#' where \eqn{F} is the cumulative of the standard logistic distribution. Unobserved degree heterogeneity is captured by
 #' \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as fixed effects. As shown by Yan et al. (2019), the estimator of 
 #' the parameter \eqn{\beta} is biased. A bias correction is then necessary and is not implemented in this version. However
 #' the estimator of \eqn{\mu_i} and \eqn{\nu_j} are consistent.\cr
 #' 
-#' For one-way-fixed effect models, \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the 
-#' fixed effects need to be `"one way"`.
+#' For one-way fixed effect models (`fe.way = 1`), \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the 
+#' fixed effects need to be one way.
 #' @seealso \code{\link{homophily.re}}.
 #' @references 
 #' Yan, T., Jiang, B., Fienberg, S. E., & Leng, C. (2019). Statistical inference in a directed network model with covariates. \emph{Journal of the American Statistical Association}, 114(526), 857-868, \doi{https://doi.org/10.1080/01621459.2018.1448829}.
@@ -87,7 +87,7 @@
 #' mu  <- unlist(mu)
 #' nu  <- unlist(nu)
 #' 
-#' out   <- homophily.fe(network =  Glist, formula = ~ -1 + dX, fixed.effects = "two sides")
+#' out   <- homophily.fe(network =  Glist, formula = ~ -1 + dX, fe.way = 2)
 #' muhat <- out$estimate$mu
 #' nuhat <- out$estimate$nu
 #' plot(mu, muhat)
@@ -99,22 +99,17 @@ homophily.fe <- function(network,
                          data,
                          #model     = "logit",
                          #rem.FE    = FALSE,
-                         symmetry      = FALSE,
-                         fixed.effects = c("one way", "two sides"),
-                         init          = NULL,
-                         opt.ctr       = list(maxit = 1e4, eps_f = 1e-9, eps_g = 1e-9),
-                         print         = TRUE){
+                         symmetry = FALSE,
+                         fe.way   = 1,
+                         init     = NULL,
+                         opt.ctr  = list(maxit = 1e4, eps_f = 1e-9, eps_g = 1e-9),
+                         print    = TRUE){
   
-  t1              <- Sys.time()
-  model           <- "logit"
-  rem.FE          <- FALSE
-  fixed.effects   <- tolower(fixed.effects[1])
-  if(symmetry & fixed.effects == "two sides") stop("Two side fixed effects are not allowed for symmetric networks.")
-  stopifnot(fixed.effects %in% c("one way", "two sides"))
+  t1      <- Sys.time()
+  fe.way  <- as.numeric(fe.way[1])
+  if(symmetry & fe.way == 2) stop("Two side fixed effects are not allowed for symmetric network models.")
+  stopifnot(fe.way %in% (1:2))
   stopifnot(is.null(init) || is.vector(init) || is.list(init))
-  model           <- tolower(model)[1]          
-  stopifnot(model %in% c("logit", "linear"))
-  if((model == "logit") & rem.FE) stop("Fixed effects cannot be removed from the logit model.")
 
   # Data and dimensions
   if (!is.list(network)) {
@@ -174,7 +169,7 @@ homophily.fe <- function(network,
   nlinks          <- sum(network)
   out             <- list()
   if(model == "logit" & !symmetry){
-    out           <- homophily.LogitFE(network, fixed.effects, M, nvec, n, N, Nvec, index, indexgr,
+    out           <- homophily.LogitFE(network, fe.way, M, nvec, n, N, Nvec, index, indexgr,
                                          formula, dX, coln, K, init, nlinks, opt.ctr, print)
   }
   if(model == "logit" & symmetry){
@@ -206,12 +201,11 @@ homophily.fe <- function(network,
 
 
 
-homophily.LogitFE <- function(network, fixed.effects, M, nvec, n, N, Nvec, index, indexgr,
+homophily.LogitFE <- function(network, fe.way, M, nvec, n, N, Nvec, index, indexgr,
                               formula, dX, coln, K, init, nlinks, opt.ctr, print){
   maxit           <- opt.ctr$maxit
   eps_f           <- opt.ctr$eps_f
   eps_g           <- opt.ctr$eps_g
-  twoside         <- fixed.effects == "two sides"
   if(is.null(maxit)){
     maxit         <- 500
   }
@@ -232,7 +226,7 @@ homophily.LogitFE <- function(network, fixed.effects, M, nvec, n, N, Nvec, index
     mu            <- rep(mylogit$coefficients[1], n)
     names(mu)     <- NULL
     nu            <- NULL
-    if(twoside){
+    if(fe.way == 2){
       nu          <- rep(0, n - M)
     }
     init          <- c(beta, mu, nu)
@@ -253,17 +247,17 @@ homophily.LogitFE <- function(network, fixed.effects, M, nvec, n, N, Nvec, index
           beta    <- mylogit$coefficients[-1]
         }
       }
-      if(is.null(nu) & twoside){
+      if(is.null(nu) & (fe.way == 2)){
         nu        <- rep(0, n - M)
       }
       stopifnot(length(beta) == K)
       stopifnot(length(mu) == n)
-      if(twoside){
+      if(fe.way == 2){
         stopifnot(length(nu) == (n - M))
       }
       init        <- c(beta, mu, nu)
     } else if(is.vector(init)){
-      if(twoside){
+      if(fe.way == 2){
         stopifnot(length(init) == (K + 2*n - M))
       } else {
         stopifnot(length(init) == (K + n))
@@ -282,7 +276,7 @@ homophily.LogitFE <- function(network, fixed.effects, M, nvec, n, N, Nvec, index
     cat("maximizer searching\n")
   } 
   estim           <- NULL
-  if(twoside){
+  if(fe.way == 2){
     estim         <- fhomobeta2f(theta, c(network), dX, nvec, index, indexgr, M, maxit, eps_f, eps_g, print)
   } else {
     estim         <- fhomobeta1f(theta, c(network), dX, nvec, index, indexgr, M, maxit, eps_f, eps_g, print)
@@ -296,22 +290,21 @@ homophily.LogitFE <- function(network, fixed.effects, M, nvec, n, N, Nvec, index
   names(beta)     <- coln
   mu              <- theta[(K + 1):(K + n)]
   nu              <- NULL
-  if(twoside){
+  if(fe.way == 2){
     nu            <- tail(theta, n - M)
     nu            <- unlist(lapply(1:M, function(x) c(nu[(indexgr[x, 1] + 2 - x):(indexgr[x, 2] + 1 - x)], 0))) 
-    
   }
   
   estim$estimate  <- c(estim$estimate)
   estim$gradient  <- c(estim$gradient)
   
-  out             <- list("model.info"     = list("model"           = "logit", 
-                                                  "sym.network"     = FALSE,
-                                                  "fixed.effects"   = fixed.effects, 
-                                                  "n"               = nvec,
-                                                  "n.obs"           = N,
-                                                  "n.links"         = nlinks,
-                                                  "K"               = K),
+  out             <- list("model.info"     = list("model"       = "logit", 
+                                                  "sym.network" = FALSE,
+                                                  "fe.way"      = fe.way, 
+                                                  "n"           = nvec,
+                                                  "n.obs"       = N,
+                                                  "n.links"     = nlinks,
+                                                  "K"           = K),
                           "estimate"        = list(beta = beta, mu = mu, nu = nu),
                           "loglike"         = -estim$value,
                           "optim"           = estim,
