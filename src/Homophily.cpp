@@ -907,7 +907,7 @@ List fhomobeta1f(Eigen::VectorXd theta,
   int n         = sum(nvec);
   int Kx        = dx.n_cols;
   
-  int nparms    = Kx + 2*n - M;
+  int nparms    = Kx + n;
   arma::mat adx = dx.each_col()%a;
   
   arma::vec d(n), b(n);
@@ -1083,7 +1083,7 @@ List fhomobetasym(Eigen::VectorXd theta,
   int n         = sum(nvec);
   int Kx        = dx.n_cols;
   
-  int nparms    = Kx + 2*n - M;
+  int nparms    = Kx + n;
   arma::mat adx = dx.each_col()%a;
   
   arma::vec d(n), b(n);
