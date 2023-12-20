@@ -1012,7 +1012,7 @@ public:
     gd.head(Kx)            = arma::trans(sum(adx, 0));
     
     int igr1, igr2, nm, j(0), j1, j2;
-    arma::vec mum, mumj, tmp, ai, exbmn, smunu;
+    arma::vec mum, tmp, ai, exbmn, smunu;
     arma::mat indexm, dXi;
     arma::uvec indexi;
     
@@ -1030,12 +1030,8 @@ public:
           ai           = a.subvec(j1, j2);
           dXi          = dx.rows(j1, j2);
           
-          // muj when nui is fixed
-          mumj         = mum;
-          mumj.shed_row(i);
-          
           // sum of mu(i) + numj
-          smunu        = mum(i) + mumj.tail(nm - 1 - i);
+          smunu        = mum(i) + mum.tail(nm - 1 - i);
           
           exbmn        = exp(dXb.subvec(j1, j2) + smunu);
           tmp          = exbmn/(1 + exbmn);
@@ -1050,7 +1046,7 @@ public:
         
         if(i > 0){
           indexi       = arma::conv_to<arma::uvec>::from(indexm.col(0).head(i) + arma::linspace(i - 1, 0, i));
-          tmp          = exp(dXb.elem(indexi) + mumj.head(i) + mum(i));
+          tmp          = exp(dXb.elem(indexi) + mum.head(i) + mum(i));
           gd(m1 + j)  += b(j) - sum(tmp/(1 + tmp));
         }
         ++ j;

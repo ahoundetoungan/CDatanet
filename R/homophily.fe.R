@@ -4,8 +4,6 @@
 #' where `x1`, `x2` are explanatory variable of links formation
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `homophily` is called.
-# @param model indicates whether the model is `logit` or `linear` (a linear-in-mean model).
-# @param rem.FE indicates whether the fixed effects should be removed by taking the model in differences.
 #' @param symmetry indicates whether the network model is symmetric (see details).
 #' @param fe.way indicates  fixed effect way. Expected value is 1 or 2 (see details).
 #' @param init (optional) either a list of starting values containing `beta`, an K-dimensional vector of the explanatory variables parameter, 
@@ -23,7 +21,6 @@
 #' \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as fixed effects. As shown by Yan et al. (2019), the estimator of 
 #' the parameter \eqn{\beta} is biased. A bias correction is then necessary and is not implemented in this version. However
 #' the estimator of \eqn{\mu_i} and \eqn{\nu_j} are consistent.\cr
-#' 
 #' For one-way fixed effect models (`fe.way = 1`), \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the 
 #' fixed effects need to be one way.
 #' @seealso \code{\link{homophily.re}}.
@@ -97,8 +94,6 @@
 homophily.fe <- function(network,
                          formula,
                          data,
-                         #model     = "logit",
-                         #rem.FE    = FALSE,
                          symmetry = FALSE,
                          fe.way   = 1,
                          init     = NULL,
@@ -168,13 +163,12 @@ homophily.fe <- function(network,
   K               <- length(coln)
   nlinks          <- sum(network)
   out             <- list()
-  if(model == "logit" & !symmetry){
-    out           <- homophily.LogitFE(network, fe.way, M, nvec, n, N, Nvec, index, indexgr,
-                                         formula, dX, coln, K, init, nlinks, opt.ctr, print)
-  }
-  if(model == "logit" & symmetry){
+  if(symmetry){
     out           <- homophily.LogitFESym(network, M, nvec, n, N, Nvec, index, indexgr,
-                                       formula, dX, coln, K, init, nlinks, opt.ctr, print)
+                                          formula, dX, coln, K, init, nlinks, opt.ctr, print)
+  } else {
+    out           <- homophily.LogitFE(network, fe.way, M, nvec, n, N, Nvec, index, indexgr,
+                                       formula, dX, coln, K, init, nlinks, opt.ctr, print) 
   }
   
   t2              <- Sys.time()

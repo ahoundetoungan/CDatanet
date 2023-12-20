@@ -58,7 +58,6 @@ where \eqn{F} is the cumulative of the standard logistic distribution. Unobserve
 \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as fixed effects. As shown by Yan et al. (2019), the estimator of
 the parameter \eqn{\beta} is biased. A bias correction is then necessary and is not implemented in this version. However
 the estimator of \eqn{\mu_i} and \eqn{\nu_j} are consistent.\cr
-
 For one-way fixed effect models (\code{fe.way = 1}), \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the
 fixed effects need to be one way.
 }
