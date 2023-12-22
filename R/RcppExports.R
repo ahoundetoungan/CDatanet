@@ -161,8 +161,16 @@ fmusum <- function(mu, nu, index, indexgr, M, N) {
     .Call(`_CDatanet_fmusum`, mu, nu, index, indexgr, M, N)
 }
 
-updategparms <- function(a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, Print) {
-    .Call(`_CDatanet_updategparms`, a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, Print)
+fmusumsym <- function(mu, index, indexgr, M, N) {
+    .Call(`_CDatanet_fmusumsym`, mu, index, indexgr, M, N)
+}
+
+bayesmunu <- function(a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, Print) {
+    .Call(`_CDatanet_bayesmunu`, a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, Print)
+}
+
+bayesmu <- function(a, dx, invdxdx, beta0, mu0, smu20, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, sym, Print) {
+    .Call(`_CDatanet_bayesmu`, a, dx, invdxdx, beta0, mu0, smu20, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, sym, Print)
 }
 
 fhomobeta2f <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {

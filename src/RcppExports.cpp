@@ -793,9 +793,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// updategparms
-List updategparms(const arma::vec& a, const arma::mat& dx, const arma::mat& invdxdx, const arma::vec& beta0, const arma::vec& mu0, const arma::vec& nu0, const double& smu20, const double& snu20, const double& rho0, const arma::mat& index, const arma::mat& indexgr, const arma::mat& INDEXgr, const int& nfix, const int& N, const int& M, const int& K, const int& Kx, const arma::vec& nvec, const int& n, const int& iteration, const bool& Print);
-RcppExport SEXP _CDatanet_updategparms(SEXP aSEXP, SEXP dxSEXP, SEXP invdxdxSEXP, SEXP beta0SEXP, SEXP mu0SEXP, SEXP nu0SEXP, SEXP smu20SEXP, SEXP snu20SEXP, SEXP rho0SEXP, SEXP indexSEXP, SEXP indexgrSEXP, SEXP INDEXgrSEXP, SEXP nfixSEXP, SEXP NSEXP, SEXP MSEXP, SEXP KSEXP, SEXP KxSEXP, SEXP nvecSEXP, SEXP nSEXP, SEXP iterationSEXP, SEXP PrintSEXP) {
+// fmusumsym
+arma::vec fmusumsym(const arma::vec& mu, const arma::mat& index, const arma::mat& indexgr, const int& M, const int& N);
+RcppExport SEXP _CDatanet_fmusumsym(SEXP muSEXP, SEXP indexSEXP, SEXP indexgrSEXP, SEXP MSEXP, SEXP NSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type index(indexSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type indexgr(indexgrSEXP);
+    Rcpp::traits::input_parameter< const int& >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const int& >::type N(NSEXP);
+    rcpp_result_gen = Rcpp::wrap(fmusumsym(mu, index, indexgr, M, N));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bayesmunu
+List bayesmunu(const arma::vec& a, const arma::mat& dx, const arma::mat& invdxdx, const arma::vec& beta0, const arma::vec& mu0, const arma::vec& nu0, const double& smu20, const double& snu20, const double& rho0, const arma::mat& index, const arma::mat& indexgr, const arma::mat& INDEXgr, const int& nfix, const int& N, const int& M, const int& K, const int& Kx, const arma::vec& nvec, const int& n, const int& iteration, const bool& Print);
+RcppExport SEXP _CDatanet_bayesmunu(SEXP aSEXP, SEXP dxSEXP, SEXP invdxdxSEXP, SEXP beta0SEXP, SEXP mu0SEXP, SEXP nu0SEXP, SEXP smu20SEXP, SEXP snu20SEXP, SEXP rho0SEXP, SEXP indexSEXP, SEXP indexgrSEXP, SEXP INDEXgrSEXP, SEXP nfixSEXP, SEXP NSEXP, SEXP MSEXP, SEXP KSEXP, SEXP KxSEXP, SEXP nvecSEXP, SEXP nSEXP, SEXP iterationSEXP, SEXP PrintSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -820,7 +835,36 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int& >::type n(nSEXP);
     Rcpp::traits::input_parameter< const int& >::type iteration(iterationSEXP);
     Rcpp::traits::input_parameter< const bool& >::type Print(PrintSEXP);
-    rcpp_result_gen = Rcpp::wrap(updategparms(a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, Print));
+    rcpp_result_gen = Rcpp::wrap(bayesmunu(a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, Print));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bayesmu
+List bayesmu(const arma::vec& a, const arma::mat& dx, const arma::mat& invdxdx, const arma::vec& beta0, const arma::vec& mu0, const double& smu20, const arma::mat& index, const arma::mat& indexgr, const arma::mat& INDEXgr, const int& nfix, const int& N, const int& M, const int& K, const int& Kx, const arma::vec& nvec, const int& n, const int& iteration, const bool& sym, const bool& Print);
+RcppExport SEXP _CDatanet_bayesmu(SEXP aSEXP, SEXP dxSEXP, SEXP invdxdxSEXP, SEXP beta0SEXP, SEXP mu0SEXP, SEXP smu20SEXP, SEXP indexSEXP, SEXP indexgrSEXP, SEXP INDEXgrSEXP, SEXP nfixSEXP, SEXP NSEXP, SEXP MSEXP, SEXP KSEXP, SEXP KxSEXP, SEXP nvecSEXP, SEXP nSEXP, SEXP iterationSEXP, SEXP symSEXP, SEXP PrintSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type dx(dxSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type invdxdx(invdxdxSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type beta0(beta0SEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type mu0(mu0SEXP);
+    Rcpp::traits::input_parameter< const double& >::type smu20(smu20SEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type index(indexSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type indexgr(indexgrSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type INDEXgr(INDEXgrSEXP);
+    Rcpp::traits::input_parameter< const int& >::type nfix(nfixSEXP);
+    Rcpp::traits::input_parameter< const int& >::type N(NSEXP);
+    Rcpp::traits::input_parameter< const int& >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const int& >::type K(KSEXP);
+    Rcpp::traits::input_parameter< const int& >::type Kx(KxSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type nvec(nvecSEXP);
+    Rcpp::traits::input_parameter< const int& >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const int& >::type iteration(iterationSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type sym(symSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type Print(PrintSEXP);
+    rcpp_result_gen = Rcpp::wrap(bayesmu(a, dx, invdxdx, beta0, mu0, smu20, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, sym, Print));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1382,7 +1426,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CDatanet_frMtoVbyCOL", (DL_FUNC) &_CDatanet_frMtoVbyCOL, 3},
     {"_CDatanet_frMtoVbyCOLsym", (DL_FUNC) &_CDatanet_frMtoVbyCOLsym, 3},
     {"_CDatanet_fmusum", (DL_FUNC) &_CDatanet_fmusum, 6},
-    {"_CDatanet_updategparms", (DL_FUNC) &_CDatanet_updategparms, 21},
+    {"_CDatanet_fmusumsym", (DL_FUNC) &_CDatanet_fmusumsym, 5},
+    {"_CDatanet_bayesmunu", (DL_FUNC) &_CDatanet_bayesmunu, 21},
+    {"_CDatanet_bayesmu", (DL_FUNC) &_CDatanet_bayesmu, 19},
     {"_CDatanet_fhomobeta2f", (DL_FUNC) &_CDatanet_fhomobeta2f, 12},
     {"_CDatanet_fhomobeta1f", (DL_FUNC) &_CDatanet_fhomobeta1f, 12},
     {"_CDatanet_fhomobetasym", (DL_FUNC) &_CDatanet_fhomobetasym, 12},

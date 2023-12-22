@@ -36,7 +36,9 @@ Address the case where a subnetwork consists of a single agent.
 AIC and BIC are added to the output of cdnet. They can be used to choose Rbar.
 
 # Changes in version 2.1.3
-Homophily models with fixed effects can be one side or two sides. 
-Homophily models with fixed effects symmetric networks are added.
 homophily has been changed to homophily.re for the random effect models.
 homophily.FE has heen changed to homophily.fe
+Random effects in homophily.re can be one side or two sides. 
+Fixed effects in homophily.fe can be one side or two sides.
+Symmetric network models are included in homophily.re.
+Symmetric network models are included in homophily.fe

@@ -26,7 +26,7 @@ in the model. If not found in data, the variables are taken from \code{environme
 
 \item{symmetry}{indicates whether the network model is symmetric (see details).}
 
-\item{fe.way}{indicates  fixed effect way. Expected value is 1 or 2 (see details).}
+\item{fe.way}{indicates the fixed effect way. The expected value is 1 or 2 (see details).}
 
 \item{init}{(optional) either a list of starting values containing \code{beta}, an K-dimensional vector of the explanatory variables parameter,
 \code{mu} an n-dimensional vector, and \code{nu} an n-dimensional vector,
@@ -48,14 +48,15 @@ package \pkg{RcppNumerical}.}
 \item{loglike(init)}{log-likelihood at the starting value.}
 }
 \description{
-\code{homophily.FE} is used to estimate a network formation model with homophily. The model includes degree heterogeneity as fixed effects (see details).
+\code{homophily.fe} implements a Logit estimator for network formation model with homophily. The model includes degree heterogeneity as fixed effects (see details).
 }
 \details{
 Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.
 This probability is specified for two-way effect models (\code{fe.way = 2}) as
 \deqn{p_{ij} = F(\mathbf{x}_{ij}'\beta + \mu_j + \nu_j)}{Pij = F(Xij'*\beta + \mu_i + \nu_j),}
 where \eqn{F} is the cumulative of the standard logistic distribution. Unobserved degree heterogeneity is captured by
-\eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as fixed effects. As shown by Yan et al. (2019), the estimator of
+\eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as fixed effects (see \code{\link{homophily.re}} for random effect models).
+As shown by Yan et al. (2019), the estimator of
 the parameter \eqn{\beta} is biased. A bias correction is then necessary and is not implemented in this version. However
 the estimator of \eqn{\mu_i} and \eqn{\nu_j} are consistent.\cr
 For one-way fixed effect models (\code{fe.way = 1}), \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the

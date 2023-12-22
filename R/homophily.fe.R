@@ -5,20 +5,21 @@
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `homophily` is called.
 #' @param symmetry indicates whether the network model is symmetric (see details).
-#' @param fe.way indicates  fixed effect way. Expected value is 1 or 2 (see details).
+#' @param fe.way indicates the fixed effect way. The expected value is 1 or 2 (see details).
 #' @param init (optional) either a list of starting values containing `beta`, an K-dimensional vector of the explanatory variables parameter, 
 #' `mu` an n-dimensional vector, and `nu` an n-dimensional vector, 
 #' where K is the number of explanatory variables and n is the number of individuals; or a vector of starting value for `c(beta, mu, nu)`.  
 #' @param opt.ctr (optional) is a list of `maxit`, `eps_f`, and `eps_g`, which are control parameters used by the solver `optim_lbfgs`, of the package \pkg{RcppNumerical}.
 #' @param print Boolean indicating if the estimation progression should be printed.
 #' @description 
-#' `homophily.FE` is used to estimate a network formation model with homophily. The model includes degree heterogeneity as fixed effects (see details).
+#' `homophily.fe` implements a Logit estimator for network formation model with homophily. The model includes degree heterogeneity as fixed effects (see details).
 #' @details
 #' Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.
 #' This probability is specified for two-way effect models (`fe.way = 2`) as
 #' \deqn{p_{ij} = F(\mathbf{x}_{ij}'\beta + \mu_j + \nu_j)}{Pij = F(Xij'*\beta + \mu_i + \nu_j),}
 #' where \eqn{F} is the cumulative of the standard logistic distribution. Unobserved degree heterogeneity is captured by
-#' \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as fixed effects. As shown by Yan et al. (2019), the estimator of 
+#' \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as fixed effects (see \code{\link{homophily.re}} for random effect models). 
+#' As shown by Yan et al. (2019), the estimator of 
 #' the parameter \eqn{\beta} is biased. A bias correction is then necessary and is not implemented in this version. However
 #' the estimator of \eqn{\mu_i} and \eqn{\nu_j} are consistent.\cr
 #' For one-way fixed effect models (`fe.way = 1`), \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the 
@@ -129,7 +130,7 @@ homophily.fe <- function(network,
   
   quiet(gc())
   if (sum(!((network == 0) | (network == 1))) != 0) {
-    stop("network should contain only 0 and 1")
+    stop("Network should contain only 0 and 1.")
   }
   
   tmp1    <- NULL
@@ -163,7 +164,7 @@ homophily.fe <- function(network,
     hasX          <- TRUE
   }
   coln            <- colnames(dX)
-  if("(Intercept)" %in% coln){stop("Fixed effect model cannot include intercept")}
+  if("(Intercept)" %in% coln){stop("Fixed effect model cannot include intercept.")}
   K               <- length(coln)
   nlinks          <- sum(network)
   out             <- list()
@@ -327,7 +328,7 @@ homophily.LogitFE <- function(network, fe.way, M, nvec, n, N, Nvec, index, index
                           "init"            = init,
                           "loglike(init)"   = initllh)
   
-  class(out)      <- "homophily.FE"
+  class(out)      <- "homophily.fe"
   out
 }
 
@@ -436,7 +437,7 @@ homophily.LogitFESym <- function(network, M, nvec, n, N, Nvec, index, indexgr,
                           "init"            = init,
                           "loglike(init)"   = initllh)
   
-  class(out)      <- "homophily.FE"
+  class(out)      <- "homophily.fe"
   out
 }
   

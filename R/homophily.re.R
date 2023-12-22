@@ -4,7 +4,9 @@
 #' where `x1`, `x2` are explanatory variable of links formation.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `homophily` is called.
-#' @param fixed.effects boolean indicating if sub-network heterogeneity as fixed effects should be included.
+#' @param symmetry indicates whether the network model is symmetric (see details).
+#' @param group.fe indicates whether the model includes group fixed effects.
+#' @param re.way indicates the random effect way. The expected value is 1 or 2 (see details).
 #' @param init (optional) list of starting values containing `beta`, an K-dimensional vector of the explanatory variables parameter, 
 #' `mu` an n-dimensional vector, and `nu` an n-dimensional vector, `smu2` the variance of `mu`, 
 #' and `snu2` the variance of `nu`, 
@@ -12,21 +14,20 @@
 #' @param iteration the number of iterations to be performed. 
 #' @param print boolean indicating if the estimation progression should be printed.
 #' @return A list consisting of:
-#'     \item{n}{number of individuals in each network.}
-#'     \item{n.obs}{number of observations.}
-#'     \item{n.links}{number of links.}
-#'     \item{K}{number of explanatory variables.}
+#'     \item{model.info}{list of model information, such as the type of random effects, whether the model is symmetric,
+#'      number of observations, etc.}
 #'     \item{posterior}{list of simulations from the posterior distribution.}
-#'     \item{iteration}{number of performed iterations.}
 #'     \item{init}{returned list of starting values.}
 #' @description 
-#' `homophily` implements a Bayesian estimator for network formation model with homophily. The model includes degree heterogeneity as random effects (see details).
+#' `homophily.re` implements a Bayesian Probit estimator for network formation model with homophily. The model includes degree heterogeneity as random effects (see details).
 #' @details
 #' Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.
-#' This probability is specified as
+#' This probability is specified for two-way effect models (`fe.way = 2`) as
 #' \deqn{p_{ij} = F(\mathbf{x}_{ij}'\beta + \mu_j + \nu_j)}{Pij = F(Xij'*\beta + \mu_i + \nu_j),}
 #' where \eqn{F} is the cumulative of the standard normal distribution. Unobserved degree heterogeneity is captured by
-#' \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as random effects.  
+#' \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as random effects (see \code{\link{homophily.fe}} for fixed effect models).\cr
+#' For one-way random effect models (`fe.way = 1`), \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the 
+#' random effects need to be one way.
 #' @seealso \code{\link{homophily.fe}}.
 #' @importFrom ddpcr quiet
 #' @importFrom stats lm
@@ -82,8 +83,8 @@
 #' mu  <- unlist(mu)
 #' nu  <- unlist(nu)
 #' 
-#' out   <- homophily.re(network =  Glist, formula = ~ dX, fixed.effects = TRUE, 
-#'                    iteration = 1e3)
+#' out   <- homophily.re(network =  Glist, formula = ~ dX, group.fe = TRUE, 
+#'                       re.way = 2, iteration = 1e3)
 #' 
 #' # plot simulations
 #' plot(out$posterior$beta[,1], type = "l")
@@ -115,13 +116,18 @@
 #' }
 #' @export
 homophily.re <- function(network,
-                      formula,
-                      data,
-                      fixed.effects = FALSE,
-                      init          = list(),
-                      iteration     = 1e3,
-                      print         = TRUE) {
+                         formula,
+                         data,
+                         symmetry  = FALSE,
+                         group.fe  = FALSE,
+                         re.way    = 1,
+                         init      = list(),
+                         iteration = 1e3,
+                         print     = TRUE) {
   t1              <- Sys.time()
+  re.way  <- as.numeric(re.way[1])
+  if(symmetry & re.way == 2) stop("Two side random effects are not allowed for symmetric network models.")
+  stopifnot(re.way %in% (1:2))
   # Data and dimensions
   if (!is.list(network)) {
     network       <- list(network)
@@ -130,23 +136,35 @@ homophily.re <- function(network,
   M               <- length(network)
   nvec            <- unlist(lapply(network, nrow))
   n               <- sum(nvec)
-  Nvec            <- nvec*(nvec- 1)
-  N               <- sum(Nvec)
-  
-  network         <- unlist(lapply(network, function(x){diag(x) = NA; x}))
-  network         <- network[!is.na(network)]
-  quiet(gc())
-  if (length(network) != N) {
-    stop("network should contain only 0 and 1 (as numeric)")
+  Nvec            <- NULL
+  if(symmetry){
+    Nvec          <- nvec*(nvec- 1)/2
+    stopifnot(sapply(network, is.symmetric.matrix))
+    network       <- frMtoVbyCOLsym(network, nvec, M)
+  } else {
+    Nvec          <- nvec*(nvec- 1)
+    # network         <- unlist(lapply(network, function(x){diag(x) = NA; x}))
+    # network         <- network[!is.na(network)]
+    network       <- frMtoVbyCOL(network, nvec, M)
   }
+  N               <- sum(Nvec)
+
+  quiet(gc())
   if (sum(!((network == 0) | (network == 1))) != 0) {
-    stop("network should contain only 0 and 1")
+    stop("Network should contain only 0 and 1.")
   } 
-  tmp1            <- cumsum(unlist(lapply(nvec, function(x) rep(x - 1, x)))) - 1
-  tmp2            <- c(0, tmp1[-n] + 1)
-  index           <- cbind(tmp2, tmp1)
+  
+  tmp1    <- NULL
+  if(symmetry){
+    tmp1  <- cumsum(unlist(lapply(nvec, function(x) (x - 1):0))) - 1
+  } else {
+    tmp1  <- cumsum(unlist(lapply(nvec, function(x) rep(x - 1, x)))) - 1
+  }
+  tmp2    <- c(0, tmp1[-n] + 1)
+  index   <- cbind(tmp2, tmp1) 
   rm(list = c("tmp1", "tmp2"))
   quiet(gc())
+  
   indexgr         <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
   INDEXgr         <- matrix(c(cumsum(c(0, Nvec[-M])), cumsum(Nvec) - 1), ncol = 2)
   # Formula to data
@@ -159,14 +177,15 @@ homophily.re <- function(network,
   
   formula         <- f.t.data$formula
   dX              <- f.t.data$X
+  if(nrow(dX) != N) stop("The number of observations in X does not match the network.")
   rm("f.t.data")
   quiet(gc())
   coln            <- colnames(dX)
   nfix            <- ifelse("(Intercept)" %in% coln, 1, 0)
   K               <- ncol(dX)
-  if (fixed.effects) {
+  if (group.fe) {
     if(M < 2){
-      stop("fixed effects can be added for only one subnetwork")
+      stop("Group fixed effects can be added for only one subnetwork.")
     }
     K             <- K + M - nfix
     nfix          <- M
@@ -216,26 +235,34 @@ homophily.re <- function(network,
     stopifnot(length(mu) == n)
   }
   
-  if (is.null(nu)) {
-    nu            <- rep(0, n)
-  } else{
-    stopifnot(length(nu) == n)
+  if(re.way == 2){
+    if (is.null(nu)) {
+      nu          <- rep(0, n)
+    } else{
+      stopifnot(length(nu) == n)
+    }
   }
-  
+
   if (is.null(smu2)) {
     tmp           <- var(mu)
     smu2          <- ifelse(tmp > 0, tmp, 1)
   } 
   
-  if (is.null(snu2)) {
+  if (is.null(snu2) & re.way == 2) {
     tmp           <- var(nu)
     snu2          <- ifelse(tmp > 0, tmp, 1)
   }
   
-  if (is.null(rho)) {
+  if (is.null(rho) & re.way == 2) {
     rho           <- cov(mu, nu)/sqrt(smu2*snu2)
     rho           <- (rho >= 1) - (rho <= -1) + rho*((rho >= -1) & (rho <= 1))
   } 
+  
+  if(re.way == 1){
+    nu            <- NULL
+    snu2          <- NULL
+    rho           <- NULL
+  }
   
   init            <- list(beta    = beta,
                           mu      = mu,
@@ -243,8 +270,14 @@ homophily.re <- function(network,
                           smu2    = smu2,
                           snu2    = snu2,
                           rho     = rho)
-  estim           <- updategparms(network, dX, invdXdX, beta, mu, nu, smu2, snu2, rho, index, indexgr,
-                                INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, print)
+  estima          <- NULL
+  if(re.way == 1){
+    estim         <- bayesmu(network, dX, invdXdX, beta, mu, smu2, index, indexgr,
+                               INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, symmetry, print)
+  } else{
+    estim         <- bayesmunu(network, dX, invdXdX, beta, mu, nu, smu2, snu2, rho, index, indexgr,
+                               INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, print)
+  }
   
   colnames(estim$beta)     <- coln
   
@@ -252,14 +285,18 @@ homophily.re <- function(network,
   timer       <- as.numeric(difftime(t2, t1, units = "secs"))
   
   nlinks      <- sum(network)
-  out         <- list("n"               = nvec,
-                      "n.obs"           = N,
-                      "n.links"         = nlinks,
-                      "K"               = K,
+  out         <- list("model.info"     = list("model"       = "probit", 
+                                              "sym.network" = symmetry,
+                                              "re.way"      = re.way, 
+                                              "n"           = nvec,
+                                              "n.obs"       = N,
+                                              "n.links"     = nlinks,
+                                              "K"           = K,
+                                              "iteration"   = iteration),
                       "posterior"       = estim,
                       "init"            = init)
   
-  class(out)  <- "homophily"
+  class(out)  <- "homophily.re"
   if(print) {
     cat("\n\n")
     cat("The program successfully executed \n")
@@ -268,7 +305,7 @@ homophily.re <- function(network,
     cat("n.obs          : ", N, "\n")
     cat("n.links        : ", nlinks, "\n")
     cat("K              : ", K, "\n")
-    cat("Fixed effects  : ", ifelse(fixed.effects, "Yes", "No"), "\n")
+    cat("Fixed effects  : ", ifelse(group.fe, "Yes", "No"), "\n")
     cat("Iteration      : ", iteration, "\n\n")
     
     

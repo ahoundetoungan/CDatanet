@@ -8,7 +8,9 @@ homophily.re(
   network,
   formula,
   data,
-  fixed.effects = FALSE,
+  symmetry = FALSE,
+  group.fe = FALSE,
+  re.way = 1,
   init = list(),
   iteration = 1000,
   print = TRUE
@@ -23,7 +25,11 @@ where \code{x1}, \code{x2} are explanatory variable of links formation.}
 \item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{homophily} is called.}
 
-\item{fixed.effects}{boolean indicating if sub-network heterogeneity as fixed effects should be included.}
+\item{symmetry}{indicates whether the network model is symmetric (see details).}
+
+\item{group.fe}{indicates whether the model includes group fixed effects.}
+
+\item{re.way}{indicates the random effect way. The expected value is 1 or 2 (see details).}
 
 \item{init}{(optional) list of starting values containing \code{beta}, an K-dimensional vector of the explanatory variables parameter,
 \code{mu} an n-dimensional vector, and \code{nu} an n-dimensional vector, \code{smu2} the variance of \code{mu},
@@ -36,23 +42,22 @@ where K is the number of explanatory variables and n is the number of individual
 }
 \value{
 A list consisting of:
-\item{n}{number of individuals in each network.}
-\item{n.obs}{number of observations.}
-\item{n.links}{number of links.}
-\item{K}{number of explanatory variables.}
+\item{model.info}{list of model information, such as the type of random effects, whether the model is symmetric,
+number of observations, etc.}
 \item{posterior}{list of simulations from the posterior distribution.}
-\item{iteration}{number of performed iterations.}
 \item{init}{returned list of starting values.}
 }
 \description{
-\code{homophily} implements a Bayesian estimator for network formation model with homophily. The model includes degree heterogeneity as random effects (see details).
+\code{homophily.re} implements a Bayesian Probit estimator for network formation model with homophily. The model includes degree heterogeneity as random effects (see details).
 }
 \details{
 Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.
-This probability is specified as
+This probability is specified for two-way effect models (\code{fe.way = 2}) as
 \deqn{p_{ij} = F(\mathbf{x}_{ij}'\beta + \mu_j + \nu_j)}{Pij = F(Xij'*\beta + \mu_i + \nu_j),}
 where \eqn{F} is the cumulative of the standard normal distribution. Unobserved degree heterogeneity is captured by
-\eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as random effects.
+\eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as random effects (see \code{\link{homophily.fe}} for fixed effect models).\cr
+For one-way random effect models (\code{fe.way = 1}), \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the
+random effects need to be one way.
 }
 \examples{
 \donttest{
@@ -104,8 +109,8 @@ for (m in 1:M) {
 mu  <- unlist(mu)
 nu  <- unlist(nu)
 
-out   <- homophily.re(network =  Glist, formula = ~ dX, fixed.effects = TRUE, 
-                   iteration = 1e3)
+out   <- homophily.re(network =  Glist, formula = ~ dX, group.fe = TRUE, 
+                      re.way = 2, iteration = 1e3)
 
 # plot simulations
 plot(out$posterior$beta[,1], type = "l")
