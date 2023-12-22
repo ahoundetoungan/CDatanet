@@ -165,16 +165,16 @@ updategparms <- function(a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, in
     .Call(`_CDatanet_updategparms`, a, dx, invdxdx, beta0, mu0, nu0, smu20, snu20, rho0, index, indexgr, INDEXgr, nfix, N, M, K, Kx, nvec, n, iteration, Print)
 }
 
-fhomobeta2f <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, Print = TRUE) {
-    .Call(`_CDatanet_fhomobeta2f`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, Print)
+fhomobeta2f <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
+    .Call(`_CDatanet_fhomobeta2f`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, hasX, Print)
 }
 
-fhomobeta1f <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, Print = TRUE) {
-    .Call(`_CDatanet_fhomobeta1f`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, Print)
+fhomobeta1f <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
+    .Call(`_CDatanet_fhomobeta1f`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, hasX, Print)
 }
 
-fhomobetasym <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, Print = TRUE) {
-    .Call(`_CDatanet_fhomobetasym`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, Print)
+fhomobetasym <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
+    .Call(`_CDatanet_fhomobetasym`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, hasX, Print)
 }
 
 hdataF2L <- function(data, nvec, index, M) {

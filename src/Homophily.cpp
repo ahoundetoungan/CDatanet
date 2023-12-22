@@ -591,6 +591,7 @@ private:
   const int& n;
   const int& Kx;
   const int& nparms;
+  const bool& hasX;
   const bool& Print;
 public:
   llhhomo2f(const arma::vec& a_,
@@ -605,6 +606,7 @@ public:
           const int& n_,
           const int& Kx_,
           const int& nparms_,
+          const bool& hasX_,
           const bool& Print_) : 
   a(a_),
   dx(dx_),
@@ -618,6 +620,7 @@ public:
   n(n_),
   Kx(Kx_),
   nparms(nparms_),
+  hasX(hasX_),
   Print(Print_){}
   
   arma::vec Grad;
@@ -634,16 +637,20 @@ public:
     int n1                 = m2 + 1;
     int n2                 = n1 + n - M - 1;
     
-    arma::vec beta         = thetaa.head(Kx);
     arma::vec mu           = thetaa.subvec(m1, m2);
     arma::vec nu           = thetaa.subvec(n1, n2);
     
-    arma::vec dXb          = dx*beta;
-    arma::vec adXb         = a%dXb;
-    double llh             = sum(adXb);
-    
     arma::vec gd(nparms, arma::fill::zeros);
-    gd.head(Kx)            = arma::trans(sum(adx, 0));
+    
+    arma::vec beta, dXb, adXb;
+    double llh(0);
+    if(hasX){
+      beta                 = thetaa.head(Kx);
+      dXb                  = dx*beta;
+      adXb                 = a%dXb;
+      llh                  = sum(adXb);
+      gd.head(Kx)          = arma::trans(sum(adx, 0));
+    }
     
     int igr1, igr2, nm, j(0), j1, j2;
     arma::vec mum, num, numj, mumj, tmp, ai, exbmn, smunu;
@@ -663,7 +670,6 @@ public:
         j1                 = index(j, 0);
         j2                 = index(j, 1);
         ai                 = a.subvec(j1, j2);
-        dXi                = dx.rows(j1, j2);
         
         // nuj when mui is fixed
         numj               = num;
@@ -681,20 +687,36 @@ public:
         // sum of mu(i) + numj
         smunu              = mum(i) + numj;
         
-        exbmn              = exp(dXb.subvec(j1, j2) + smunu);
-        tmp                = exbmn/(1 + exbmn);
-        llh               += sum(ai%smunu - log(1 + exbmn));
-        
-        // grad X
-        gd.head(Kx)       -= arma::trans(arma::sum(dXi.each_col()%tmp, 0));
-        
-        // grad mui
-        gd(m1 + j)         = d(j) - sum(tmp);
-        
-        // grad nui
-        if(i < (nm - 1)){
-          tmp              = exp(dXb.elem(indexi) + mumj + num(i));
-          gd(n1 + j - m)   = b(j) - sum(tmp/(1 + tmp));
+        if(hasX){
+          exbmn            = exp(dXb.subvec(j1, j2) + smunu);
+          tmp              = exbmn/(1 + exbmn);
+          llh             += sum(ai%smunu - log(1 + exbmn));
+          
+          // grad X
+          dXi              = dx.rows(j1, j2);
+          gd.head(Kx)     -= arma::trans(arma::sum(dXi.each_col()%tmp, 0));
+          
+          // grad mui
+          gd(m1 + j)       = d(j) - sum(tmp);
+          
+          // grad nui
+          if(i < (nm - 1)){
+            tmp            = exp(dXb.elem(indexi) + mumj + num(i));
+            gd(n1 + j - m) = b(j) - sum(tmp/(1 + tmp));
+          }
+        } else {
+          exbmn            = exp(smunu);
+          tmp              = exbmn/(1 + exbmn);
+          llh             += sum(ai%smunu - log(1 + exbmn));
+          
+          // grad mui
+          gd(m1 + j)       = d(j) - sum(tmp);
+          
+          // grad nui
+          if(i < (nm - 1)){
+            tmp            = exp(mumj + num(i));
+            gd(n1 + j - m) = b(j) - sum(tmp/(1 + tmp));
+          }
         }
         ++ j;
       }
@@ -704,13 +726,14 @@ public:
     Grad                   = gd;
     
     if(Print){
-      NumericVector betacpp  = wrap(beta);
-      betacpp.attr("dim")    = R_NilValue;
-      Rcpp::Rcout << "beta: \n";
-      Rcpp::print(betacpp);
+      if(hasX){
+        NumericVector betacpp  = wrap(beta);
+        betacpp.attr("dim")    = R_NilValue;
+        Rcpp::Rcout << "beta: \n";
+        Rcpp::print(betacpp);
+      }
       Rcpp::Rcout << "log-likelihood: " << llh << "\n";
     }
-    
     return -llh;
   }
 };
@@ -726,13 +749,16 @@ List fhomobeta2f(Eigen::VectorXd theta,
                const int maxit = 300, 
                const double& eps_f = 1e-6, 
                const double& eps_g = 1e-5,
+               const bool& hasX = true,
                const bool& Print = true){
-  int n         = sum(nvec);
-  int Kx        = dx.n_cols;
+  int n(sum(nvec)), Kx(0);
+  arma::mat adx;
+  if(hasX){
+    Kx          = dx.n_cols;
+    adx         = dx.each_col()%a;
+  } 
   
   int nparms    = Kx + 2*n - M;
-  arma::mat adx = dx.each_col()%a;
-  
   arma::vec d(n), b(n);
   int j(0);
   for (int m(0); m < M; ++ m) {
@@ -755,7 +781,7 @@ List fhomobeta2f(Eigen::VectorXd theta,
     }
   }
   
-  llhhomo2f f(a, dx, adx, d, b, index, indexgr, nvec, M, n, Kx, nparms, Print);
+  llhhomo2f f(a, dx, adx, d, b, index, indexgr, nvec, M, n, Kx, nparms, hasX, Print);
   
   double fopt;
   int status = optim_lbfgs(f, theta, fopt, maxit, eps_f, eps_g);
@@ -783,6 +809,7 @@ private:
   const int& n;
   const int& Kx;
   const int& nparms;
+  const bool& hasX;
   const bool& Print;
 public:
   llhhomo1f(const arma::vec& a_,
@@ -797,6 +824,7 @@ public:
           const int& n_,
           const int& Kx_,
           const int& nparms_,
+          const bool& hasX_,
           const bool& Print_) : 
   a(a_),
   dx(dx_),
@@ -810,6 +838,7 @@ public:
   n(n_),
   Kx(Kx_),
   nparms(nparms_),
+  hasX(hasX_),
   Print(Print_){}
   
   arma::vec Grad;
@@ -824,15 +853,17 @@ public:
     int m1                 = b2 + 1;
     int m2                 = m1 + n - 1;
     
-    arma::vec beta         = thetaa.head(Kx);
     arma::vec mu           = thetaa.subvec(m1, m2);
-    
-    arma::vec dXb          = dx*beta;
-    arma::vec adXb         = a%dXb;
-    double llh             = sum(adXb);
-    
     arma::vec gd(nparms, arma::fill::zeros);
-    gd.head(Kx)            = arma::trans(sum(adx, 0));
+    arma::vec beta, dXb, adXb;
+    double llh(0);
+    if(hasX){
+      beta                 = thetaa.head(Kx);
+      dXb                  = dx*beta;
+      adXb                 = a%dXb;
+      llh                  = sum(adXb);
+      gd.head(Kx)          = arma::trans(sum(adx, 0));
+    }
     
     int igr1, igr2, nm, j(0), j1, j2;
     arma::vec mum, mumj, tmp, ai, exbmn, smunu;
@@ -850,7 +881,6 @@ public:
         j1                 = index(j, 0);
         j2                 = index(j, 1);
         ai                 = a.subvec(j1, j2);
-        dXi                = dx.rows(j1, j2);
         
         // muj when nui is fixed
         mumj               = mum;
@@ -859,20 +889,35 @@ public:
         // sum of mu(i) + numj
         smunu              = mum(i) + mumj;
         
-        exbmn              = exp(dXb.subvec(j1, j2) + smunu);
-        tmp                = exbmn/(1 + exbmn);
-        llh               += sum(ai%smunu - log(1 + exbmn));
-        
-        // grad X
-        gd.head(Kx)       -= arma::trans(arma::sum(dXi.each_col()%tmp, 0));
-        
-        // grad mui
-        gd(m1 + j)         = d(j) - sum(tmp);
-        indexi             = arma::conv_to<arma::uvec>::from(indexm.col(0)) + i;
-        indexi.head(i + 1)-= 1;
-        indexi.shed_row(i); 
-        tmp                = exp(dXb.elem(indexi) + mumj + mum(i));
-        gd(m1 + j)        += b(j) - sum(tmp/(1 + tmp));
+        if(hasX){
+          dXi                = dx.rows(j1, j2);
+          exbmn              = exp(dXb.subvec(j1, j2) + smunu);
+          tmp                = exbmn/(1 + exbmn);
+          llh               += sum(ai%smunu - log(1 + exbmn));
+          
+          // grad X
+          gd.head(Kx)       -= arma::trans(arma::sum(dXi.each_col()%tmp, 0));
+          
+          // grad mui
+          gd(m1 + j)         = d(j) - sum(tmp);
+          indexi             = arma::conv_to<arma::uvec>::from(indexm.col(0)) + i;
+          indexi.head(i + 1)-= 1;
+          indexi.shed_row(i); 
+          tmp                = exp(dXb.elem(indexi) + mumj + mum(i));
+          gd(m1 + j)        += b(j) - sum(tmp/(1 + tmp));
+        } else {
+          exbmn              = exp(smunu);
+          tmp                = exbmn/(1 + exbmn);
+          llh               += sum(ai%smunu - log(1 + exbmn));
+
+          // grad mui
+          gd(m1 + j)         = d(j) - sum(tmp);
+          indexi             = arma::conv_to<arma::uvec>::from(indexm.col(0)) + i;
+          indexi.head(i + 1)-= 1;
+          indexi.shed_row(i); 
+          tmp                = exp(mumj + mum(i));
+          gd(m1 + j)        += b(j) - sum(tmp/(1 + tmp));
+        }
         ++ j;
       }
     }
@@ -881,13 +926,14 @@ public:
     Grad                   = gd;
     
     if(Print){
-      NumericVector betacpp  = wrap(beta);
-      betacpp.attr("dim")    = R_NilValue;
-      Rcpp::Rcout << "beta: \n";
-      Rcpp::print(betacpp);
+      if(hasX){
+        NumericVector betacpp  = wrap(beta);
+        betacpp.attr("dim")    = R_NilValue;
+        Rcpp::Rcout << "beta: \n";
+        Rcpp::print(betacpp);
+      }
       Rcpp::Rcout << "log-likelihood: " << llh << "\n";
     }
-    
     return -llh;
   }
 };
@@ -903,13 +949,16 @@ List fhomobeta1f(Eigen::VectorXd theta,
                const int maxit = 300, 
                const double& eps_f = 1e-6, 
                const double& eps_g = 1e-5,
+               const bool& hasX = true,
                const bool& Print = true){
-  int n         = sum(nvec);
-  int Kx        = dx.n_cols;
+  int n(sum(nvec)), Kx(0);
+  arma::mat adx;
+  if(hasX){
+    Kx          = dx.n_cols;
+    adx         = dx.each_col()%a;
+  } 
   
   int nparms    = Kx + n;
-  arma::mat adx = dx.each_col()%a;
-  
   arma::vec d(n), b(n);
   int j(0);
   for (int m(0); m < M; ++ m) {
@@ -932,7 +981,7 @@ List fhomobeta1f(Eigen::VectorXd theta,
     }
   }
   
-  llhhomo1f f(a, dx, adx, d, b, index, indexgr, nvec, M, n, Kx, nparms, Print);
+  llhhomo1f f(a, dx, adx, d, b, index, indexgr, nvec, M, n, Kx, nparms, hasX, Print);
   
   double fopt;
   int status = optim_lbfgs(f, theta, fopt, maxit, eps_f, eps_g);
@@ -960,6 +1009,7 @@ private:
   const int& n;
   const int& Kx;
   const int& nparms;
+  const bool& hasX;
   const bool& Print;
 public:
   llhhomosym(const arma::vec& a_,
@@ -974,6 +1024,7 @@ public:
             const int& n_,
             const int& Kx_,
             const int& nparms_,
+            const bool& hasX_,
             const bool& Print_) : 
   a(a_),
   dx(dx_),
@@ -987,6 +1038,7 @@ public:
   n(n_),
   Kx(Kx_),
   nparms(nparms_),
+  hasX(hasX_),
   Print(Print_){}
   
   arma::vec Grad;
@@ -1001,15 +1053,17 @@ public:
     int m1                 = b2 + 1;
     int m2                 = m1 + n - 1;
     
-    arma::vec beta         = thetaa.head(Kx);
     arma::vec mu           = thetaa.subvec(m1, m2);
-    
-    arma::vec dXb          = dx*beta;
-    arma::vec adXb         = a%dXb;
-    double llh             = sum(adXb);
-    
     arma::vec gd(nparms, arma::fill::zeros);
-    gd.head(Kx)            = arma::trans(sum(adx, 0));
+    arma::vec beta, dXb, adXb;
+    double llh(0);
+    if(hasX){
+      beta                 = thetaa.head(Kx);
+      dXb                  = dx*beta;
+      adXb                 = a%dXb;
+      llh                  = sum(adXb);
+      gd.head(Kx)          = arma::trans(sum(adx, 0));
+    }
     
     int igr1, igr2, nm, j(0), j1, j2;
     arma::vec mum, tmp, ai, exbmn, smunu;
@@ -1028,25 +1082,38 @@ public:
           j1           = index(j, 0);
           j2           = index(j, 1);
           ai           = a.subvec(j1, j2);
-          dXi          = dx.rows(j1, j2);
           
           // sum of mu(i) + numj
           smunu        = mum(i) + mum.tail(nm - 1 - i);
           
-          exbmn        = exp(dXb.subvec(j1, j2) + smunu);
-          tmp          = exbmn/(1 + exbmn);
-          llh         += sum(ai%smunu - log(1 + exbmn));
-          
-          // grad X
-          gd.head(Kx) -= arma::trans(arma::sum(dXi.each_col()%tmp, 0));
-          
-          // grad mui
-          gd(m1 + j)   = d(j) - sum(tmp);
+          if(hasX){
+            dXi          = dx.rows(j1, j2);
+            exbmn        = exp(dXb.subvec(j1, j2) + smunu);
+            tmp          = exbmn/(1 + exbmn);
+            llh         += sum(ai%smunu - log(1 + exbmn));
+            
+            // grad X
+            gd.head(Kx) -= arma::trans(arma::sum(dXi.each_col()%tmp, 0));
+            
+            // grad mui
+            gd(m1 + j)   = d(j) - sum(tmp);
+          } else {
+            exbmn        = exp(smunu);
+            tmp          = exbmn/(1 + exbmn);
+            llh         += sum(ai%smunu - log(1 + exbmn));
+
+            // grad mui
+            gd(m1 + j)   = d(j) - sum(tmp);
+          }
         }
         
         if(i > 0){
           indexi       = arma::conv_to<arma::uvec>::from(indexm.col(0).head(i) + arma::linspace(i - 1, 0, i));
-          tmp          = exp(dXb.elem(indexi) + mum.head(i) + mum(i));
+          if(hasX){
+            tmp        = exp(dXb.elem(indexi) + mum.head(i) + mum(i));
+          } else {
+            tmp        = exp(mum.head(i) + mum(i));
+          }
           gd(m1 + j)  += b(j) - sum(tmp/(1 + tmp));
         }
         ++ j;
@@ -1057,10 +1124,12 @@ public:
     Grad               = gd;
     
     if(Print){
-      NumericVector betacpp  = wrap(beta);
-      betacpp.attr("dim")    = R_NilValue;
-      Rcpp::Rcout << "beta: \n";
-      Rcpp::print(betacpp);
+      if(hasX){
+        NumericVector betacpp  = wrap(beta);
+        betacpp.attr("dim")    = R_NilValue;
+        Rcpp::Rcout << "beta: \n";
+        Rcpp::print(betacpp);
+      }
       Rcpp::Rcout << "log-likelihood: " << llh << "\n";
     }
     
@@ -1079,13 +1148,16 @@ List fhomobetasym(Eigen::VectorXd theta,
                  const int maxit = 300, 
                  const double& eps_f = 1e-6, 
                  const double& eps_g = 1e-5,
+                 const bool& hasX = true,
                  const bool& Print = true){
-  int n         = sum(nvec);
-  int Kx        = dx.n_cols;
+  int n(sum(nvec)), Kx(0);
+  arma::mat adx;
+  if(hasX){
+    Kx          = dx.n_cols;
+    adx         = dx.each_col()%a;
+  } 
   
   int nparms    = Kx + n;
-  arma::mat adx = dx.each_col()%a;
-  
   arma::vec d(n), b(n);
   int j(0);
   for (int m(0); m < M; ++ m) {
@@ -1111,7 +1183,7 @@ List fhomobetasym(Eigen::VectorXd theta,
     }
   }
   
-  llhhomosym f(a, dx, adx, d, b, index, indexgr, nvec, M, n, Kx, nparms, Print);
+  llhhomosym f(a, dx, adx, d, b, index, indexgr, nvec, M, n, Kx, nparms, hasX, Print);
   
   double fopt;
   int status = optim_lbfgs(f, theta, fopt, maxit, eps_f, eps_g);

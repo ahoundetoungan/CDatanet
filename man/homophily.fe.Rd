@@ -19,7 +19,7 @@ homophily.fe(
 \item{network}{matrix or list of sub-matrix of social interactions containing 0 and 1, where links are represented by 1}
 
 \item{formula}{an object of class \link[stats]{formula}: a symbolic description of the model. The \code{formula} should be as for example \code{~ x1 + x2}
-where \code{x1}, \code{x2} are explanatory variable of links formation}
+where \code{x1}, \code{x2} are explanatory variable of links formation. If missing, the model is estimated with fixed effects only.}
 
 \item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{homophily} is called.}

@@ -825,8 +825,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // fhomobeta2f
-List fhomobeta2f(Eigen::VectorXd theta, const arma::vec& a, const arma::mat& dx, const arma::vec& nvec, const arma::mat& index, const arma::mat& indexgr, const int& M, const int maxit, const double& eps_f, const double& eps_g, const bool& Print);
-RcppExport SEXP _CDatanet_fhomobeta2f(SEXP thetaSEXP, SEXP aSEXP, SEXP dxSEXP, SEXP nvecSEXP, SEXP indexSEXP, SEXP indexgrSEXP, SEXP MSEXP, SEXP maxitSEXP, SEXP eps_fSEXP, SEXP eps_gSEXP, SEXP PrintSEXP) {
+List fhomobeta2f(Eigen::VectorXd theta, const arma::vec& a, const arma::mat& dx, const arma::vec& nvec, const arma::mat& index, const arma::mat& indexgr, const int& M, const int maxit, const double& eps_f, const double& eps_g, const bool& hasX, const bool& Print);
+RcppExport SEXP _CDatanet_fhomobeta2f(SEXP thetaSEXP, SEXP aSEXP, SEXP dxSEXP, SEXP nvecSEXP, SEXP indexSEXP, SEXP indexgrSEXP, SEXP MSEXP, SEXP maxitSEXP, SEXP eps_fSEXP, SEXP eps_gSEXP, SEXP hasXSEXP, SEXP PrintSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -840,14 +840,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type maxit(maxitSEXP);
     Rcpp::traits::input_parameter< const double& >::type eps_f(eps_fSEXP);
     Rcpp::traits::input_parameter< const double& >::type eps_g(eps_gSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type hasX(hasXSEXP);
     Rcpp::traits::input_parameter< const bool& >::type Print(PrintSEXP);
-    rcpp_result_gen = Rcpp::wrap(fhomobeta2f(theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, Print));
+    rcpp_result_gen = Rcpp::wrap(fhomobeta2f(theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, hasX, Print));
     return rcpp_result_gen;
 END_RCPP
 }
 // fhomobeta1f
-List fhomobeta1f(Eigen::VectorXd theta, const arma::vec& a, const arma::mat& dx, const arma::vec& nvec, const arma::mat& index, const arma::mat& indexgr, const int& M, const int maxit, const double& eps_f, const double& eps_g, const bool& Print);
-RcppExport SEXP _CDatanet_fhomobeta1f(SEXP thetaSEXP, SEXP aSEXP, SEXP dxSEXP, SEXP nvecSEXP, SEXP indexSEXP, SEXP indexgrSEXP, SEXP MSEXP, SEXP maxitSEXP, SEXP eps_fSEXP, SEXP eps_gSEXP, SEXP PrintSEXP) {
+List fhomobeta1f(Eigen::VectorXd theta, const arma::vec& a, const arma::mat& dx, const arma::vec& nvec, const arma::mat& index, const arma::mat& indexgr, const int& M, const int maxit, const double& eps_f, const double& eps_g, const bool& hasX, const bool& Print);
+RcppExport SEXP _CDatanet_fhomobeta1f(SEXP thetaSEXP, SEXP aSEXP, SEXP dxSEXP, SEXP nvecSEXP, SEXP indexSEXP, SEXP indexgrSEXP, SEXP MSEXP, SEXP maxitSEXP, SEXP eps_fSEXP, SEXP eps_gSEXP, SEXP hasXSEXP, SEXP PrintSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -861,14 +862,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type maxit(maxitSEXP);
     Rcpp::traits::input_parameter< const double& >::type eps_f(eps_fSEXP);
     Rcpp::traits::input_parameter< const double& >::type eps_g(eps_gSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type hasX(hasXSEXP);
     Rcpp::traits::input_parameter< const bool& >::type Print(PrintSEXP);
-    rcpp_result_gen = Rcpp::wrap(fhomobeta1f(theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, Print));
+    rcpp_result_gen = Rcpp::wrap(fhomobeta1f(theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, hasX, Print));
     return rcpp_result_gen;
 END_RCPP
 }
 // fhomobetasym
-List fhomobetasym(Eigen::VectorXd theta, const arma::vec& a, const arma::mat& dx, const arma::vec& nvec, const arma::mat& index, const arma::mat& indexgr, const int& M, const int maxit, const double& eps_f, const double& eps_g, const bool& Print);
-RcppExport SEXP _CDatanet_fhomobetasym(SEXP thetaSEXP, SEXP aSEXP, SEXP dxSEXP, SEXP nvecSEXP, SEXP indexSEXP, SEXP indexgrSEXP, SEXP MSEXP, SEXP maxitSEXP, SEXP eps_fSEXP, SEXP eps_gSEXP, SEXP PrintSEXP) {
+List fhomobetasym(Eigen::VectorXd theta, const arma::vec& a, const arma::mat& dx, const arma::vec& nvec, const arma::mat& index, const arma::mat& indexgr, const int& M, const int maxit, const double& eps_f, const double& eps_g, const bool& hasX, const bool& Print);
+RcppExport SEXP _CDatanet_fhomobetasym(SEXP thetaSEXP, SEXP aSEXP, SEXP dxSEXP, SEXP nvecSEXP, SEXP indexSEXP, SEXP indexgrSEXP, SEXP MSEXP, SEXP maxitSEXP, SEXP eps_fSEXP, SEXP eps_gSEXP, SEXP hasXSEXP, SEXP PrintSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -882,8 +884,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type maxit(maxitSEXP);
     Rcpp::traits::input_parameter< const double& >::type eps_f(eps_fSEXP);
     Rcpp::traits::input_parameter< const double& >::type eps_g(eps_gSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type hasX(hasXSEXP);
     Rcpp::traits::input_parameter< const bool& >::type Print(PrintSEXP);
-    rcpp_result_gen = Rcpp::wrap(fhomobetasym(theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, Print));
+    rcpp_result_gen = Rcpp::wrap(fhomobetasym(theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, hasX, Print));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1380,9 +1383,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CDatanet_frMtoVbyCOLsym", (DL_FUNC) &_CDatanet_frMtoVbyCOLsym, 3},
     {"_CDatanet_fmusum", (DL_FUNC) &_CDatanet_fmusum, 6},
     {"_CDatanet_updategparms", (DL_FUNC) &_CDatanet_updategparms, 21},
-    {"_CDatanet_fhomobeta2f", (DL_FUNC) &_CDatanet_fhomobeta2f, 11},
-    {"_CDatanet_fhomobeta1f", (DL_FUNC) &_CDatanet_fhomobeta1f, 11},
-    {"_CDatanet_fhomobetasym", (DL_FUNC) &_CDatanet_fhomobetasym, 11},
+    {"_CDatanet_fhomobeta2f", (DL_FUNC) &_CDatanet_fhomobeta2f, 12},
+    {"_CDatanet_fhomobeta1f", (DL_FUNC) &_CDatanet_fhomobeta1f, 12},
+    {"_CDatanet_fhomobetasym", (DL_FUNC) &_CDatanet_fhomobetasym, 12},
     {"_CDatanet_hdataF2L", (DL_FUNC) &_CDatanet_hdataF2L, 4},
     {"_CDatanet_hdataF2U", (DL_FUNC) &_CDatanet_hdataF2U, 5},
     {"_CDatanet_hdata2S", (DL_FUNC) &_CDatanet_hdata2S, 5},
