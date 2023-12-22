@@ -514,7 +514,7 @@ void updatemu(arma::vec& mu,
   
   // normalize mu to zero mean
   if(nfix == 1){
-    double mu        = sum(mu)/n;
+    double mub       = sum(mu)/n;
     mu              -= mub;
     beta(0)         += (2*mub);
     dxbeta           = dx*beta;
@@ -598,7 +598,7 @@ void updatemusym(arma::vec& mu,
   
   // normalize mu to zero mean
   if(nfix == 1){
-    double mu        = sum(mu)/n;
+    double mub       = sum(mu)/n;
     mu              -= mub;
     beta(0)         += (2*mub);
     dxbeta           = dx*beta;
