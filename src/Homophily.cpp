@@ -485,7 +485,7 @@ void updatemu(arma::vec& mu,
     nm     = nvec(m);
     indexm = index.rows(igr1, igr2);
     // posterior variance
-    smu    = 1.0/(2.0*(nm - 1) + invvmu);
+    smu    = sqrt(1.0/(2.0*(nm - 1) + invvmu));
     
     for(int i(0); i < nm; ++ i){
       mum     = mu.subvec(igr1, igr2);
@@ -504,7 +504,7 @@ void updatemu(arma::vec& mu,
       tmp    += sum(astmdxbeta.elem(indexj) - mumj);
       
       // posterior mean
-      mub     = smu*tmp;
+      mub     = pow(smu, 2)*tmp;
       
       // simulation
       mu(j)   = R::rnorm(mub, smu);
@@ -569,7 +569,7 @@ void updatemusym(arma::vec& mu,
     nm     = nvec(m);
     indexm = index.rows(igr1, igr2);
     // posterior variance
-    smu    = 1.0/((nm - 1) + invvmu);
+    smu    = sqrt(1.0/(nm - 1 + invvmu));
     mum    = mu.subvec(igr1, igr2);
     
     for(int i(0); i < nm; ++ i){
@@ -583,12 +583,12 @@ void updatemusym(arma::vec& mu,
       
       // elements that vary when mui is fixed
       if(i > 0){
-        indexj = arma::conv_to<arma::uvec>::from(indexm.col(0).head(i) + arma::linspace(i - 1, 0, i));
+        indexj  = arma::conv_to<arma::uvec>::from(indexm.col(0).head(i) + arma::linspace(i - 1, 0, i));
         tmp    += sum(astmdxbeta.elem(indexj) - mum.head(i));
       }
 
       // posterior mean
-      mub     = smu*tmp;
+      mub     = pow(smu, 2)*tmp;
       
       // simulation
       mu(j)   = R::rnorm(mub, smu);
@@ -829,7 +829,7 @@ List bayesmu(const arma::vec& a,
       //update beta
       updatebeta(beta, dxbeta, INDEXgr, nfix, Kx, dx, invdxdx, mupmu, ast);
       
-      //update mu and nu
+      //update mu 
       if(sym){
         updatemusym(mu, mupmu, beta, dxbeta, dx, ast, Kx, INDEXgr, M, N, n, nfix, nvec, index, indexgr, smu2);
       } else {
@@ -854,7 +854,11 @@ List bayesmu(const arma::vec& a,
       updatebeta(beta, dxbeta, INDEXgr, nfix, Kx, dx, invdxdx, mupmu, ast);
       
       //update mu and nu
-      updatemu(mu, mupmu, beta, dxbeta, dx, ast, Kx, INDEXgr, M, N, n, nfix, nvec, index, indexgr, smu2);
+      if(sym){
+        updatemusym(mu, mupmu, beta, dxbeta, dx, ast, Kx, INDEXgr, M, N, n, nfix, nvec, index, indexgr, smu2);
+      } else {
+        updatemu(mu, mupmu, beta, dxbeta, dx, ast, Kx, INDEXgr, M, N, n, nfix, nvec, index, indexgr, smu2);
+      }
       
       //update smu2
       updatesmu2(smu2, n, mu);

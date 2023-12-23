@@ -305,7 +305,7 @@ homophily.re <- function(network,
     cat("n.obs          : ", N, "\n")
     cat("n.links        : ", nlinks, "\n")
     cat("K              : ", K, "\n")
-    cat("Fixed effects  : ", ifelse(group.fe, "Yes", "No"), "\n")
+    cat("Group FE       : ", ifelse(group.fe, "Yes", "No"), "\n")
     cat("Iteration      : ", iteration, "\n\n")
     
     
@@ -317,4 +317,4 @@ homophily.re <- function(network,
   }
   
   out
-}
+} 
