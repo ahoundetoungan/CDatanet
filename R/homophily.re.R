@@ -1,4 +1,4 @@
-#' @title Estimate Network Formation Model with Degree Heterogeneity as Random Effects
+#' @title Estimating network formation models with degree heterogeneity: the Bayesian random effect approach
 #' @param network matrix or list of sub-matrix of social interactions containing 0 and 1, where links are represented by 1.
 #' @param formula an object of class \link[stats]{formula}: a symbolic description of the model. The `formula` should be as for example \code{~ x1 + x2}
 #' where `x1`, `x2` are explanatory variable of links formation.
@@ -6,7 +6,7 @@
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `homophily` is called.
 #' @param symmetry indicates whether the network model is symmetric (see details).
 #' @param group.fe indicates whether the model includes group fixed effects.
-#' @param re.way indicates the random effect way. The expected value is 1 or 2 (see details).
+#' @param re.way indicates whether it is a one-way or two-way fixed effect model. The expected value is 1 or 2 (see details).
 #' @param init (optional) list of starting values containing `beta`, an K-dimensional vector of the explanatory variables parameter, 
 #' `mu` an n-dimensional vector, and `nu` an n-dimensional vector, `smu2` the variance of `mu`, 
 #' and `snu2` the variance of `nu`, 
@@ -19,7 +19,7 @@
 #'     \item{posterior}{list of simulations from the posterior distribution.}
 #'     \item{init}{returned list of starting values.}
 #' @description 
-#' `homophily.re` implements a Bayesian Probit estimator for network formation model with homophily. The model includes degree heterogeneity as random effects (see details).
+#' `homophily.re` implements a Bayesian Probit estimator for network formation model with homophily. The model includes degree heterogeneity using random effects (see details).
 #' @details
 #' Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.
 #' This probability is specified for two-way effect models (`fe.way = 2`) as

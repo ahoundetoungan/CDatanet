@@ -2,7 +2,7 @@
 % Please edit documentation in R/homophily.re.R
 \name{homophily.re}
 \alias{homophily.re}
-\title{Estimate Network Formation Model with Degree Heterogeneity as Random Effects}
+\title{Estimating network formation models with degree heterogeneity: the Bayesian random effect approach}
 \usage{
 homophily.re(
   network,
@@ -29,7 +29,7 @@ in the model. If not found in data, the variables are taken from \code{environme
 
 \item{group.fe}{indicates whether the model includes group fixed effects.}
 
-\item{re.way}{indicates the random effect way. The expected value is 1 or 2 (see details).}
+\item{re.way}{indicates whether it is a one-way or two-way fixed effect model. The expected value is 1 or 2 (see details).}
 
 \item{init}{(optional) list of starting values containing \code{beta}, an K-dimensional vector of the explanatory variables parameter,
 \code{mu} an n-dimensional vector, and \code{nu} an n-dimensional vector, \code{smu2} the variance of \code{mu},
@@ -48,7 +48,7 @@ number of observations, etc.}
 \item{init}{returned list of starting values.}
 }
 \description{
-\code{homophily.re} implements a Bayesian Probit estimator for network formation model with homophily. The model includes degree heterogeneity as random effects (see details).
+\code{homophily.re} implements a Bayesian Probit estimator for network formation model with homophily. The model includes degree heterogeneity using random effects (see details).
 }
 \details{
 Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.

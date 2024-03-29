@@ -32,13 +32,18 @@ R defaulted to C++11 in R 4.0.0, to C++14 in R 4.2.0 and to C++17.
 Fixed effect is allowed in the model SAR.
 
 # Changes in version 2.1.2
-Address the case where a subnetwork consists of a single agent.
-AIC and BIC are added to the output of cdnet. They can be used to choose Rbar.
+- I address the problem of single-agent subnetwork.
+- AIC and BIC are added to the output of cdnet. They can be used to choose Rbar.
 
 # Changes in version 2.1.3
-homophily has been changed to homophily.re for the random effect models.
-homophily.FE has heen changed to homophily.fe
-Random effects in homophily.re can be one side or two sides. 
-Fixed effects in homophily.fe can be one side or two sides.
-Symmetric network models are included in homophily.re.
-Symmetric network models are included in homophily.fe
+- `homophily` has been changed to `homophily.re` for the random effect models.
+- `homophily.FE` has heen changed to `homophily.fe`.
+- Random effects in `homophily.re` can be one side or two sides. 
+- Fixed effects in `homophily.fe` can be one side or two sides.
+- Symmetric network models are included in `homophily.re`.
+- Symmetric network models are included in `homophily.fe`.
+- The function `homophili.data` is added to convert data between directed network models and symmetric network models.
+
+# Changes in version 2.2.0
+- Following the revision of the paper Count Data Model with Social Interaction under Rational Expectations, `cdnet` now allows heterogeneity in peer effects. For example peer effects can be estimated between Blacks and Whites, Girls and Boys etc.
+- `cdnet` allows heterogeneity in the cut-points. The cost function in the utility function is nonparametric and depends on some characteristics X such as gender, race, etc.

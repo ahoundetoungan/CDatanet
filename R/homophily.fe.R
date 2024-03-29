@@ -1,18 +1,18 @@
-#' @title Estimate Network Formation Model with Degree Heterogeneity as Fixed Effects
+#' @title Estimating network formation models with degree heterogeneity: the fixed effect approach
 #' @param network matrix or list of sub-matrix of social interactions containing 0 and 1, where links are represented by 1
 #' @param formula an object of class \link[stats]{formula}: a symbolic description of the model. The `formula` should be as for example \code{~ x1 + x2}
 #' where `x1`, `x2` are explanatory variable of links formation. If missing, the model is estimated with fixed effects only.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `homophily` is called.
 #' @param symmetry indicates whether the network model is symmetric (see details).
-#' @param fe.way indicates the fixed effect way. The expected value is 1 or 2 (see details).
+#' @param fe.way indicates whether it is a one-way or two-way fixed effect model. The expected value is 1 or 2 (see details).
 #' @param init (optional) either a list of starting values containing `beta`, an K-dimensional vector of the explanatory variables parameter, 
 #' `mu` an n-dimensional vector, and `nu` an n-dimensional vector, 
 #' where K is the number of explanatory variables and n is the number of individuals; or a vector of starting value for `c(beta, mu, nu)`.  
 #' @param opt.ctr (optional) is a list of `maxit`, `eps_f`, and `eps_g`, which are control parameters used by the solver `optim_lbfgs`, of the package \pkg{RcppNumerical}.
 #' @param print Boolean indicating if the estimation progression should be printed.
 #' @description 
-#' `homophily.fe` implements a Logit estimator for network formation model with homophily. The model includes degree heterogeneity as fixed effects (see details).
+#' `homophily.fe` implements a Logit estimator for network formation model with homophily. The model includes degree heterogeneity using fixed effects (see details).
 #' @details
 #' Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.
 #' This probability is specified for two-way effect models (`fe.way = 2`) as

@@ -1,4 +1,4 @@
-#' @title Convert data between directed network models and symmetric network models.
+#' @title Converting data between directed network models and symmetric network models.
 #' @param data is the `matrix` or `data.frame` of the explanatory variables of the network formation model. This 
 #' corresponds to the \code{X} matrix in \code{\link{homophily.fe}} or in \code{\link{homophily.re}}.
 #' @param nvec is a vector of the number of individuals in the networks.
@@ -6,7 +6,7 @@
 #' can select lower triangular entries (`to = "lower"`) or upper triangular entries (`to = "upper`).
 #' For a triangular `X` (`n*(n-1)/2` rows), one can convert to a full matrix of `n*(n-1)` rows by using symmetry (`to = "symmetric"`).
 #' @description 
-#' `homophili.data` is used to convert the matrix of explanatory variables between directed network models and symmetric network models.
+#' `homophili.data` converts the matrix of explanatory variables between directed network models and symmetric network models.
 #' @return the transformed `data.frame`.
 #' @export
 homophili.data <- function(data, nvec, to = c("lower", "upper", "symmetric")){

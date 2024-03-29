@@ -6,21 +6,27 @@
 \alias{CDatanet-package}
 \title{The CDatanet package}
 \description{
-The \pkg{CDatanet} package implements the count data model with social interactions and the dyadic linking model developed in Houndetoungan (2022).
-It also simulates data from the count data model and implements the Spatial Autoregressive Tobit model (LeSage, 2000; Xu and Lee, 2015) for left censored data and the Spatial Autoregressive Model (Lee, 2004).
-Network formation models, such as that studied by Yan et al. (2019), are also implemented.
+The \pkg{CDatanet} package simulates and estimates peer effects models and network formation models. The class of peer effect models includes linear-in-means models (Lee, 2004; Lee et al., 2010),
+Tobit models (Xu and Lee, 2015), and discrete numerical data models (Houndetoungan, 2024).
+The network formation models include pair-wise regressions with degree heterogeneity (Graham, 2017; Yan et al., 2019) and exponential random graph models (Mele, 2017).
 To make the computations faster \pkg{CDatanet} uses \code{C++} through the \pkg{Rcpp} package (Eddelbuettel et al., 2011).
 }
 \references{
 Eddelbuettel, D., & Francois, R. (2011). \pkg{Rcpp}: Seamless \R and \code{C++} integration. \emph{Journal of Statistical Software}, 40(8), 1-18, \doi{10.18637/jss.v040.i08}.
 
-Houndetoungan, E. A. (2022). Count Data Models with Social Interactions under Rational Expectations. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
+Houndetoungan, E. A. (2024). Count Data Models with Social Interactions under Rational Expectations. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
 
 Lee, L. F. (2004). Asymptotic distributions of quasi-maximum likelihood estimators for spatial autoregressive models. \emph{Econometrica}, 72(6), 1899-1925, \doi{10.1111/j.1468-0262.2004.00558.x}.
 
+Lee, L. F., Liu, X., & Lin, X. (2010). Specification and estimation of social interaction models with network structures. The Econometrics Journal, 13(2), 145-176, \doi{10.1111/j.1368-423X.2010.00310.x}
+
 Xu, X., & Lee, L. F. (2015). Maximum likelihood estimation of a spatial autoregressive Tobit model. \emph{Journal of Econometrics}, 188(1), 264-280, \doi{10.1016/j.jeconom.2015.05.004}.
 
-Yan, T., Jiang, B., Fienberg, S. E., & Leng, C. (2019). Statistical inference in a directed network model with covariates. \emph{Journal of the American Statistical Association}, 114(526), 857-868, \doi{https://doi.org/10.1080/01621459.2018.1448829}.
+Graham, B. S. (2017). An econometric model of network formation with degree heterogeneity. \emph{Econometrica}, 85(4), 1033-1063, \doi{10.3982/ECTA12679}.
+
+Mele, A. (2017). A structural model of dense network formation. \emph{Econometrica}, 85(3), 825-850, \doi{10.3982/ECTA10400}.
+
+Yan, T., Jiang, B., Fienberg, S. E., & Leng, C. (2019). Statistical inference in a directed network model with covariates. \emph{Journal of the American Statistical Association}, 114(526), 857-868, \doi{10.1080/01621459.2018.1448829}.
 }
 \seealso{
 Useful links:
@@ -31,6 +37,6 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Aristide Houndetoungan \email{ariel92and@gmail.com}
+\strong{Maintainer}: Aristide Houndetoungan \email{ahoundetoungan@gmail.com}
 
 }

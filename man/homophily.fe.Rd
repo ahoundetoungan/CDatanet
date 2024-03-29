@@ -2,7 +2,7 @@
 % Please edit documentation in R/homophily.fe.R
 \name{homophily.fe}
 \alias{homophily.fe}
-\title{Estimate Network Formation Model with Degree Heterogeneity as Fixed Effects}
+\title{Estimating network formation models with degree heterogeneity: the fixed effect approach}
 \usage{
 homophily.fe(
   network,
@@ -26,7 +26,7 @@ in the model. If not found in data, the variables are taken from \code{environme
 
 \item{symmetry}{indicates whether the network model is symmetric (see details).}
 
-\item{fe.way}{indicates the fixed effect way. The expected value is 1 or 2 (see details).}
+\item{fe.way}{indicates whether it is a one-way or two-way fixed effect model. The expected value is 1 or 2 (see details).}
 
 \item{init}{(optional) either a list of starting values containing \code{beta}, an K-dimensional vector of the explanatory variables parameter,
 \code{mu} an n-dimensional vector, and \code{nu} an n-dimensional vector,
@@ -48,7 +48,7 @@ package \pkg{RcppNumerical}.}
 \item{loglike(init)}{log-likelihood at the starting value.}
 }
 \description{
-\code{homophily.fe} implements a Logit estimator for network formation model with homophily. The model includes degree heterogeneity as fixed effects (see details).
+\code{homophily.fe} implements a Logit estimator for network formation model with homophily. The model includes degree heterogeneity using fixed effects (see details).
 }
 \details{
 Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.

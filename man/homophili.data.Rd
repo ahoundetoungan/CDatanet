@@ -2,7 +2,7 @@
 % Please edit documentation in R/homophilidata.R
 \name{homophili.data}
 \alias{homophili.data}
-\title{Convert data between directed network models and symmetric network models.}
+\title{Converting data between directed network models and symmetric network models.}
 \usage{
 homophili.data(data, nvec, to = c("lower", "upper", "symmetric"))
 }
@@ -20,5 +20,5 @@ For a triangular \code{X} (\code{n*(n-1)/2} rows), one can convert to a full mat
 the transformed \code{data.frame}.
 }
 \description{
-\code{homophili.data} is used to convert the matrix of explanatory variables between directed network models and symmetric network models.
+\code{homophili.data} converts the matrix of explanatory variables between directed network models and symmetric network models.
 }
