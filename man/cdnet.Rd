@@ -108,7 +108,7 @@ The argument \code{npl.ctr} must include
 \donttest{
 set.seed(123)
 M      <- 5 # Number of sub-groups
-nvec   <- round(runif(M, 50, 100))
+nvec   <- round(runif(M, 100, 200))
 n      <- sum(nvec)
 
 # Adjacency matrix
@@ -150,7 +150,7 @@ for (m in 1:M) {
 }
 
 # Parameters
-lambda <- c(0.2, -0.3, 0.15, 0.25) #Four definitions of networks
+lambda <- c(0.2, 0.3, -0.15, 0.25) #Four definitions of networks
 Gamma  <- c(2.5, 2.2, -0.9, 1.5, -1.2)
 delta  <- rep(c(0.6, 0.47, 0.35, 0.2, 0.05), 2) # two cost groups.
 
