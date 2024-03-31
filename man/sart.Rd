@@ -68,7 +68,7 @@ In the case of incomplete information modelswith rational expectations, \eqn{y_i
 # Groups' size
 set.seed(123)
 M      <- 5 # Number of sub-groups
-nvec   <- round(runif(M, 100, 1000))
+nvec   <- round(runif(M, 100, 200))
 n      <- sum(nvec)
 
 # Parameters
@@ -96,17 +96,39 @@ for (m in 1:M) {
   G[[m]]       <- Gm
 }
 
-# data
+# Data
 data   <- data.frame(X, peer.avg(G, cbind(x1 = X[,1], x2 =  X[,2])))
 colnames(data) <- c("x1", "x2", "gx1", "gx2")
 
+## Complete information game
 ytmp    <- simsart(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, theta = theta, 
-                   data = data)
-data$y  <- ytmp$y
+                   data = data, cinfo = TRUE)
+data$yc <- ytmp$y
 
-out     <- sart(formula = y ~ x1 + x2 + gx1 + gx2, optimizer = "nlm",
-                Glist = G, data = data)
-summary(out)
+## Incomplete information game
+ytmp    <- simsart(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, theta = theta, 
+                   data = data, cinfo = FALSE)
+data$yi <- ytmp$y
+
+# Complete information estimation for yc
+outc1   <- sart(formula = yc ~ x1 + x2 + gx1 + gx2, optimizer = "nlm",
+                Glist = G, data = data, cinfo = TRUE)
+summary(outc1)
+
+# Complete information estimation for yi
+outc1   <- sart(formula = yi ~ x1 + x2 + gx1 + gx2, optimizer = "nlm",
+                Glist = G, data = data, cinfo = TRUE)
+summary(outc1)
+
+# Incomplete information estimation for yc
+outi1   <- sart(formula = yc ~ x1 + x2 + gx1 + gx2, optimizer = "nlm",
+                Glist = G, data = data, cinfo = FALSE)
+summary(outi1)
+
+# Incomplete information estimation for yi
+outi1   <- sart(formula = yi ~ x1 + x2 + gx1 + gx2, optimizer = "nlm",
+                Glist = G, data = data, cinfo = FALSE)
+summary(outi1)
 }
 }
 \references{

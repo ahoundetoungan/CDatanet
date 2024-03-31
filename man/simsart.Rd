@@ -32,7 +32,7 @@ A list consisting of:
 \item{Ey}{\eqn{E(y)}, the expectation of y.}
 \item{Gy}{the average of y among friends.}
 \item{GEy}{the average of \eqn{E(y)} friends.}
-\item{marg.effects}{the marginal effects for each individual.}
+\item{meff}{a list includinh average and individual marginal effects.}
 \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 }
 \description{
@@ -52,7 +52,7 @@ In the case of incomplete information modelswith rational expectations, \eqn{y_i
 # Groups' size
 set.seed(123)
 M      <- 5 # Number of sub-groups
-nvec   <- round(runif(M, 100, 1000))
+nvec   <- round(runif(M, 100, 200))
 n      <- sum(nvec)
 
 # Parameters
@@ -80,16 +80,19 @@ for (m in 1:M) {
   G[[m]]       <- Gm
 }
 
-# data
+# Data
 data   <- data.frame(X, peer.avg(G, cbind(x1 = X[,1], x2 =  X[,2])))
 colnames(data) <- c("x1", "x2", "gx1", "gx2")
 
+## Complete information game
 ytmp    <- simsart(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, theta = theta, 
-                   data = data)
-y       <- ytmp$y
+                   data = data, cinfo = TRUE)
+data$yc <- ytmp$y
 
-# plot histogram
-hist(y)}
+## Incomplete information game
+ytmp    <- simsart(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, theta = theta, 
+                   data = data, cinfo = FALSE)
+data$yi <- ytmp$y}
 }
 \references{
 Xu, X., & Lee, L. F. (2015). Maximum likelihood estimation of a spatial autoregressive Tobit model. \emph{Journal of Econometrics}, 188(1), 264-280, \doi{10.1016/j.jeconom.2015.05.004}.

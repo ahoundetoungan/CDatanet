@@ -27,7 +27,7 @@
 #'     \item{Ey}{\eqn{E(y)}, the expectation of y.}
 #'     \item{Gy}{the average of y among friends.}
 #'     \item{GEy}{the average of \eqn{E(y)} friends.}
-#'     \item{marg.effects}{the marginal effects for each individual.}
+#'     \item{meff}{a list includinh average and individual marginal effects.}
 #'     \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 #' @references 
 #' Xu, X., & Lee, L. F. (2015). Maximum likelihood estimation of a spatial autoregressive Tobit model. \emph{Journal of Econometrics}, 188(1), 264-280, \doi{10.1016/j.jeconom.2015.05.004}.
@@ -36,7 +36,7 @@
 #' # Groups' size
 #' set.seed(123)
 #' M      <- 5 # Number of sub-groups
-#' nvec   <- round(runif(M, 100, 1000))
+#' nvec   <- round(runif(M, 100, 200))
 #' n      <- sum(nvec)
 #' 
 #' # Parameters
@@ -64,16 +64,19 @@
 #'   G[[m]]       <- Gm
 #' }
 #' 
-#' # data
+#' # Data
 #' data   <- data.frame(X, peer.avg(G, cbind(x1 = X[,1], x2 =  X[,2])))
 #' colnames(data) <- c("x1", "x2", "gx1", "gx2")
 #' 
+#' ## Complete information game
 #' ytmp    <- simsart(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, theta = theta, 
-#'                    data = data)
-#' y       <- ytmp$y
+#'                    data = data, cinfo = TRUE)
+#' data$yc <- ytmp$y
 #' 
-#' # plot histogram
-#' hist(y)}
+#' ## Incomplete information game
+#' ytmp    <- simsart(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, theta = theta, 
+#'                    data = data, cinfo = FALSE)
+#' data$yi <- ytmp$y}
 #' @importFrom Rcpp sourceCpp
 #' @export
 simsart   <- function(formula,
@@ -136,16 +139,16 @@ simsart   <- function(formula,
     thetaWI <- thetaWI[-2]
     coln    <- coln[-2]
   }
-  meffects  <- pnorm(Ztl/sigma) %*% t(thetaWI); colnames(meffects) <- coln
+  imeff     <- pnorm(Ztl/sigma) %*% t(thetaWI); colnames(imeff) <- coln
   
   
-  list("yst"          = yst,
-       "y"            = y,
-       "Ey"           = Ey,
-       "Gy"           = Gy,
-       "GEy"          = GEy,
-       "marg.effects" = meffects,
-       "iteration"    = t)
+  list("yst"       = yst,
+       "y"         = y,
+       "Ey"        = Ey,
+       "Gy"        = Gy,
+       "GEy"       = GEy,
+       "meff"      = list(ameff = apply(imeff, 2, mean), imeff = imeff),
+       "iteration" = t)
 }
 
 
@@ -189,7 +192,7 @@ simsart   <- function(formula,
 #' # Groups' size
 #' set.seed(123)
 #' M      <- 5 # Number of sub-groups
-#' nvec   <- round(runif(M, 100, 1000))
+#' nvec   <- round(runif(M, 100, 200))
 #' n      <- sum(nvec)
 #' 
 #' # Parameters
@@ -217,17 +220,39 @@ simsart   <- function(formula,
 #'   G[[m]]       <- Gm
 #' }
 #' 
-#' # data
+#' # Data
 #' data   <- data.frame(X, peer.avg(G, cbind(x1 = X[,1], x2 =  X[,2])))
 #' colnames(data) <- c("x1", "x2", "gx1", "gx2")
 #' 
+#' ## Complete information game
 #' ytmp    <- simsart(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, theta = theta, 
-#'                    data = data)
-#' data$y  <- ytmp$y
+#'                    data = data, cinfo = TRUE)
+#' data$yc <- ytmp$y
 #' 
-#' out     <- sart(formula = y ~ x1 + x2 + gx1 + gx2, optimizer = "nlm",
-#'                 Glist = G, data = data)
-#' summary(out)
+#' ## Incomplete information game
+#' ytmp    <- simsart(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, theta = theta, 
+#'                    data = data, cinfo = FALSE)
+#' data$yi <- ytmp$y
+#' 
+#' # Complete information estimation for yc
+#' outc1   <- sart(formula = yc ~ x1 + x2 + gx1 + gx2, optimizer = "nlm",
+#'                 Glist = G, data = data, cinfo = TRUE)
+#' summary(outc1)
+#' 
+#' # Complete information estimation for yi
+#' outc1   <- sart(formula = yi ~ x1 + x2 + gx1 + gx2, optimizer = "nlm",
+#'                 Glist = G, data = data, cinfo = TRUE)
+#' summary(outc1)
+#' 
+#' # Incomplete information estimation for yc
+#' outi1   <- sart(formula = yc ~ x1 + x2 + gx1 + gx2, optimizer = "nlm",
+#'                 Glist = G, data = data, cinfo = FALSE)
+#' summary(outi1)
+#' 
+#' # Incomplete information estimation for yi
+#' outi1   <- sart(formula = yi ~ x1 + x2 + gx1 + gx2, optimizer = "nlm",
+#'                 Glist = G, data = data, cinfo = FALSE)
+#' summary(outi1)
 #' }
 #' @importFrom stats dnorm
 #' @importFrom stats pnorm
@@ -293,7 +318,7 @@ sart <- function(formula,
   
   llh        <- NULL
   resTO      <- list()
-  covt       <- NULL
+  tmp        <- NULL
   covm       <- NULL
   var.comp   <- NULL
   t          <- NULL
@@ -328,13 +353,13 @@ sart <- function(formula,
       ctr    <- c(ctr, list(p = thetat))
       par1   <- "estimate"
       like   <- "minimum"
-      ctr  <- c(ctr, list(f = foptimTobit)) 
+      ctr    <- c(ctr, list(f = foptimTobit)) 
     }
     
     resTO    <- do.call(get(optimizer), ctr)
     theta    <- resTO[[par1]]
     
-    covt     <- fcovSTC(theta = theta, X = X, G2 = G2list, I = Ilist, W = Wlist, K =  K, n = n, 
+    tmp      <- fcovSTC(theta = theta, X = X, G2 = G2list, I = Ilist, W = Wlist, K =  K, n = n, 
                         y = y, Gy = Gy, indzero = indzero, indpos = indpos, igroup = igr, 
                         ngroup = M, ccov = cov)
     
@@ -426,37 +451,32 @@ sart <- function(formula,
     if (npl.maxit == t) {
       warning("The maximum number of iterations of the NPL algorithm has been reached.")
     }
-    covt       <- fcovSTI(n = n, GEy = GEyt, theta = thetat, X = X, K = K, G = Glist,
+    tmp        <- fcovSTI(n = n, GEy = GEyt, theta = thetat, X = X, K = K, G = Glist,
                           igroup = igr, ngroup = M, ccov = cov)
   }
   
   names(theta) <- c(coln, "sigma")
   
   # Marginal effects
-  meffects          <- c(covt$meffects)
-  var.comp          <- covt$var.comp
-  covm              <- covt$covm
-  covt              <- covt$covt
+  imeff        <- tmp$meff; colnames(imeff) <- coln
+  indexWI      <- 1:(K + 1)
+  if("(Intercept)" %in% coln){
+    indexWI    <- indexWI[coln != "(Intercept)"]
+  }
+  imeff        <- imeff[, indexWI, drop = FALSE]
+  meff         <- list(ameff = apply(imeff, 2, mean), imeff = imeff)
   
-  colnME            <- coln
-  if("(Intercept)" %in% coln) {
-    colnME          <- coln[-2]
-    meffects        <- meffects[-2]
-    covm            <- covm[-2, -2]
-  } 
-  names(meffects)   <- colnME
-  
-  if(!is.null(covt)) {
-    colnames(covt)  <- c(coln, "logsigma")
-    rownames(covt)  <- c(coln, "logsigma")
-    colnames(covm)  <- colnME
-    rownames(covm)  <- colnME
-    if(!is.null(var.comp$Sigma)){
-      rownames(var.comp$Sigma) <- c(coln, "logsigma")
-      rownames(var.comp$Omega) <- c(coln, "logsigma")
-      colnames(var.comp$Sigma) <- c(coln, "logsigma")
-      colnames(var.comp$Omega) <- c(coln, "logsigma")
-    }
+  # Covariances
+  covm         <- tmp$covm
+  covt         <- tmp$covt
+
+  if(cov) {
+    covm            <- covm[indexWI, indexWI]
+    colnames(covt)  <- c(coln, "sigma")
+    rownames(covt)  <- c(coln, "sigma")
+    colnames(covm)  <- coln[indexWI]
+    rownames(covm)  <- coln[indexWI]
+
   }
   
   INFO              <- list("M"          = M,
@@ -469,10 +489,11 @@ sart <- function(formula,
                             "npl.iter"   = t)
   
   out               <- list("info"       = INFO,
-                            "estimate"   = list(theta = theta, marg.effects = meffects),
+                            "estimate"   = theta,
+                            "meff"       = meff,
                             "Ey"         = Eyt, 
                             "GEy"        = GEyt,
-                            "cov"        = list(parms = covt, marg.effects = covm, var.comp = var.comp),
+                            "cov"        = list(parms = covt, ameff = covm),
                             "details"    = resTO)
   class(out)        <- "sart"
   out
@@ -497,7 +518,7 @@ sart <- function(formula,
   out           <- c(object, list("..." = ...)) 
   if(is.null(object$cov$parms)){
     env.formula <- environment(object$info$formula)
-    thetat      <- object$estimate$theta
+    thetat      <- object$estimate
     thetat      <- c(log(thetat[1]/(1 - thetat[1])), thetat[-c(1, length(thetat))], log(thetat[length(thetat)]))
     GEyt        <- object$GEy
     formula     <- object$info$formula
@@ -533,37 +554,30 @@ sart <- function(formula,
                             y = y, Gy = Gy, indzero = indzero, indpos = indpos, igroup = igr, 
                             ngroup = M, ccov = TRUE)
     } else {
-      tmp    <- fcovSTI(n = n, GEy = GEyt, theta = thetat, X = X, K = K, G = Glist,
+      tmp        <- fcovSTI(n = n, GEy = GEyt, theta = thetat, X = X, K = K, G = Glist,
                         igroup = igr, ngroup = M, ccov = TRUE)
     }
-    meffects          <- c(tmp$meffects)
-    var.comp          <- tmp$var.comp
-    covt              <- tmp$covt
-    covm              <- tmp$covm
-    Rmax              <- tmp$Rmax
     
-    colnME            <- coln
-    if("(Intercept)" %in% coln) {
-      colnME          <- coln[-2]
-      meffects        <- meffects[-2]
-      covm            <- covm[-2, -2]
-    } 
-    names(meffects)   <- colnME
-    
-    if(!is.null(covt)) {
-      colnames(covt)  <- c(coln, "logsigma")
-      rownames(covt)  <- c(coln, "logsigma")
-      colnames(covm)  <- colnME
-      rownames(covm)  <- colnME
-      if(!is.null(var.comp$Sigma)){
-        rownames(var.comp$Sigma) <- c(coln, "logsigma")
-        rownames(var.comp$Omega) <- c(coln, "logsigma")
-        colnames(var.comp$Sigma) <- c(coln, "logsigma")
-        colnames(var.comp$Omega) <- c(coln, "logsigma")
-      }
+    # Marginal effects
+    imeff        <- tmp$meff; colnames(imeff) <- coln
+    indexWI      <- 1:(K + 1)
+    if("(Intercept)" %in% coln){
+      indexWI    <- indexWI[coln != "(Intercept)"]
     }
+    imeff        <- imeff[, indexWI, drop = FALSE]
+    meff         <- list(ameff = apply(imeff, 2, mean), imeff = imeff)
     
-    out$cov           <- list(parms = covt, marg.effects = covm, var.comp = var.comp)
+    # Covariances
+    covm         <- covt$covm
+    covt         <- covt$covt
+    Rmax         <- tmp$Rmax
+    
+    covm            <- covm[indexWI, indexWI]
+    colnames(covt)  <- c(coln, "sigma")
+    rownames(covt)  <- c(coln, "sigma")
+    colnames(covm)  <- coln[indexWI]
+    rownames(covm)  <- coln[indexWI]
+    out$cov         <- list(parms = covt, ameff = covm)
   }
   class(out)    <- "summary.sart"
   out
@@ -577,15 +591,15 @@ sart <- function(formula,
   
   M                    <- x$info$M
   n                    <- x$info$n
-  estimate             <- x$estimate$theta
+  estimate             <- x$estimate
   iteration            <- x$info$npl.iter
   RE                   <- !is.null(iteration)
   formula              <- x$info$formula
   K                    <- length(estimate)
   coef                 <- estimate[-K]
-  meff                 <- x$estimate$marg.effects
+  meff                 <- x$meff$ameff
   std                  <- sqrt(diag(x$cov$parms)[-K])
-  std.meff             <- sqrt(diag(x$cov$marg.effects))
+  std.meff             <- sqrt(diag(x$cov$ameff))
   sigma                <- estimate[K]
   llh                  <- x$info$log.like
   censored             <- x$info$censured
@@ -595,13 +609,13 @@ sart <- function(formula,
   tmp                  <- fcoefficients(coef, std)
   out_print            <- tmp$out_print
   out                  <- tmp$out
-  out_print            <- c(list(out_print), x[-(1:6)], list(...))
+  out_print            <- c(list(out_print), x[-(1:7)], list(...))
   
   
   tmp.meff             <- fcoefficients(meff, std.meff)
   out_print.meff       <- tmp.meff$out_print
   out.meff             <- tmp.meff$out
-  out_print.meff       <- c(list(out_print.meff), x[-(1:6)], list(...))
+  out_print.meff       <- c(list(out_print.meff), x[-(1:7)], list(...))
   
   
   nfr                  <- x$info$nlinks
@@ -640,118 +654,3 @@ sart <- function(formula,
   stopifnot(class(x) == "sart")
   print(summary(x, ...))
 }
-
-#' @rdname summary.sart
-#' @importFrom stats cov
-#' @export
-"summary.sarts" <- function(object, ...) {
-  stopifnot(class(object) %in% c("list", "sarts", "summary.sarts")) 
-  
-  lclass        <- unique(unlist(lapply(object, class)))
-  if (!all(lclass %in%c("summary.sart"))) {
-    stop("All the components in `object` should be from `summary.sart` class")
-  }
-  
-  nsim          <- length(object)
-  K             <- length(object[[1]]$estimate$theta)
-  coef          <- do.call("rbind", lapply(object, function(z) t(c(z$estimate$theta))))
-  meff          <- do.call("rbind", lapply(object, function(z) t(z$estimate$marg.effects)))
-  estimate      <- colSums(coef)/nsim
-  meffects      <- colSums(meff)/nsim
-  RE            <- !is.null(object[[1]]$Ey)
-  
-  vcoef2        <- Reduce("+", lapply(object, function(z) z$cov$parms))/nsim
-  vmeff2        <- Reduce("+", lapply(object, function(z) z$cov$marg.effects))/nsim
-  
-  vcoef1        <- cov(coef)
-  vmeff1        <- cov(meff)
-  
-  vcoef         <- vcoef1 + vcoef2
-  vmeff         <- vmeff1 + vmeff2
-  
-  llh           <- unlist(lapply(object, function(z) z$info$log.like))
-  llh           <- c("min" = min(llh), "mean" = mean(llh), "max" = max(llh))
-  
-  M             <- object[[1]]$info$M
-  n             <- object[[1]]$info$n
-  
-  INFO                 <- list("M"          = M,
-                               "n"          = n,
-                               "log.like"   = llh,
-                               "Rat.Exp"    = RE,
-                               "simulation" = nsim)
-  
-  out                  <- list("info"       = INFO,
-                               "estimate"   = list(theta = estimate, marg.effects = meffects),
-                               "cov"        = list(parms = vcoef, marg.effects = vmeff),
-                               ...          = ...)
-  class(out)           <- "summary.sarts"
-  out
-} 
-
-
-#' @rdname summary.sart
-#' @importFrom stats cov
-#' @export
-"print.summary.sarts" <- function(x, ...) {
-  stopifnot(class(x) %in% c("summary.sarts")) 
-  
-  nsim          <- x$info$simulation
-  coef          <- x$estimate$theta
-  meffects      <- x$estimate$marg.effects
-  K             <- length(coef)
-  sigma            <- tail(coef, 1)
-  coef          <- head(coef, K - 1)
-  RE            <- x$info$Rat.Exp
-  
-  vcoef         <- x$cov$parms
-  vmeff         <- x$cov$marg.effects
-  
-  llh           <- x$info$log.like
-  
-  M             <- x$info$M
-  n             <- x$info$n
-  
-  std           <- sqrt(head(diag(vcoef), K-1))
-  std.meff      <- sqrt(diag(vmeff))
-  
-  tmp           <- fcoefficients(coef, std)
-  out_print     <- tmp$out_print
-  out           <- tmp$out
-  
-  tmp.meff       <- fcoefficients(meffects, std.meff)
-  out_print.meff <- tmp.meff$out_print
-  out.meff       <- tmp.meff$out
-  
-  out_print      <- c(list(out_print), x[-c(1:3)], list(...))
-  out_print.meff <- c(list(out_print.meff), x[-c(1:3)], list(...))
-  
-  cat("SART Model", ifelse(RE, "with Rational Expectation", ""), "\n\n")
-  cat("Method: Replication of ")
-  if(RE){
-    cat("Nested pseudo-likelihood (NPL)")
-  } else{
-    cat("Maximum Likelihood (ML)")
-  }
-  cat("\nReplication: ", nsim, "\n\n")
-  
-  cat("Coefficients:\n")
-  do.call("print", out_print)
-  
-  cat("\nMarginal Effects:\n")
-  do.call("print", out_print.meff)
-  cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
-  cat("sigma: ", sigma, "\n")
-  cat("log likelihood: \n")
-  print(llh)
-  
-  invisible(x)
-} 
-
-#' @rdname summary.sart
-#' @importFrom stats cov
-#' @export
-"print.sarts" <- function(x, ...) { 
-  stopifnot(class(x) %in% c("sarts", "list"))
-  print(summary.sarts(x, ...))
-} 

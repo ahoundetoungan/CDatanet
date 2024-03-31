@@ -22,13 +22,13 @@
 #' @description
 #' `simcdnet` simulate the count data model with social interactions under rational expectations developed by Houndetoungan (2024).
 #' @details 
-#' Houndetoungan (2024) shows that the count variable \eqn{y_i}{yi} take the value \eqn{r} with probability. 
+#' The count variable \eqn{y_i}{yi} take the value \eqn{r} with probability. 
 #' \deqn{P_{ir} = F(\sum_{s = 1}^S \lambda_s \bar{y}_i^{e,s}  + \mathbf{z}_i'\Gamma - a_{h(i),r}) - F(\sum_{s = 1}^S \lambda_s \bar{y}_i^{e,s}  + \mathbf{z}_i'\Gamma - a_{h(i),r + 1}).}
 #' In this equation, \eqn{\mathbf{z}_i} is a vector of control variables; \eqn{F} is the distribution function of the standard normal distribution;
 #' \eqn{\bar{y}_i^{e,s}} is the average of \eqn{E(y)} among peers using the `s`-th network definition;
 #' \eqn{a_{h(i),r}} is the `r`-th cut-point in the cost group \eqn{h(i)}. \cr\cr
-#' For identification, \eqn{a_{h(i),0} = -\infty} and \eqn{a_{h(i),1} = 0}. Moreover, \eqn{a_{h(i),r} = \infty} for any \eqn{r \geq R_{\text{max}} + 1}, 
-#' which implies that \eqn{P_{ir} = 0} for any \eqn{r \geq R_{\text{max}} + 1}.
+#' The following identification conditions have been introduced: \eqn{\sum_{s = 1}^S \lambda_s > 0}, \eqn{a_{h(i),0} = -\infty}, \eqn{a_{h(i),1} = 0}, and 
+#' \eqn{a_{h(i),r} = \infty} for any \eqn{r \geq R_{\text{max}} + 1}. The last condition implies that \eqn{P_{ir} = 0} for any \eqn{r \geq R_{\text{max}} + 1}.
 #' For any \eqn{r \geq 1}, the distance between two cut-points is \eqn{a_{h(i),r+1} - a_{h(i),r} =  \delta_{h(i),r} + \sum_{s = 1}^S \lambda_s}
 #' As the number of cut-point can be large, a quadratic cost function is considered for \eqn{r \geq \bar{R}_{h(i)}}, where \eqn{\bar{R} = (\bar{R}_{1}, ..., \bar{R}_{L})}.
 #' With the semi-parametric cost-function,
@@ -46,7 +46,7 @@
 #'     \item{y}{the observed count variable.}
 #'     \item{Ey}{\eqn{E(y)}, the expectation of y.}
 #'     \item{GEy}{the average of \eqn{E(y)} friends.}
-#'     \item{marg.effects}{the marginal effects for each individual.}
+#'     \item{meff}{a list includinh average and individual marginal effects.}
 #'     \item{Rmax}{infinite sums in the marginal effects are approximated by sums up to Rmax.}
 #'     \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 #' @references 
@@ -97,7 +97,7 @@
 #' }
 #' 
 #' # Parameters
-#' lambda <- c(0.2, 0.3, 0.15, 0.25) #Four definitions of networks
+#' lambda <- c(0.2, -0.3, 0.15, 0.25) #Four definitions of networks
 #' Gamma  <- c(2.5, 2.2, -0.9, 1.5, -1.2)
 #' delta  <- rep(c(0.6, 0.47, 0.35, 0.2, 0.05), 2) # two cost groups.
 #' 
@@ -124,8 +124,8 @@ simcdnet   <- function(formula,
                        cost.group,
                        Rmax,
                        Rbar,
-                       tol   = 1e-10,
-                       maxit = 500,
+                       tol        = 1e-10,
+                       maxit      = 500,
                        data) {
   if(missing(Rmax)) Rmax <- Inf
   stopifnot((Rmax >= 1) & (Rmax <= Inf))
@@ -201,7 +201,8 @@ simcdnet   <- function(formula,
   f.t.data  <- formula.to.data(formula = formula, contextual = FALSE, Glist = Glist, M = M, igr = igr, 
                                data = data, type = "sim", theta0  = 0)
   X         <- f.t.data$X
-  if(ncol(X) != length(Gamma)) stop("ncol(X) == length(Gamma) is not true.")
+  K         <- length(Gamma)
+  if(ncol(X) != K) stop("ncol(X) == length(Gamma) is not true.")
   coln      <- c("lambda", colnames(X))
   if(nCl > 1) {
     coln    <- c(paste0(coln[1], ":", 1:nCl), coln[-1])
@@ -228,34 +229,25 @@ simcdnet   <- function(formula,
   }
   
   # marginal effects
-  GamWI    <- c(lambda, Gamma)
-  colWI    <- coln
-  if("(Intercept)" %in% colWI){
-    GamWI  <- GamWI[colWI != "(Intercept)"]
-    colWI  <- colWI[colWI != "(Intercept)"]
+  Gamma2   <- Gamma
+  colnme   <- coln
+  if("(Intercept)" %in% coln){
+    Gamma2 <- Gamma[tail(coln, K) != "(Intercept)"]
+    colnme <- colnme[coln != "(Intercept)"]
   }
-  meffects <- fmeffects(ZtLambda = Ztlamda, lbeta = GamWI, lCa = lCa, nCa = nCa, delta = delta, idelta = idelta,
-                        n = na, sumn = sumn, Rbar = Rbar, R = Rmax)
-  
-  # rho != 0
-  #   t        <- fyb2(yb, Gyb, Glist, igr, M, xb, lambda, delta, deltabar, rho, n, Rbar, tol, maxit)
-  #   Ztlamda  <- lambda*Gyb + xb
-  #   yst      <- Ztlamda + eps
-  #   y        <- c(fy2(yst, max(yst), lambda, delta, deltabar, rho, n, Rbar))
-  #   meffects <- fmeffects2(n, lambda, delta, deltabar, rho, Rbar, Ztlamda, thetaWI)
+  meff     <- fmeffects(ZtLambda = Ztlamda, lambda = lambda, Gamma2 = Gamma2, lCa = lCa, nCa = nCa,
+                        delta = delta, idelta = idelta, sumn = sumn, Rbar = Rbar, R = Rmax)
+  Rmax     <- meff$Rmax
+  imeff    <- meff$imeff; colnames(imeff) <- colnme
   
   
-  Rmax            <- meffects$Rmax
-  meffects        <- meffects$meffects; colnames(meffects) <- colWI
-  
-  
-  list("yst"            = yst,
-       "y"              = y,
-       "Ey"             = Ey,
-       "GEy"            = GEy,
-       "marg.effects"   = meffects,
-       "Rmax"           = Rmax,
-       "iteration"      = c(t))
+  list("yst"       = yst,
+       "y"         = y,
+       "Ey"        = Ey,
+       "GEy"       = GEy,
+       "meff"      = list(ameff = apply(imeff, 2, mean), imeff = imeff),
+       "Rmax"      = Rmax,
+       "iteration" = c(t))
 }
 
 
@@ -276,6 +268,7 @@ simcdnet   <- function(formula,
 #' @param npl.ctr a list of controls for the NPL method (see details).
 #' @param opt.ctr a list of arguments to be passed in `optim_lbfgs` of the package \pkg{RcppNumerical}, \link[stats]{nlm} or \link[stats]{optim} (the solver set in `optimizer`), such as `maxit`, `eps_f`, `eps_g`, `control`, `method`, etc.
 #' @param cov a Boolean indicating if the covariance should be computed.
+#' @param ubslambda a positive value indicating the upper bound of \eqn{\sum_{s = 1}^S \lambda_s > 0}.
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `cdnet` is called.
 #' @return A list consisting of:
@@ -295,8 +288,8 @@ simcdnet   <- function(formula,
 #' In this equation, \eqn{\mathbf{z}_i} is a vector of control variables; \eqn{F} is the distribution function of the standard normal distribution;
 #' \eqn{\bar{y}_i^{e,s}} is the average of \eqn{E(y)} among peers using the `s`-th network definition;
 #' \eqn{a_{h(i),r}} is the `r`-th cut-point in the cost group \eqn{h(i)}. \cr\cr
-#' For identification, \eqn{a_{h(i),0} = -\infty} and \eqn{a_{h(i),1} = 0}. Moreover, \eqn{a_{h(i),r} = \infty} for any \eqn{r \geq R_{\text{max}} + 1}, 
-#' which implies that \eqn{P_{ir} = 0} for any \eqn{r \geq R_{\text{max}} + 1}.
+#' The following identification conditions have been introduced: \eqn{\sum_{s = 1}^S \lambda_s > 0}, \eqn{a_{h(i),0} = -\infty}, \eqn{a_{h(i),1} = 0}, and 
+#' \eqn{a_{h(i),r} = \infty} for any \eqn{r \geq R_{\text{max}} + 1}. The last condition implies that \eqn{P_{ir} = 0} for any \eqn{r \geq R_{\text{max}} + 1}.
 #' For any \eqn{r \geq 1}, the distance between two cut-points is \eqn{a_{h(i),r+1} - a_{h(i),r} =  \delta_{h(i),r} + \sum_{s = 1}^S \lambda_s}
 #' As the number of cut-point can be large, a quadratic cost function is considered for \eqn{r \geq \bar{R}_{h(i)}}, where \eqn{\bar{R} = (\bar{R}_{1}, ..., \bar{R}_{L})}.
 #' With the semi-parametric cost-function,
@@ -369,7 +362,7 @@ simcdnet   <- function(formula,
 #' }
 #' 
 #' # Parameters
-#' lambda <- c(0.2, 0.3, 0.15, 0.25) #Four definitions of networks
+#' lambda <- c(0.2, -0.3, 0.15, 0.25) #Four definitions of networks
 #' Gamma  <- c(2.5, 2.2, -0.9, 1.5, -1.2)
 #' delta  <- rep(c(0.6, 0.47, 0.35, 0.2, 0.05), 2) # two cost groups.
 #' 
@@ -386,21 +379,17 @@ simcdnet   <- function(formula,
 #' 
 #' # Estimation
 #' est    <- cdnet(formula = y ~ x1 + x2 + gx1 + gx2, Glist = G, Rbar = rep(5, 2), cost.group = crg,
-#'                 optimizer = "nlm", data = data, opt.ctr = list(iterlim = 5000, steptol = 1e-15))
+#'                 optimizer = "fastlbfgs", data = data, 
+#'                 opt.ctr = list(maxit = 5e3, eps_f = 1e-11, eps_g = 1e-11))
 #' 
 #' # Print summary
 #' summary(est)
 #' print(est)
-#' 
-#' # Marginal effects
-#' meffects.cdnet(est, Glist = G, data = data)
-#' 
-#' # Standard errors of marginal effects using simulations
-#' meffects.cdnet(est, Glist = G, data = data, S = 100)
 #' }
 #' @importFrom stats quantile
 #' @importFrom utils head
 #' @importFrom utils tail
+#' @importFrom stats runif
 #' @export
 cdnet    <- function(formula,
                      Glist, 
@@ -409,6 +398,7 @@ cdnet    <- function(formula,
                      Rbar,
                      starting  = list(lambda = NULL, Gamma = NULL, delta = NULL), 
                      Ey0       = NULL,
+                     ubslambda = 1L,
                      optimizer = "fastlbfgs", 
                      npl.ctr   = list(), 
                      opt.ctr   = list(), 
@@ -417,6 +407,10 @@ cdnet    <- function(formula,
   if(missing(Rmax)) Rmax <- Inf
   stopifnot(optimizer %in% c("fastlbfgs", "optim", "nlm"))
   stopifnot((Rmax >= 1) & (Rmax <= Inf))
+  stopifnot(length(ubslambda) == 1)
+  stopifnot(ubslambda > 0)
+  lb_sl       <- 0
+  ub_sl       <- ubslambda
   env.formula <- environment(formula)
   
   # controls
@@ -514,7 +508,7 @@ cdnet    <- function(formula,
   K        <- ncol(X)
   
   # Ey 
-  Eyt      <- rep(0, sumn)
+  Eyt      <- runif(sumn, y*0.98, y*1.02)
   if (!is.null(Ey0)) {
     Eyt    <- Ey0
   }
@@ -542,7 +536,7 @@ cdnet    <- function(formula,
     }
     if(any(head(thetat, nCl) < 0)) stop("Negative peer effects are not supported in this version.")
     lmbd0     <- head(thetat, nCl)
-    thetat    <- c(log(head(thetat, nCl)/(1 - head(thetat, nCl))), tail(thetat, K))
+    thetat    <- c(fcdlambdat(head(thetat, nCl), nCl, lb_sl, ub_sl), tail(thetat, K))
     if(any(Deltat <= 0)) stop("all(delta) > 0 is not true for starting values.")
   } else {
     Gy        <- lapply(1:nCl, function(x_2) unlist(lapply(1:M, function(x_1) Glist[[x_1]][[x_2]] %*% y[(igr[x_1, 1]:igr[x_1,2]) + 1])))
@@ -553,7 +547,7 @@ cdnet    <- function(formula,
     b[1:nCl]  <- sapply(b[1:nCl], function(x_) min(max(x_, 0.01), 0.99)) 
     lmbd0     <- b[1:nCl]
     Deltat    <- rep(0.01, sum(ndelta))
-    thetat    <- c(log(head(b, nCl)/(1 - head(b, nCl))), tail(b, K))
+    thetat    <- c(fcdlambdat(head(b, nCl), nCl, lb_sl, ub_sl), tail(b, K))
   }
   
   idelta      <- matrix(c(0, cumsum(ndelta)[-length(ndelta)], cumsum(ndelta) - 1), ncol = 2); idelta[ndelta == 0,] <- NA
@@ -574,8 +568,9 @@ cdnet    <- function(formula,
   steps    <- list()
   
   # arguments
-  ctr      <- c(list(Gye = GEyt, X = X, lCa = lCa, nCa = nCa, nCl = nCl, K = K, n = na, sumn = sumn, 
-                     idelta = idelta, ndelta = ndelta, Rbar = Rbar, R = Rmax, y = y, maxy = maxy) , opt.ctr)
+  ctr      <- c(list(lb_sl = lb_sl, ub_sl = ub_sl, Gye = GEyt, X = X, lCa = lCa, 
+                     nCa = nCa, nCl = nCl, K = K, n = na, sumn = sumn, idelta = idelta, 
+                     ndelta = ndelta, Rbar = Rbar, R = Rmax, y = y, maxy = maxy) , opt.ctr)
   
   # Arguments used in the optimizer
   if (optimizer == "fastlbfgs"){
@@ -608,10 +603,10 @@ cdnet    <- function(formula,
     REt         <- do.call(get(optimizer), ctr)
     thetat      <- REt[[par1]]
     llht        <- -REt[[like]]
-    theta       <- c(1/(1 + exp(-head(thetat, nCl))), thetat[(nCl + 1):(K + nCl)], exp(tail(thetat, sum(ndelta))) + 1e-323)
+    theta       <- c(fcdlambda(head(thetat, nCl), nCl, lb_sl, ub_sl), thetat[(nCl + 1):(K + nCl)], exp(tail(thetat, sum(ndelta))) + 1e-323)
     
     # compute y
-    fL_NPL(ye = Eyt, Gye = GEyt, theta = thetat, X = X, G = Glist, lCa = lCa, nCa = nCa, nCl = nCl, igroup = igr, 
+    fL_NPL(ye = Eyt, Gye = GEyt, theta = theta, X = X, G = Glist, lCa = lCa, nCa = nCa, nCl = nCl, igroup = igr, 
            ngroup = M, K = K, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta, Rbar = Rbar, R = Rmax)
     
     # distance
@@ -637,12 +632,15 @@ cdnet    <- function(formula,
       print(theta)
     }
     
-    if((ninc.d > npl.incdit) | (llht < -1e293)) {
+    if((ninc.d > npl.incdit)) {
       cat("** Non-convergence ** Redefining theta and computing a new E(y)\n")
-      thetat[1:nCl] <- -4.5
+      thetat[1:nCl] <- runif(nCl, -4.5, 0)
+      theta         <- c(fcdlambda(head(thetat, nCl), nCl, lb_sl, ub_sl), thetat[(nCl + 1):(K + nCl)], exp(tail(thetat, sum(ndelta))) + 1e-323)
+      Eyt           <- runif(sumn, y*0.98, y*1.02)
       dist0         <- Inf
-      fnewye(ye = Eyt, Gye = GEyt, theta = thetat, X = X, G = Glist, lCa = lCa, nCa = nCa, nCl = nCl, igroup = igr, 
-             ngroup = M, K = K, n = na, sumn = sumn, idelta = idelta, Rbar = Rbar, tol = npl.tol, maxit = npl.maxit)
+      fnewye(ye = Eyt, Gye = GEyt, theta = theta, X = X, G = Glist, lCa = lCa, nCa = nCa, nCl = nCl, igroup = igr, 
+             ngroup = M, K = K, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta, Rbar = Rbar, tol = npl.tol, 
+             maxit = npl.maxit, R = Rmax)
       ctr[[par0]] <- thetat
     }
   }
@@ -672,29 +670,30 @@ cdnet    <- function(formula,
     warning("NPL: maximum number of iterations has been reached.")
   }
   # covariance and ME
-  var.comp          <- NULL
-  covt              <- NULL
+  Gamma2   <- Gam
+  colnme   <- coln
+  ixWi     <- 0:(K - 1)
+  if("(Intercept)" %in% coln){
+    Gamma2 <- Gam[tail(coln, K) != "(Intercept)"]
+    colnme <- colnme[coln != "(Intercept)"]
+    ixWi   <- ixWi[tail(coln, K) != "(Intercept)"]
+  }
+  
+  tmp      <- fcovCDI(theta = theta, Gamma2 = Gamma2, Gye = GEyt, X = X, ixWi = ixWi, G = Glist, lCa = lCa, nCa = nCa, 
+                       nCl = nCl, igroup = igr, ngroup = M, K = K, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta,
+                       Rbar = Rbar, R = Rmax, S = npl.S, ccov = cov)
+  # Marginal effects
+  imeff    <- tmp$imeff; colnames(imeff) <- colnme
+  meff     <- list(ameff = apply(imeff, 2, mean), imeff = imeff)
+  
+  # Covariances
+  covt     <- tmp$covt
+  covm     <- tmp$covm
   if(cov){
-    tmp             <- fcovCDI(theta = thetat, Gye = GEyt, X = X, G = Glist, lCa = lCa, nCa = nCa, nCl = nCl,
-                               igroup = igr, ngroup = M, K = K, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta,
-                               Rbar = Rbar, R = Rmax, S = npl.S)
-    var.comp        <- tmp$var.comp
-    covt            <- tmp$covt
-    # Rmax            <- tmp$Rmax
-    
-    namecovt        <- c(coln, unlist(lapply(1:nCa, function(x_){
-      if((Rbar[x_] == 1) & (Rmax == 1)) return(c())
-      if(Rbar[x_] == Rmax) return(paste0("log(delta:", x_, ".", 2:(Rbar[x_]), ")"))
-      if(Rbar[x_] > 1) return(c(paste0("log(delta:", x_, ".", 2:(Rbar[x_]), ")"), paste0("log(deltabar:", x_, ")")))
-      paste0("log(deltabar:", x_, ")")
-    })))
-    colnames(covt)  <- namecovt
-    rownames(covt)  <- namecovt
-    namecovt[1:nCl] <- "log(lambda)"; if(nCl > 1) namecovt[1:nCl] <- paste0("log(lambda:", 1:nCl, ")")
-    rownames(var.comp$Sigma) <- namecovt
-    rownames(var.comp$Omega) <- namecovt
-    colnames(var.comp$Sigma) <- namecovt
-    colnames(var.comp$Omega) <- namecovt
+    colnames(covt)  <- namtheta
+    rownames(covt)  <- namtheta
+    colnames(covm)  <- colnme
+    rownames(covm)  <- colnme
   }
   
   AIC                  <- 2*length(theta) - 2*llht
@@ -715,9 +714,10 @@ cdnet    <- function(formula,
   
   out                  <- list("info"       = INFO,
                                "estimate"   = list(parms = theta, lambda =  lbda, Gamma = Gam, delta = Del),
+                               "meff"       = meff,
                                "Ey"         = Eyt, 
                                "GEy"        = GEyt,
-                               "cov"        = list(parms = covt, var.comp = var.comp),
+                               "cov"        = list(parms = covt, ameff = covm),
                                "details"    = steps)
   class(out)           <- "cdnet"
   out
@@ -756,11 +756,10 @@ cdnet    <- function(formula,
     nvec        <- object$info$n
     sumn        <- sum(nvec)
     nCa         <- length(Rbar)
-    parms       <- object$estimate$parms
+    theta       <- object$estimate$parms
     lambda      <- object$estimate$lambda
     Gamma       <- object$estimate$Gamma
     delta       <- object$estimate$delta
-    thetat      <- c(log(lambda/(1 - lambda)), Gamma, log(delta))
     ndelta      <- ifelse(Rbar == Rmax, Rbar - 1, Rbar)
     idelta      <- matrix(c(0, cumsum(ndelta)[-length(ndelta)], cumsum(ndelta) - 1), ncol = 2); idelta[ndelta == 0,] <- NA
     
@@ -802,29 +801,32 @@ cdnet    <- function(formula,
       coln      <- c(paste0(coln[1], ":", 1:nCl), coln[-1])
     }
     
-    tmp         <- fcovCDI(theta = thetat, Gye = GEyt, X = X, G = Glist, lCa = lCa, nCa = nCa, nCl = nCl,
-                           igroup = igr, ngroup = M, K = Kz, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta,
-                           Rbar = Rbar, R = Rmax, S = npl.S)
-    
-    var.comp        <- tmp$var.comp
-    covt            <- tmp$covt
-    # out$info$Rmax   <- tmp$Rmax
-    
-    namecovt        <- c(coln, unlist(lapply(1:nCa, function(x_){
+    namtheta    <- c(coln, unlist(lapply(1:nCa, function(x_){
       if((Rbar[x_] == 1) & (Rmax == 1)) return(c())
       if(Rbar[x_] == Rmax) return(paste0("delta:", x_, ".", 2:(Rbar[x_])))
-      if(Rbar[x_] > 1) return(c(paste0("log(delta:", x_, ".", 2:(Rbar[x_]), ")"), paste0("log(deltabar:", x_, ")")))
-      paste0("log(deltabar:", x_, ")")
+      if(Rbar[x_] > 1) return(c(paste0("delta:", x_, ".", 2:(Rbar[x_])), paste0("deltabar:", x_)))
+      paste0("deltabar:", x_)
     })))
-    colnames(covt)  <- namecovt
-    rownames(covt)  <- namecovt
-    namecovt[1:nCl] <- "log(lambda)"; if(nCl > 1) namecovt[1:nCl] <- paste0("log(lambda:", 1:nCl, ")")
-    rownames(var.comp$Sigma) <- namecovt
-    rownames(var.comp$Omega) <- namecovt
-    colnames(var.comp$Sigma) <- namecovt
-    colnames(var.comp$Omega) <- namecovt
     
-    out$cov           <- list(parms = covt, var.comp = var.comp)
+    Gamma2      <- Gamma
+    ixWi        <- 0:(Kz - 1)
+    if("(Intercept)" %in% coln){
+      Gamma2    <- Gamma[tail(coln, Kz) != "(Intercept)"]
+      ixWi      <- ixWi[tail(coln, Kz) != "(Intercept)"]
+    }
+    tmp         <- fcovCDI(theta = theta, Gamma2 = Gamma2, Gye = GEyt, X = X, ixWi = ixWi, G = Glist, lCa = lCa, nCa = nCa, 
+                           nCl = nCl, igroup = igr, ngroup = M, K = Kz, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta,
+                           Rbar = Rbar, R = Rmax, S = npl.S, ccov = TRUE)
+    
+    # Covariances
+    covt        <- tmp$covt
+    covm        <- tmp$covm
+    colnames(covt)  <- namtheta
+    rownames(covt)  <- namtheta
+    colnames(covm)  <- names(out$meff$ameff)
+    rownames(covm)  <- names(out$meff$ameff)
+    
+    out$cov         <- list(parms = covt, ameff = covm)
   }
   class(out) <- "summary.cdnet"
   out
@@ -841,7 +843,8 @@ cdnet    <- function(formula,
   n                    <- x$info$n
   iteration            <- x$info$npl.iter
   Rbar                 <- x$info$Rbar
-  csRbar               <- c(0, cumsum(Rbar))
+  Rmax                 <- x$info$Rmax
+  csRbar               <- c(0, cumsum(Rbar - (Rbar == Rmax)))
   formula              <- x$info$formula
   Kz                   <- x$info$Kz
   AIC                  <- x$info$AIC
@@ -851,7 +854,9 @@ cdnet    <- function(formula,
   
   coef                 <- c(x$estimate$lambda, x$estimate$Gamma)
   K                    <- length(coef)
+  meff                 <- x$meff$ameff
   std                  <- sqrt(head(diag(x$cov$parms), K))
+  std.meff             <- sqrt(diag(x$cov$ameff))
   delta                <- x$estimate$delta
   
   llh                  <- x$info$log.like
@@ -860,8 +865,12 @@ cdnet    <- function(formula,
   tmp                  <- fcoefficients(coef, std)
   out_print            <- tmp$out_print
   out                  <- tmp$out
-  out_print            <- c(list(out_print), x[-(1:6)], list(...))
+  out_print            <- c(list(out_print), x[-(1:7)], list(...))
   
+  tmp.meff             <- fcoefficients(meff, std.meff)
+  out_print.meff       <- tmp.meff$out_print
+  out.meff             <- tmp.meff$out
+  out_print.meff       <- c(list(out_print.meff), x[-(1:7)], list(...))
   
   cat("Count data Model with Social Interactions\n\n")
   cat("Call:\n")
@@ -873,14 +882,30 @@ cdnet    <- function(formula,
   
   cat("Coefficients:\n")
   do.call("print", out_print)
+  
+  cat("\nMarginal Effects:\n")
+  do.call("print", out_print.meff)
   cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
   
   cat("Cost function -- Number of groups: ", nCa, "\n", sep = "")
   
   for(k in 1:nCa){
     cat("Group ", k, ", Rbar = ", Rbar[k], "\n", sep = "")
-    if(Rbar[k] > 1) cat("delta:", delta[(csRbar[k] + 1):(csRbar[k + 1] - 1)], "\n", sep = " ")
-    cat("deltabar: ", delta[csRbar[k + 1]], "\n\n", sep = "")
+    if(Rbar[k] > 1){
+      cat("delta:", delta[(csRbar[k] + 1):(csRbar[k + 1] - 1)], "\n", sep = " ")
+     if(Rmax > Rbar[k]){
+       cat("deltabar: ", delta[csRbar[k + 1]], "\n\n", sep = "")
+     } else {
+       cat("deltabar not defined: Rbar = Rmax\n\n", sep = "")
+     }
+    } else {
+      if(Rmax > Rbar[k]){
+        cat("delta not defined: Rbar = 1\n", sep = " ")
+        cat("deltabar: ", delta[k], "\n\n", sep = "")
+      } else{
+        cat("delta and deltabar not defined: Rbar = Rmax = 1\n\n", sep = " ")
+      }
+    }
   }
   
   
@@ -895,205 +920,4 @@ cdnet    <- function(formula,
 "print.cdnet" <- function(x, ...) {
   stopifnot(class(x) == "cdnet")
   print(summary(x, ...))
-}
-
-#' @title Computing marginal effects for count data models with social interactions under rational expectations
-#' @description \code{meffects.cdnet} computes and prints marginal effects for the class `cdnet` as returned by the function \link{cdnet}.
-#' Standard errors for the marginal effects are computed by simulation following Krinsky and Robb (1989).
-#' @param object an object of class `cdnet` or `summary.cdnet`, as returned by the function \code{\link{cdnet}} or \code{\link{summary.cdnet}}.
-#' @param list.index list of observation indices to use to calculate the average marginal effect for each variable (see the example of the function \code{\link{cdnet}}).
-#' @param Glist adjacency matrix. For networks consisting of multiple subnets, `Glist` can be a list of subnets with the `m`-th element being an `ns*ns` adjacency matrix, where `ns` is the number of nodes in the `m`-th subnet.
-#' For heterogenous peer effects (e.g., boy-boy, boy-girl friendship effects), the `m`-th element can be a list of many `ns*ns` adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
-#' For heterogeneous peer effects in the case of a single large network, `Glist` must be a one-item list. This item must be a list of many specifications of large networks.
-#' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `summary.cdnet` is called.
-#' @param S he number of simulations to use to calculate standard errors. Only marginal effects are calculated when `S = NULL`.
-#' @param ncores ncores the number of cores to use for simulations. A large number of cores should make the process faster.
-#' @references 
-#' Krinsky, I., & Robb, A. L. (1986). On approximating the statistical properties of elasticities. The review of economics and statistics, 715-719, \doi{10.2307/1924536}.
-#' @importFrom MASS mvrnorm
-#' @importFrom parallel makeCluster stopCluster
-#' @importFrom foreach foreach "%dopar%"
-#' @importFrom doRNG "%dorng%"
-#' @importFrom doParallel registerDoParallel
-#' @export
-"meffects.cdnet" <- function(object, Glist, data, list.index = list(), S = NULL, ncores = 1L){
-  if(!is.null(S)) stopifnot(S >= 2)
-  stopifnot(inherits(object, c("summary.cdnet", "cdnet")))
-  env.formula  <- environment(object$info$formula)
-  Rbar         <- object$info$Rbar
-  Rmax         <- object$info$Rmax
-  Kz           <- object$info$Kz
-  nCl          <- object$info$n.lambda
-  cost.group   <- object$info$cost.group
-  M            <- object$info$M
-  nvec         <- object$info$n
-  sumn         <- sum(nvec)
-  nCa          <- length(Rbar)
-  parms        <- object$estimate$parms
-  lambda       <- object$estimate$lambda
-  Gamma        <- object$estimate$Gamma
-  delta        <- object$estimate$delta
-  ndelta       <- ifelse(Rbar == Rmax, Rbar - 1, Rbar)
-  idelta       <- matrix(c(0, cumsum(ndelta)[-length(ndelta)], cumsum(ndelta) - 1), ncol = 2); idelta[ndelta == 0,] <- NA
-  
-  
-  # Cost group
-  uCa          <- sort(unique(cost.group))
-  lCa          <- lapply(uCa, function(x_) which(cost.group == x_) - 1)
-  na           <- sapply(lCa, length)
-  
-  # Network
-  stopifnot(inherits(Glist, c("list", "matrix", "array")))
-  if (!is.list(Glist)) {
-    Glist      <- list(Glist)
-  }
-  if(inherits(Glist[[1]], "list")){
-    stopifnot(all(sapply(Glist, function(x_) inherits(x_, "list"))))
-  } else if(inherits(Glist[[1]], c("matrix", "array"))) {
-    stopifnot(all(sapply(Glist, function(x_) inherits(x_, c("matrix", "array")))))
-    Glist      <- lapply(Glist, function(x_) list(x_))
-  }
-  if(M != length(Glist)) stop("`Glist` structure does not match. Perhaps another `Glist` is used in `cdnet`.")
-  if(any(nvec != sapply(Glist, function(x_) nrow(x_[[1]])))) stop("`Glist` structure does not match. Perhaps another `Glist` is used in `cdnet`.")
-  if(nCl != length(Glist[[1]])) stop("`Glist` structure does not match. Perhaps another `Glist` is used in `cdnet`.")
-  igr          <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
-  
-  # Data
-  GEyt         <- object$GEy
-  npl.S        <- S
-  if (is.null(npl.S)) {
-    npl.S      <- 1e3L
-  }
-  formula      <- object$info$formula
-  f.t.data     <- formula.to.data(formula, FALSE, Glist, M, igr, data, theta0 = 0) #because G are directly included in X
-  X            <- f.t.data$X
-  if(Kz != ncol(X)) stop("`data` structure does not match. Perhaps another `data` is used in `cdnet` or `formula` has been changed.")
-  if(sumn != nrow(X)) stop("`data` structure does not match. Perhaps another `data` is used in `cdnet` or `formula` has been changed.")
-  if(any(colnames(X) != names(Gamma))) stop("`data` structure does not match. Perhaps another `data` is used in `cdnet` or `formula` has been changed.")
-  coln         <- c("lambda", colnames(X))
-  if(nCl > 1) {
-    coln       <- c(paste0(coln[1], ":", 1:nCl), coln[-1])
-  }
-  
-  # list.index
-  if(length(list.index) == 0){
-    if("(Intercept)" %in% coln){
-      coln       <- coln[coln != "(Intercept)"]
-      list.index <- rep(list(1:sumn), length(coln)); names(list.index) <- coln
-    }
-  } else{
-    if(is.null(names(list.index))) stop("index in `list.index` must be names elements in c(lambda, Gamma)")
-    if(any(!(names(list.index) %in% coln))) stop("index in `list.index` must be names elements in c(lambda, Gamma)")
-  }
-  
-  ZtLambda <- c(GEyt%*%lambda + X%*%Gamma)
-  nlindex  <- names(list.index)
-  lGam     <- c(lambda, Gamma)
-  meff.i   <- fmeffects(ZtLambda = ZtLambda, lbeta = lGam[nlindex], lCa = lCa, nCa = nCa, delta = delta + sum(lambda), 
-                           idelta = idelta, n = na, sumn = sumn, Rbar = Rbar, R = Rmax)
-  meff     <- sapply(1:length(nlindex), function(x_){mean(meff.i$meffects[list.index[[x_]], x_])})
-  names(meff)  <- nlindex
-  
-  covm         <- NULL
-  if(!is.null(S)){
-    covt       <- object$cov$parms
-    if(is.null(covt)) stop("`cov` was set FALSE in `cdnet`.")
-    for(s in 1:nCl){
-      covt[s,] <- covt[s,]/lambda[s]
-      covt[,s] <- covt[,s]/lambda[s]
-    }
-    thetat <- c(log(lambda/(1 - lambda)), Gamma, log(delta))
-    
-    cl     <- makeCluster(ncores)
-    registerDoParallel(cl)
-    on.exit(stopCluster(cl))
-    
-    covm   <- stats::cov(t(foreach(s = 1:S, .combine = cbind, .packages  = "CDatanet") %dorng% {
-      fsime(thetat, covt, GEyt, X, list.index, nlindex, lCa, nCa, nCl, Kz, idelta, na, sumn, Rbar, Rmax)}))
-    colnames(covm) <- nlindex
-    rownames(covm) <- nlindex
-  }
-  
-  out         <- list("info"           = object$info,
-                      "marg.effects.i" = meff.i,
-                      "marg.effects"   = meff,
-                      "cov"            = covm)
-  class(out)  <- "meffects.cdnet"
-  out
-}
-
-fsime     <- function(thetat, covt, GEyt, X, list.index, nlindex, lCa, nCa, nCl, Kz, idelta, na, sumn, Rbar, Rmax){
-  thet1   <- mvrnorm(n = 1, mu = thetat, Sigma = covt)
-  lam1    <- 1/(1 + exp(-head(thet1, nCl)))
-  Gam1    <- thet1[(nCl + 1):(nCl + Kz)]
-  lGam1   <- c(lam1, Gam1)
-  del1    <- exp(tail(thet1, sum(Rbar)))    
-  ZtL1    <- c(GEyt%*%lam1 + X%*%Gam1)
-  meff1   <- fmeffects(ZtLambda = ZtL1, lbeta = lGam1[nlindex], lCa = lCa, nCa = nCa, delta = del1 + sum(lam1), 
-                       idelta = idelta, n = na, sumn = sumn, Rbar = Rbar, R = Rmax)
-  sapply(1:length(nlindex), function(x_){mean(meff1$meffects[list.index[[x_]], x_])})
-}
-
-
-#' @title Printing marginal effects for count data models with social interactions under rational expectations
-#' @description Summary and print methods for the class `meffects.cdnet` as returned by the function \link{meffects.cdnet}.
-#' @param object an object of class `meffects.cdnet` as return by the function \code{\link{meffects.cdnet}}.
-#' @param x an object of class `meffects.cdnet` as return by the function \code{\link{meffects.cdnet}} or \code{\link{print.meffects.cdnet}}.
-#' @param ... further arguments passed to or from other methods.
-#' @export
-"print.meffects.cdnet" <- function(x, ...){
-  stopifnot(class(x) == "meffects.cdnet")
-  M                    <- x$info$M
-  n                    <- x$info$n
-  iteration            <- x$info$npl.iter
-  Rbar                 <- x$info$Rbar
-  csRbar               <- c(0, cumsum(Rbar))
-  formula              <- x$info$formula
-  Kz                   <- x$info$Kz
-  AIC                  <- x$info$AIC
-  BIC                  <- x$info$BIC
-  nCa                  <- length(Rbar)
-  nCl                  <- x$info$n.lambda
-  
-  coef                 <- x$marg.effects
-  std                  <- sqrt(diag(x$cov))
-  
-  llh                  <- x$info$log.like
-  
-  if(is.null(x$cov)){
-    cat("Marginal effects:\n")
-    print(coef)
-    return(invisible(x))
-  }
-  
-  tmp                  <- fcoefficients(coef, std)
-  out_print            <- tmp$out_print
-  out                  <- tmp$out
-  out_print            <- c(list(out_print), x[-(1:4)], list(...))
-  
-  cat("Count data Model with Social Interactions\n\n")
-  cat("Call:\n")
-  print(formula)
-  cat("\nMethod: Nested pseudo-likelihood (NPL) \nIteration: ", iteration, sep = "", "\n\n")
-  cat("Network:\n")
-  cat("Number of groups         : ", M, sep = "", "\n")
-  cat("Sample size              : ", sum(n), sep = "", "\n\n")
-  
-  cat("Marginal effects:\n")
-  do.call("print", out_print)
-  cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
-  
-  
-  cat("log pseudo-likelihood: ", llh, sep = "", "\n")
-  cat("AIC: ", AIC, " -- BIC: ", BIC, sep = "", "\n")
-  
-  invisible(x)
-}
-
-#' @rdname print.meffects.cdnet
-#' @export
-"summary.meffects.cdnet" <- function(object, ...) {
-  stopifnot(class(object) == "meffects.cdnet")
-  object
 }

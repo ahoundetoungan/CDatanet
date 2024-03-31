@@ -341,8 +341,8 @@ List fcovSTI(const int& n,
   NumericVector PhiZtLst = 1 - exp(LHhiZtLst);
   double avPhiZtLst      = sum(PhiZtLst)/n;
   arma::vec lbeta        = arma::join_cols(arma::ones(1)*lambda, theta.subvec(1, K));
-  arma::vec meffects     = avPhiZtLst*lbeta;
-  
+  arma::mat meffects     = as<arma::vec>(PhiZtLst)*lbeta.t();
+
   if(ccov){
     arma::mat Z                = arma::join_rows(GEy, X);
     NumericVector lphiZtLst    = Rcpp::dnorm4(ZtLst, 0, 1, true);
@@ -368,7 +368,7 @@ List fcovSTI(const int& n,
         arma::mat Gm        = G[m];
         arma::mat Sm        = Gm.each_col() % d.subvec(n1, n2);
         Sm                  = arma::eye<arma::mat>(nm, nm) - lambda*Sm;
-        GinvSW.rows(n1, n2) = Gm * arma::solve(Sm, W.rows(n1, n2));
+        GinvSW.rows(n1, n2) = Gm*arma::solve(Sm, W.rows(n1, n2));
       }
     }
     // cout<<arma::accu(GinvSW)<<endl;
@@ -401,13 +401,14 @@ List fcovSTI(const int& n,
     arma::vec tmp2 = -lbeta*mean(ZtLst*phiZtLst);
     arma::mat tmp3 = arma::join_rows(tmp1, tmp2);
     arma::mat covm = tmp3*covt*tmp3.t();
+    covt.row(K+1) /= sigma;
+    covt.col(K+1) /= sigma;
 
-    out            = List::create(Named("meffects")    = meffects,
-                                  Named("covtheta")    = covt,
-                                  Named("covmeffects") = covm,
-                                  Named("var.comp")    = List::create(Named("Sigma") = Sigma/n, Named("Omega") = Omega/n));
+    out            = List::create(Named("meff") = meffects,
+                                  Named("covt") = covt,
+                                  Named("covm") = covm);
   } else{
-    out            = List::create(Named("meffects")    = meffects);
+    out            = List::create(Named("meff") = meffects);
   }
   
   return out;

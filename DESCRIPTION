@@ -12,11 +12,12 @@ BugReports: https://github.com/ahoundetoungan/CDatanet/issues
 URL: https://github.com/ahoundetoungan/CDatanet
 LazyData: true
 Depends: R (>= 3.5.0)
-Imports: Rcpp (>= 1.0.0), Formula, formula.tools, ddpcr, Matrix, matrixcalc, MASS, foreach, doRNG, doParallel, parallel
+Imports: Rcpp (>= 1.0.0), Formula, formula.tools, ddpcr, Matrix, matrixcalc, foreach, doRNG, doParallel, parallel
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress, RcppDist, RcppNumerical, RcppEigen
 RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)
 Suggests: 
     ggplot2,
+    MASS,
     knitr,
     rmarkdown

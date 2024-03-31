@@ -12,6 +12,7 @@ cdnet(
   Rbar,
   starting = list(lambda = NULL, Gamma = NULL, delta = NULL),
   Ey0 = NULL,
+  ubslambda = 1L,
   optimizer = "fastlbfgs",
   npl.ctr = list(),
   opt.ctr = list(),
@@ -37,6 +38,8 @@ For heterogeneous peer effects in the case of a single large network, \code{Glis
 \item{starting}{(optional) a starting value for \eqn{\theta = (\lambda, \Gamma', \delta')'}, where \eqn{\lambda}, \eqn{\Gamma}, and \eqn{\delta} are the parameters to be estimated (see details).}
 
 \item{Ey0}{(optional) a starting value for \eqn{E(y)}.}
+
+\item{ubslambda}{a positive value indicating the upper bound of \eqn{\sum_{s = 1}^S \lambda_s > 0}.}
 
 \item{optimizer}{is either \code{fastlbfgs} (L-BFGS optimization method of the package \pkg{RcppNumerical}), \code{nlm} (referring to the function \link[stats]{nlm}), or \code{optim} (referring to the function \link[stats]{optim}).
 Arguments for these functions such as, \code{control} and \code{method} can be set via the argument \code{opt.ctr}.}
@@ -71,8 +74,8 @@ The count variable \eqn{y_i}{yi} take the value \eqn{r} with probability.
 In this equation, \eqn{\mathbf{z}_i} is a vector of control variables; \eqn{F} is the distribution function of the standard normal distribution;
 \eqn{\bar{y}_i^{e,s}} is the average of \eqn{E(y)} among peers using the \code{s}-th network definition;
 \eqn{a_{h(i),r}} is the \code{r}-th cut-point in the cost group \eqn{h(i)}. \cr\cr
-For identification, \eqn{a_{h(i),0} = -\infty} and \eqn{a_{h(i),1} = 0}. Moreover, \eqn{a_{h(i),r} = \infty} for any \eqn{r \geq R_{\text{max}} + 1},
-which implies that \eqn{P_{ir} = 0} for any \eqn{r \geq R_{\text{max}} + 1}.
+The following identification conditions have been introduced: \eqn{\sum_{s = 1}^S \lambda_s > 0}, \eqn{a_{h(i),0} = -\infty}, \eqn{a_{h(i),1} = 0}, and
+\eqn{a_{h(i),r} = \infty} for any \eqn{r \geq R_{\text{max}} + 1}. The last condition implies that \eqn{P_{ir} = 0} for any \eqn{r \geq R_{\text{max}} + 1}.
 For any \eqn{r \geq 1}, the distance between two cut-points is \eqn{a_{h(i),r+1} - a_{h(i),r} =  \delta_{h(i),r} + \sum_{s = 1}^S \lambda_s}
 As the number of cut-point can be large, a quadratic cost function is considered for \eqn{r \geq \bar{R}_{h(i)}}, where \eqn{\bar{R} = (\bar{R}_{1}, ..., \bar{R}_{L})}.
 With the semi-parametric cost-function,
@@ -147,7 +150,7 @@ for (m in 1:M) {
 }
 
 # Parameters
-lambda <- c(0.2, 0.3, 0.15, 0.25) #Four definitions of networks
+lambda <- c(0.2, -0.3, 0.15, 0.25) #Four definitions of networks
 Gamma  <- c(2.5, 2.2, -0.9, 1.5, -1.2)
 delta  <- rep(c(0.6, 0.47, 0.35, 0.2, 0.05), 2) # two cost groups.
 
@@ -164,17 +167,12 @@ table(y)
 
 # Estimation
 est    <- cdnet(formula = y ~ x1 + x2 + gx1 + gx2, Glist = G, Rbar = rep(5, 2), cost.group = crg,
-                optimizer = "nlm", data = data, opt.ctr = list(iterlim = 5000, steptol = 1e-15))
+                optimizer = "fastlbfgs", data = data, 
+                opt.ctr = list(maxit = 5e3, eps_f = 1e-11, eps_g = 1e-11))
 
 # Print summary
 summary(est)
 print(est)
-
-# Marginal effects
-meffects.cdnet(est, Glist = G, data = data)
-
-# Standard errors of marginal effects using simulations
-meffects.cdnet(est, Glist = G, data = data, S = 100)
 }
 }
 \references{

@@ -58,7 +58,7 @@ A list consisting of:
 \item{y}{the observed count variable.}
 \item{Ey}{\eqn{E(y)}, the expectation of y.}
 \item{GEy}{the average of \eqn{E(y)} friends.}
-\item{marg.effects}{the marginal effects for each individual.}
+\item{meff}{a list includinh average and individual marginal effects.}
 \item{Rmax}{infinite sums in the marginal effects are approximated by sums up to Rmax.}
 \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 }
@@ -66,13 +66,13 @@ A list consisting of:
 \code{simcdnet} simulate the count data model with social interactions under rational expectations developed by Houndetoungan (2024).
 }
 \details{
-Houndetoungan (2024) shows that the count variable \eqn{y_i}{yi} take the value \eqn{r} with probability.
+The count variable \eqn{y_i}{yi} take the value \eqn{r} with probability.
 \deqn{P_{ir} = F(\sum_{s = 1}^S \lambda_s \bar{y}_i^{e,s}  + \mathbf{z}_i'\Gamma - a_{h(i),r}) - F(\sum_{s = 1}^S \lambda_s \bar{y}_i^{e,s}  + \mathbf{z}_i'\Gamma - a_{h(i),r + 1}).}
 In this equation, \eqn{\mathbf{z}_i} is a vector of control variables; \eqn{F} is the distribution function of the standard normal distribution;
 \eqn{\bar{y}_i^{e,s}} is the average of \eqn{E(y)} among peers using the \code{s}-th network definition;
 \eqn{a_{h(i),r}} is the \code{r}-th cut-point in the cost group \eqn{h(i)}. \cr\cr
-For identification, \eqn{a_{h(i),0} = -\infty} and \eqn{a_{h(i),1} = 0}. Moreover, \eqn{a_{h(i),r} = \infty} for any \eqn{r \geq R_{\text{max}} + 1},
-which implies that \eqn{P_{ir} = 0} for any \eqn{r \geq R_{\text{max}} + 1}.
+The following identification conditions have been introduced: \eqn{\sum_{s = 1}^S \lambda_s > 0}, \eqn{a_{h(i),0} = -\infty}, \eqn{a_{h(i),1} = 0}, and
+\eqn{a_{h(i),r} = \infty} for any \eqn{r \geq R_{\text{max}} + 1}. The last condition implies that \eqn{P_{ir} = 0} for any \eqn{r \geq R_{\text{max}} + 1}.
 For any \eqn{r \geq 1}, the distance between two cut-points is \eqn{a_{h(i),r+1} - a_{h(i),r} =  \delta_{h(i),r} + \sum_{s = 1}^S \lambda_s}
 As the number of cut-point can be large, a quadratic cost function is considered for \eqn{r \geq \bar{R}_{h(i)}}, where \eqn{\bar{R} = (\bar{R}_{1}, ..., \bar{R}_{L})}.
 With the semi-parametric cost-function,
@@ -131,7 +131,7 @@ for (m in 1:M) {
 }
 
 # Parameters
-lambda <- c(0.2, 0.3, 0.15, 0.25) #Four definitions of networks
+lambda <- c(0.2, -0.3, 0.15, 0.25) #Four definitions of networks
 Gamma  <- c(2.5, 2.2, -0.9, 1.5, -1.2)
 delta  <- rep(c(0.6, 0.47, 0.35, 0.2, 0.05), 2) # two cost groups.
 

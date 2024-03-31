@@ -173,9 +173,10 @@ List fcovSTC(const arma::vec& theta,
   double sigma         = exp(theta(K + 1));
   arma::vec ZtL        = lambda*Gy + X*theta.subvec(1, K); 
   NumericVector ZtLst  = wrap(ZtL/sigma);
-  double avPhiZtLst    = sum(Rcpp::pnorm(ZtLst, 0, 1, true, false))/n;
+  NumericVector PhiZtLst(Rcpp::pnorm(ZtLst, 0, 1, true, false));
+  double avPhiZtLst    = sum(PhiZtLst)/n;
   arma::vec lbeta      = arma::join_cols(arma::ones(1)*lambda, theta.subvec(1, K));
-  arma::vec meffects   = avPhiZtLst*lbeta;
+  arma::mat meffects   = as<arma::vec>(PhiZtLst)*lbeta.t();
   
   if(ccov) {
     arma::vec tmp        = y - ZtL;
@@ -196,7 +197,7 @@ List fcovSTC(const arma::vec& theta,
     
     qvec.col(0)      = ((-indzero%(irm)/sigma + indpos%tmp/pow(sigma, 2))%Gy - rvec);
     qvec.cols(1, K)  = arma::repmat(-indzero%irm/sigma + indpos%tmp/pow(sigma, 2), 1, K)%X;
-    qvec.col(K + 1)  = (indzero%irm%ZtL/sigma - indpos%(1 - pow(tmp/sigma, 2)));
+    qvec.col(K + 1)  = (indzero%irm%ZtL/pow(sigma, 2) - indpos%(1 - pow(tmp/sigma, 2))/sigma);
     arma::mat covt   = arma::inv(arma::cov(qvec))/n;
     
     // cov marginal effects
@@ -205,15 +206,15 @@ List fcovSTC(const arma::vec& theta,
     arma::rowvec ZavphiZtLst = arma::mean(Z.each_col()%as<arma::vec>(phiZtLst), 0);
     
     arma::mat tmp1 = arma::eye<arma::mat>(K + 1, K + 1)*avPhiZtLst + lbeta*ZavphiZtLst/sigma;
-    arma::vec tmp2 = -lbeta*mean(ZtLst*phiZtLst);
+    arma::vec tmp2 = -lbeta*mean(ZtLst*phiZtLst)/sigma;
     arma::mat tmp3 = arma::join_rows(tmp1, tmp2);
     arma::mat covm = tmp3*covt*tmp3.t();
     
-    out = List::create(Named("meffects")    = meffects,
-                       Named("covtheta")    = covt,
-                       Named("covmeffects") = covm);
+    out = List::create(Named("meff")  = meffects,
+                       Named("covt")  = covt,
+                       Named("covm") = covm);
   } else {
-    out = List::create(Named("meffects") = meffects);
+    out = List::create(Named("meff") = meffects);
   }
 
   return out;
