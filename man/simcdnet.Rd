@@ -6,12 +6,12 @@
 \usage{
 simcdnet(
   formula,
+  group,
   Glist,
   parms,
   lambda,
   Gamma,
   delta,
-  cost.group,
   Rmax,
   Rbar,
   tol = 1e-10,
@@ -24,9 +24,13 @@ simcdnet(
 where \code{y} is the endogenous vector and \code{x1}, \code{x2}, \code{gx1} and \code{gx2} are control variables, which can include contextual variables, i.e. averages among the peers.
 Peer averages can be computed using the function \code{\link{peer.avg}}.}
 
-\item{Glist}{adjacency matrix. For networks consisting of multiple subnets, \code{Glist} can be a list of subnets with the \code{m}-th element being an \code{ns*ns} adjacency matrix, where \code{ns} is the number of nodes in the \code{m}-th subnet.
-For heterogenous peer effects (e.g., boy-boy, boy-girl friendship effects), the \code{m}-th element can be a list of many \code{ns*ns} adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
-For heterogeneous peer effects in the case of a single large network, \code{Glist} must be a one-item list. This item must be a list of many specifications of large networks.}
+\item{group}{the vector indicating the individual groups. The default assumes a common group. For 2 groups; that is, \code{length(unique(group)) = 2}, (e.g., \code{A} and \code{B}),
+four types of peer effects are defined: peer effects of \code{A} on \code{A}, of \code{A} on \code{B}, of \code{B} on \code{A}, and of \code{B} on \code{B}.}
+
+\item{Glist}{adjacency matrix. For networks consisting of multiple subnets, \code{Glist} can be a list of subnets with the \code{m}-th element being an \eqn{n_s\times n_s}-adjacency matrix, where \eqn{n_s} is the number of nodes in the \code{m}-th subnet.
+For heterogeneous peer effects (\code{length(unique(group)) = h > 1}), the \code{m}-th element must be a list of \eqn{h^2} \eqn{n_s\times n_s}-adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
+For heterogeneous peer effects in the case of a single large network, \code{Glist} must be a one-item list. This item must be a list of \eqn{h^2} network specifications.
+The order in which the networks in are specified are important and must match \code{sort(unique(group))} (see examples).}
 
 \item{parms}{a vector defining the true value of \eqn{\theta = (\lambda', \Gamma', \delta')'} (see the model specification in details).
 Each parameter \eqn{\lambda}, \eqn{\Gamma}, or \eqn{\delta} can also be given separately to the arguments \code{lambda}, \code{Gamma}, or \code{delta}.}
@@ -37,12 +41,10 @@ Each parameter \eqn{\lambda}, \eqn{\Gamma}, or \eqn{\delta} can also be given se
 
 \item{delta}{the true value of the vector \eqn{\delta}.}
 
-\item{cost.group}{the vector indicating the groups in which individuals have the same cost function (same cut-points in the ordered model). The default assumes a common group.}
-
 \item{Rmax}{an integer indicating the theoretical upper bound of \code{y}. (see the model specification in details).}
 
-\item{Rbar}{an \eqn{L}-vector, where  \eqn{L} is the number of cost groups. For large \code{Rmax} the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}).
-The \code{l}-th element of \code{Rbar} indicates \eqn{\bar{R}} for the \code{l}-th value of \code{sort(unique(cost.group))} (see the model specification in details).}
+\item{Rbar}{an \eqn{L}-vector, where  \eqn{L} is the number of groups. For large \code{Rmax} the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}).
+The \code{l}-th element of \code{Rbar} indicates \eqn{\bar{R}} for the \code{l}-th value of \code{sort(unique(group))} (see the model specification in details).}
 
 \item{tol}{the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of \code{y}. The process stops if the \eqn{\ell_1}-distance
 between two consecutive \eqn{E(y)} is less than \code{tol}.}
@@ -93,7 +95,7 @@ nvec   <- round(runif(M, 100, 200))
 n      <- sum(nvec)
 
 # Adjacency matrix
-A      <- list() 
+A      <- list()
 for (m in 1:M) {
   nm           <- nvec[m]
   Am           <- matrix(0, nm, nm)
@@ -109,43 +111,40 @@ Anorm  <- norm.network(A) #Row-normalization
 # X
 X      <- cbind(rnorm(n, 1, 3), rexp(n, 0.4))
 
-# cost group defining as X1 > 1
-crg    <- 1*(X[,1] > 0.95)
+# Two group:
+group  <- 1*(X[,1] > 0.95)
 
 # Networks
-# Let us capture heterogeneity in peer effects using crg
-# As we have 2 crg, we can estimate 4 peer effects. 
-# Influence of friends in 1st crg on individual in 1st crg
-# Incluence of friends in 2nd crg on individual in 1st crg
-# Influence of friends in 1st crg on individual in 2st crg
-# Incluence of friends in 2nd crg on individual in 2st crg
+# length(group) = 2 and unique(sort(group)) = c(0, 1)
+# The networks must be defined as to capture:
+# peer effects of `0` on `0`, peer effects of `1` on `0`
+# peer effects of `0` on `1`, and peer effects of `1` on `1`
 G        <- list()
 cums     <- c(0, cumsum(nvec))
 for (m in 1:M) {
-  tp     <- crg[(cums[m] + 1):(cums[m + 1])]
+  tp     <- group[(cums[m] + 1):(cums[m + 1])]
   Am     <- A[[m]]
-  G[[m]] <- norm.network(list(Am * (tp \%*\% t(tp)), 
-                              Am * ((1 - tp) \%*\% t(tp)), 
-                              Am * (tp \%*\% t(1 - tp)), 
-                              Am * ((1 - tp) \%*\% t(1 - tp))))
+  G[[m]] <- norm.network(list(Am * ((1 - tp) \%*\% t(1 - tp)),
+                              Am * ((1 - tp) \%*\% t(tp)),
+                              Am * (tp \%*\% t(1 - tp)),
+                              Am * (tp \%*\% t(tp))))
 }
 
 # Parameters
-lambda <- c(0.2, 0.3, -0.15, 0.25) #Four definitions of networks
-Gamma  <- c(2.5, 2.2, -0.9, 1.5, -1.2)
-delta  <- rep(c(0.6, 0.47, 0.35, 0.2, 0.05), 2) # two cost groups.
+lambda <- c(0.2, 0.3, -0.15, 0.25) 
+Gamma  <- c(4.5, 2.2, -0.9, 1.5, -1.2)
+delta  <- rep(c(2.6, 1.47, 0.85, 0.7, 0.5), 2) 
 
 # Data
 data   <- data.frame(X, peer.avg(Anorm, cbind(x1 = X[,1], x2 =  X[,2])))
 colnames(data) = c("x1", "x2", "gx1", "gx2")
 
-ytmp   <- simcdnet(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, Rbar = rep(5, 2), 
-                   lambda = lambda, Gamma = Gamma, delta = delta, cost.group = crg,  
+ytmp   <- simcdnet(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, Rbar = rep(5, 2),
+                   lambda = lambda, Gamma = Gamma, delta = delta, group = group,
                    data = data)
 y      <- ytmp$y
 hist(y, breaks = max(y) + 1)
-table(y)
-}
+table(y)}
 }
 \references{
 Houndetoungan, E. A. (2024). Count Data Models with Social Interactions under Rational Expectations. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.

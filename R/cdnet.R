@@ -2,18 +2,20 @@
 #' @param formula a class object \link[stats]{formula}: a symbolic description of the model. `formula` must be as, for example, \code{y ~ x1 + x2 + gx1 + gx2}
 #' where `y` is the endogenous vector and `x1`, `x2`, `gx1` and `gx2` are control variables, which can include contextual variables, i.e. averages among the peers.
 #' Peer averages can be computed using the function \code{\link{peer.avg}}.
-#' @param Glist adjacency matrix. For networks consisting of multiple subnets, `Glist` can be a list of subnets with the `m`-th element being an `ns*ns` adjacency matrix, where `ns` is the number of nodes in the `m`-th subnet.
-#' For heterogenous peer effects (e.g., boy-boy, boy-girl friendship effects), the `m`-th element can be a list of many `ns*ns` adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
-#' For heterogeneous peer effects in the case of a single large network, `Glist` must be a one-item list. This item must be a list of many specifications of large networks.
+#' @param Glist adjacency matrix. For networks consisting of multiple subnets, `Glist` can be a list of subnets with the `m`-th element being an \eqn{n_s\times n_s}-adjacency matrix, where \eqn{n_s} is the number of nodes in the `m`-th subnet.
+#' For heterogeneous peer effects (`length(unique(group)) = h > 1`), the `m`-th element must be a list of \eqn{h^2} \eqn{n_s\times n_s}-adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
+#' For heterogeneous peer effects in the case of a single large network, `Glist` must be a one-item list. This item must be a list of \eqn{h^2} network specifications. 
+#' The order in which the networks in are specified are important and must match `sort(unique(group))` (see examples).
+#' @param group the vector indicating the individual groups. The default assumes a common group. For 2 groups; that is, `length(unique(group)) = 2`, (e.g., `A` and `B`), 
+#' four types of peer effects are defined: peer effects of `A` on `A`, of `A` on `B`, of `B` on `A`, and of `B` on `B`.
 #' @param parms a vector defining the true value of \eqn{\theta = (\lambda', \Gamma', \delta')'} (see the model specification in details). 
 #' Each parameter \eqn{\lambda}, \eqn{\Gamma}, or \eqn{\delta} can also be given separately to the arguments `lambda`, `Gamma`, or `delta`.
 #' @param lambda the true value of the vector \eqn{\lambda}.
 #' @param Gamma the true value of the vector \eqn{\Gamma}.
 #' @param delta the true value of the vector \eqn{\delta}.
-#' @param cost.group the vector indicating the groups in which individuals have the same cost function (same cut-points in the ordered model). The default assumes a common group.
 #' @param Rmax an integer indicating the theoretical upper bound of `y`. (see the model specification in details).
-#' @param Rbar an \eqn{L}-vector, where  \eqn{L} is the number of cost groups. For large `Rmax` the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}). 
-#' The `l`-th element of `Rbar` indicates \eqn{\bar{R}} for the `l`-th value of `sort(unique(cost.group))` (see the model specification in details).
+#' @param Rbar an \eqn{L}-vector, where  \eqn{L} is the number of groups. For large `Rmax` the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}). 
+#' The `l`-th element of `Rbar` indicates \eqn{\bar{R}} for the `l`-th value of `sort(unique(group))` (see the model specification in details).
 #' @param tol the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of `y`. The process stops if the \eqn{\ell_1}-distance 
 #' between two consecutive \eqn{E(y)} is less than `tol`.
 #' @param maxit the maximal number of iterations in the Fixed Point Iteration Method.
@@ -59,7 +61,7 @@
 #' n      <- sum(nvec)
 #' 
 #' # Adjacency matrix
-#' A      <- list() 
+#' A      <- list()
 #' for (m in 1:M) {
 #'   nm           <- nvec[m]
 #'   Am           <- matrix(0, nm, nm)
@@ -75,53 +77,50 @@
 #' # X
 #' X      <- cbind(rnorm(n, 1, 3), rexp(n, 0.4))
 #' 
-#' # cost group defining as X1 > 1
-#' crg    <- 1*(X[,1] > 0.95)
+#' # Two group:
+#' group  <- 1*(X[,1] > 0.95)
 #' 
 #' # Networks
-#' # Let us capture heterogeneity in peer effects using crg
-#' # As we have 2 crg, we can estimate 4 peer effects. 
-#' # Influence of friends in 1st crg on individual in 1st crg
-#' # Incluence of friends in 2nd crg on individual in 1st crg
-#' # Influence of friends in 1st crg on individual in 2st crg
-#' # Incluence of friends in 2nd crg on individual in 2st crg
+#' # length(group) = 2 and unique(sort(group)) = c(0, 1)
+#' # The networks must be defined as to capture:
+#' # peer effects of `0` on `0`, peer effects of `1` on `0`
+#' # peer effects of `0` on `1`, and peer effects of `1` on `1`
 #' G        <- list()
 #' cums     <- c(0, cumsum(nvec))
 #' for (m in 1:M) {
-#'   tp     <- crg[(cums[m] + 1):(cums[m + 1])]
+#'   tp     <- group[(cums[m] + 1):(cums[m + 1])]
 #'   Am     <- A[[m]]
-#'   G[[m]] <- norm.network(list(Am * (tp %*% t(tp)), 
-#'                               Am * ((1 - tp) %*% t(tp)), 
-#'                               Am * (tp %*% t(1 - tp)), 
-#'                               Am * ((1 - tp) %*% t(1 - tp))))
+#'   G[[m]] <- norm.network(list(Am * ((1 - tp) %*% t(1 - tp)),
+#'                               Am * ((1 - tp) %*% t(tp)),
+#'                               Am * (tp %*% t(1 - tp)),
+#'                               Am * (tp %*% t(tp))))
 #' }
 #' 
 #' # Parameters
-#' lambda <- c(0.2, 0.3, -0.15, 0.25) #Four definitions of networks
-#' Gamma  <- c(2.5, 2.2, -0.9, 1.5, -1.2)
-#' delta  <- rep(c(0.6, 0.47, 0.35, 0.2, 0.05), 2) # two cost groups.
+#' lambda <- c(0.2, 0.3, -0.15, 0.25) 
+#' Gamma  <- c(4.5, 2.2, -0.9, 1.5, -1.2)
+#' delta  <- rep(c(2.6, 1.47, 0.85, 0.7, 0.5), 2) 
 #' 
 #' # Data
 #' data   <- data.frame(X, peer.avg(Anorm, cbind(x1 = X[,1], x2 =  X[,2])))
 #' colnames(data) = c("x1", "x2", "gx1", "gx2")
 #' 
-#' ytmp   <- simcdnet(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, Rbar = rep(5, 2), 
-#'                    lambda = lambda, Gamma = Gamma, delta = delta, cost.group = crg,  
+#' ytmp   <- simcdnet(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, Rbar = rep(5, 2),
+#'                    lambda = lambda, Gamma = Gamma, delta = delta, group = group,
 #'                    data = data)
 #' y      <- ytmp$y
 #' hist(y, breaks = max(y) + 1)
-#' table(y)
-#' }
+#' table(y)}
 #' @importFrom Rcpp sourceCpp
 #' @importFrom stats rnorm
 #' @export
 simcdnet   <- function(formula,
+                       group,
                        Glist,
                        parms,
                        lambda,
                        Gamma,
                        delta,
-                       cost.group,
                        Rmax,
                        Rbar,
                        tol        = 1e-10,
@@ -133,6 +132,7 @@ simcdnet   <- function(formula,
     stopifnot(all(Rbar <= Rmax))
     stopifnot(all(Rbar >= 1))
   }
+  # Network
   stopifnot(inherits(Glist, c("list", "matrix", "array")))
   if (!is.list(Glist)) {
     Glist  <- list(Glist)
@@ -144,28 +144,26 @@ simcdnet   <- function(formula,
     stopifnot(all(sapply(Glist, function(x_) inherits(x_, c("matrix", "array")))))
     Glist  <- lapply(Glist, function(x_) list(x_))
   }
-  
-  # Sizes
   M        <- length(Glist)
   nvec     <- sapply(Glist, function(x_) nrow(x_[[1]]))
   sumn     <- sum(nvec)
   igr      <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
   nCl      <- length(Glist[[1]])
   
-  # cost.group
-  if(missing(cost.group)){
-    cost.group <- rep(0, sumn)
+  # group
+  if(missing(group)){
+    group <- rep(0, sumn)
   }
-  if(length(cost.group) != sumn) stop("length(cost.group) != n")
-  uCa      <- sort(unique(cost.group))
+  if(length(group) != sumn) stop("length(group) != n")
+  uCa      <- sort(unique(group))
   nCa      <- length(uCa)
-  lCa      <- lapply(uCa, function(x_) which(cost.group == x_) - 1)
+  lCa      <- lapply(uCa, function(x_) which(group == x_) - 1)
   na       <- sapply(lCa, length)
   if(!missing(Rbar)){
     if(length(Rbar) == 1) Rbar = rep(Rbar, nCa)
-    if(nCa != length(Rbar)) stop("length(Rbar) is not equal to the number of cost groups.")
+    if(nCa != length(Rbar)) stop("length(Rbar) is not equal to the number of groups.")
   }
-  
+  if((nCa^2) != nCl) stop("The number of network specifications does not match the number of groups.")
   
   # Parameters
   if(!missing(parms)){
@@ -185,16 +183,18 @@ simcdnet   <- function(formula,
     if(nCa == 1){
       if(!missing(Rbar)){
         if(ifelse(Rbar == Rmax, Rbar - 1, Rbar) != length(delta)) stop("length(delta) does not match Rbar and Rmax.")
+      } else {
+        Rbar <- length(delta)
       }
     }
     if(length(delta) != sum(ifelse(Rbar == Rmax, Rbar - 1, Rbar))) stop("length(delta) does not match Rbar and Rmax.")
-    if(nCl != length(lambda)) stop("length(lambda) is not equal to the number of specifications of networks.")
+    if(nCl != length(lambda)) stop("length(lambda) is not equal to the number of network specifications.")
   }
   
   ndelta  <- ifelse(Rbar == Rmax, Rbar - 1, Rbar)
   stopifnot(all(Rbar <= Rmax))
-  stopifnot(all(delta > 0))
-  delta   <- delta + sum(lambda)
+  if(any(Rmax > 1)) stopifnot(all(delta > 0))
+  delta   <- delta + unlist(lapply(1:nCa, function(x) rep(sum(lambda[((x - 1)*nCa + 1):(x*nCa)]), ndelta[x])))
   idelta  <- matrix(c(0, cumsum(ndelta)[-length(ndelta)], cumsum(ndelta) - 1), ncol = 2); idelta[ndelta == 0,] <- NA
   
   # data
@@ -202,7 +202,7 @@ simcdnet   <- function(formula,
                                data = data, type = "sim", theta0  = 0)
   X         <- f.t.data$X
   K         <- length(Gamma)
-  if(ncol(X) != K) stop("ncol(X) == length(Gamma) is not true.")
+  if(ncol(X) != K) stop("ncol(X) = ", ncol(X), " is different from length(Gamma) = ", length(Gamma))
   coln      <- c("lambda", colnames(X))
   if(nCl > 1) {
     coln    <- c(paste0(coln[1], ":", 1:nCl), coln[-1])
@@ -215,8 +215,8 @@ simcdnet   <- function(formula,
   # E(y) and G*E(y)
   Ey        <- rep(0, sumn)
   GEy       <- matrix(0, sumn, nCl)
-  t         <- fye(ye = Ey, Gye = GEy, G = Glist, lCa = lCa, nCa = nCa, nCl = nCl, igroup = igr, 
-                   ngroup = M, psi = xb, lambda = lambda, delta = delta, idelta = idelta, n = na, sumn = sumn,
+  t         <- fye(ye = Ey, Gye = GEy, G = Glist, lCa = lCa, nCa = nCa, igroup = igr, ngroup = M, 
+                   psi = xb, lambda = lambda, delta = delta, idelta = idelta, n = na, sumn = sumn,
                    Rbar = Rbar, R = Rmax, tol = tol, maxit = maxit)
   
   # y
@@ -237,7 +237,7 @@ simcdnet   <- function(formula,
   }
   meff     <- fmeffects(ZtLambda = Ztlamda, lambda = lambda, Gamma2 = Gamma2, lCa = lCa, nCa = nCa,
                         delta = delta, idelta = idelta, sumn = sumn, Rbar = Rbar, R = Rmax)
-  Rmax     <- meff$Rmax
+  # Rmax     <- meff$Rmax
   imeff    <- meff$imeff; colnames(imeff) <- colnme
   
   
@@ -255,12 +255,14 @@ simcdnet   <- function(formula,
 #' @param formula a class object \link[stats]{formula}: a symbolic description of the model. `formula` must be as, for example, \code{y ~ x1 + x2 + gx1 + gx2}
 #' where `y` is the endogenous vector and `x1`, `x2`, `gx1` and `gx2` are control variables, which can include contextual variables, i.e. averages among the peers.
 #' Peer averages can be computed using the function \code{\link{peer.avg}}.
-#' @param Glist adjacency matrix. For networks consisting of multiple subnets, `Glist` can be a list of subnets with the `m`-th element being an `ns*ns` adjacency matrix, where `ns` is the number of nodes in the `m`-th subnet.
-#' For heterogenous peer effects (e.g., boy-boy, boy-girl friendship effects), the `m`-th element can be a list of many `ns*ns` adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
-#' For heterogeneous peer effects in the case of a single large network, `Glist` must be a one-item list. This item must be a list of many specifications of large networks.
-#' @param cost.group the vector indicating the groups in which individuals have the same cost function (same cut-points in the ordered model). The default assumes a common group.
+#' @param Glist adjacency matrix. For networks consisting of multiple subnets, `Glist` can be a list of subnets with the `m`-th element being an \eqn{n_s\times n_s}-adjacency matrix, where \eqn{n_s} is the number of nodes in the `m`-th subnet.
+#' For heterogeneous peer effects (`length(unique(group)) = h > 1`), the `m`-th element must be a list of \eqn{h^2} \eqn{n_s\times n_s}-adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
+#' For heterogeneous peer effects in the case of a single large network, `Glist` must be a one-item list. This item must be a list of \eqn{h^2} network specifications. 
+#' The order in which the networks in are specified are important and must match `sort(unique(group))` (see examples).
+#' @param group the vector indicating the individual groups. The default assumes a common group. For 2 groups; that is, `length(unique(group)) = 2`, (e.g., `A` and `B`), 
+#' four types of peer effects are defined: peer effects of `A` on `A`, of `A` on `B`, of `B` on `A`, and of `B` on `B`.
 #' @param Rmax an integer indicating the theoretical upper bound of `y`. (see the model specification in details).
-#' @param Rbar an \eqn{L}-vector, where  \eqn{L} is the number of cost groups. For large `Rmax` the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}). 
+#' @param Rbar an \eqn{L}-vector, where  \eqn{L} is the number of groups. For large `Rmax` the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}). 
 #' @param starting (optional) a starting value for \eqn{\theta = (\lambda, \Gamma', \delta')'}, where \eqn{\lambda}, \eqn{\Gamma}, and \eqn{\delta} are the parameters to be estimated (see details).
 #' @param Ey0 (optional) a starting value for \eqn{E(y)}.
 #' @param optimizer is either `fastlbfgs` (L-BFGS optimization method of the package \pkg{RcppNumerical}), `nlm` (referring to the function \link[stats]{nlm}), or `optim` (referring to the function \link[stats]{optim}). 
@@ -335,56 +337,51 @@ simcdnet   <- function(formula,
 #'   }
 #'   A[[m]]       <- Am
 #' }
-#' Anorm  <- norm.network(A)
+#' Anorm  <- norm.network(A) #Row-normalization
 #' 
 #' # X
 #' X      <- cbind(rnorm(n, 1, 3), rexp(n, 0.4))
 #' 
-#' # cost group defining as X1 > 1
-#' crg    <- 1*(X[,1] > 0.95)
+#' # Two group:
+#' group  <- 1*(X[,1] > 0.95)
 #' 
 #' # Networks
-#' # Let us capture heterogeneity in peer effects using crg
-#' # As we have 2 crg, we can estimate 4 peer effects.
-#' # Influence of friends in 1st crg on individual in 1st crg
-#' # Incluence of friends in 2nd crg on individual in 1st crg
-#' # Influence of friends in 1st crg on individual in 2st crg
-#' # Incluence of friends in 2nd crg on individual in 2st crg
+#' # length(group) = 2 and unique(sort(group)) = c(0, 1)
+#' # The networks must be defined as to capture:
+#' # peer effects of `0` on `0`, peer effects of `1` on `0`
+#' # peer effects of `0` on `1`, and peer effects of `1` on `1`
 #' G        <- list()
 #' cums     <- c(0, cumsum(nvec))
 #' for (m in 1:M) {
-#'   tp     <- crg[(cums[m] + 1):(cums[m + 1])]
+#'   tp     <- group[(cums[m] + 1):(cums[m + 1])]
 #'   Am     <- A[[m]]
-#'   G[[m]] <- norm.network(list(Am * (tp %*% t(tp)),
+#'   G[[m]] <- norm.network(list(Am * ((1 - tp) %*% t(1 - tp)),
 #'                               Am * ((1 - tp) %*% t(tp)),
 #'                               Am * (tp %*% t(1 - tp)),
-#'                               Am * ((1 - tp) %*% t(1 - tp))))
+#'                               Am * (tp %*% t(tp))))
 #' }
 #' 
 #' # Parameters
-#' lambda <- c(0.2, 0.3, -0.15, 0.25) #Four definitions of networks
-#' Gamma  <- c(2.5, 2.2, -0.9, 1.5, -1.2)
-#' delta  <- rep(c(0.6, 0.47, 0.35, 0.2, 0.05), 2) # two cost groups.
+#' lambda <- c(0.2, 0.3, -0.15, 0.25) 
+#' Gamma  <- c(4.5, 2.2, -0.9, 1.5, -1.2)
+#' delta  <- rep(c(2.6, 1.47, 0.85, 0.7, 0.5), 2) 
 #' 
 #' # Data
 #' data   <- data.frame(X, peer.avg(Anorm, cbind(x1 = X[,1], x2 =  X[,2])))
 #' colnames(data) = c("x1", "x2", "gx1", "gx2")
 #' 
 #' ytmp   <- simcdnet(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, Rbar = rep(5, 2),
-#'                    lambda = lambda, Gamma = Gamma, delta = delta, cost.group = crg,
+#'                    lambda = lambda, Gamma = Gamma, delta = delta, group = group,
 #'                    data = data)
 #' y      <- ytmp$y
 #' hist(y, breaks = max(y) + 1)
 #' table(y)
 #' 
 #' # Estimation
-#' est    <- cdnet(formula = y ~ x1 + x2 + gx1 + gx2, Glist = G, Rbar = rep(5, 2), cost.group = crg,
-#'                 optimizer = "fastlbfgs", data = data, 
+#' est    <- cdnet(formula = y ~ x1 + x2 + gx1 + gx2, Glist = G, Rbar = rep(5, 2), group = group,
+#'                 optimizer = "fastlbfgs", data = data,
 #'                 opt.ctr = list(maxit = 5e3, eps_f = 1e-11, eps_g = 1e-11))
-#' 
-#' # Print summary
 #' summary(est)
-#' print(est)
 #' }
 #' @importFrom stats quantile
 #' @importFrom utils head
@@ -393,7 +390,7 @@ simcdnet   <- function(formula,
 #' @export
 cdnet    <- function(formula,
                      Glist, 
-                     cost.group,
+                     group,
                      Rmax,
                      Rbar,
                      starting  = list(lambda = NULL, Gamma = NULL, delta = NULL), 
@@ -447,31 +444,30 @@ cdnet    <- function(formula,
     stopifnot(all(sapply(Glist, function(x_) inherits(x_, c("matrix", "array")))))
     Glist  <- lapply(Glist, function(x_) list(x_))
   }
-  
-  # Sizes
   M        <- length(Glist)
   nvec     <- sapply(Glist, function(x_) nrow(x_[[1]]))
   sumn     <- sum(nvec)
   igr      <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
   nCl      <- length(Glist[[1]])
   
-  # cost.group
-  if(missing(cost.group)){
-    cost.group <- rep(0, sumn)
+  # group
+  if(missing(group)){
+    group <- rep(0, sumn)
   }
-  if(is.null(cost.group)){
-    cost.group <- rep(0, sumn)
+  if(is.null(group)){
+    group <- rep(0, sumn)
   }
   
-  if(length(cost.group) != sumn) stop("length(cost.group) != n")
-  uCa      <- sort(unique(cost.group))
+  if(length(group) != sumn) stop("length(group) != n")
+  uCa      <- sort(unique(group))
   nCa      <- length(uCa)
-  lCa      <- lapply(uCa, function(x_) which(cost.group == x_) - 1)
+  lCa      <- lapply(uCa, function(x_) which(group == x_) - 1)
   na       <- sapply(lCa, length)
   if(!missing(Rbar)){
     if(length(Rbar) == 1) Rbar = rep(Rbar, nCa)
-    if(nCa != length(Rbar)) stop("length(Rbar) is not equal to the number of cost groups.")
+    if(nCa != length(Rbar)) stop("length(Rbar) is not equal to the number of groups.")
   }
+  if((nCa^2) != nCl) stop("The number of network specifications does not match the number of groups.")
   
   # starting values
   thetat   <- c(starting$lambda, starting$Gamma)
@@ -536,7 +532,7 @@ cdnet    <- function(formula,
     }
     if(any(head(thetat, nCl) < 0)) stop("Negative peer effects are not supported in this version.")
     lmbd0     <- head(thetat, nCl)
-    thetat    <- c(fcdlambdat(head(thetat, nCl), nCl, lb_sl, ub_sl), tail(thetat, K))
+    thetat    <- c(fcdlambdat(head(thetat, nCl), nCa, lb_sl, ub_sl), tail(thetat, K))
     if(any(Deltat <= 0)) stop("all(delta) > 0 is not true for starting values.")
   } else {
     Gy        <- lapply(1:nCl, function(x_2) unlist(lapply(1:M, function(x_1) Glist[[x_1]][[x_2]] %*% y[(igr[x_1, 1]:igr[x_1,2]) + 1])))
@@ -546,13 +542,14 @@ cdnet    <- function(formula,
     b         <- b/sqrt(sum((y - Xtmp%*%b)^2)/sumn)
     b[1:nCl]  <- sapply(b[1:nCl], function(x_) min(max(x_, 0.01), 0.99)) 
     lmbd0     <- b[1:nCl]
-    Deltat    <- rep(0.01, sum(ndelta))
-    thetat    <- c(fcdlambdat(head(b, nCl), nCl, lb_sl, ub_sl), tail(b, K))
+    Deltat    <- rep(1, sum(ndelta))
+    thetat    <- c(fcdlambdat(head(b, nCl), nCa, lb_sl, ub_sl), tail(b, K))
   }
   
   idelta      <- matrix(c(0, cumsum(ndelta)[-length(ndelta)], cumsum(ndelta) - 1), ncol = 2); idelta[ndelta == 0,] <- NA
   lDelta      <- log(Deltat)
   thetat      <- c(thetat, lDelta)
+  thetat0     <- thetat
   
   # other variables
   cont     <- TRUE
@@ -568,9 +565,9 @@ cdnet    <- function(formula,
   steps    <- list()
   
   # arguments
-  ctr      <- c(list(lb_sl = lb_sl, ub_sl = ub_sl, Gye = GEyt, X = X, lCa = lCa, 
-                     nCa = nCa, nCl = nCl, K = K, n = na, sumn = sumn, idelta = idelta, 
-                     ndelta = ndelta, Rbar = Rbar, R = Rmax, y = y, maxy = maxy) , opt.ctr)
+  ctr      <- c(list(lb_sl = lb_sl, ub_sl = ub_sl, Gye = GEyt, X = X, lCa = lCa, nCa = nCa, 
+                     K = K, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta, Rbar = Rbar, 
+                     R = Rmax, y = y, maxy = maxy) , opt.ctr)
   
   # Arguments used in the optimizer
   if (optimizer == "fastlbfgs"){
@@ -603,10 +600,10 @@ cdnet    <- function(formula,
     REt         <- do.call(get(optimizer), ctr)
     thetat      <- REt[[par1]]
     llht        <- -REt[[like]]
-    theta       <- c(fcdlambda(head(thetat, nCl), nCl, lb_sl, ub_sl), thetat[(nCl + 1):(K + nCl)], exp(tail(thetat, sum(ndelta))) + 1e-323)
+    theta       <- c(fcdlambda(head(thetat, nCl), nCa, lb_sl, ub_sl), thetat[(nCl + 1):(K + nCl)], exp(tail(thetat, sum(ndelta))) + 1e-323)
     
     # compute y
-    fL_NPL(ye = Eyt, Gye = GEyt, theta = theta, X = X, G = Glist, lCa = lCa, nCa = nCa, nCl = nCl, igroup = igr, 
+    fL_NPL(ye = Eyt, Gye = GEyt, theta = theta, X = X, G = Glist, lCa = lCa, nCa = nCa, igroup = igr, 
            ngroup = M, K = K, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta, Rbar = Rbar, R = Rmax)
     
     # distance
@@ -632,13 +629,17 @@ cdnet    <- function(formula,
       print(theta)
     }
     
-    if((ninc.d > npl.incdit)) {
+    if((ninc.d > npl.incdit) | !is.finite(llht)) {
+      cont          <- (t < (npl.maxit - 1))
       cat("** Non-convergence ** Redefining theta and computing a new E(y)\n")
-      thetat[1:nCl] <- runif(nCl, -4.5, 0)
-      theta         <- c(fcdlambda(head(thetat, nCl), nCl, lb_sl, ub_sl), thetat[(nCl + 1):(K + nCl)], exp(tail(thetat, sum(ndelta))) + 1e-323)
+      thetat        <- thetat0
+      thetat[1:nCl] <- -4.5
+      theta         <- c(fcdlambda(head(thetat, nCl), nCa, lb_sl, ub_sl), thetat[(nCl + 1):(K + nCl)], exp(tail(thetat, sum(ndelta))) + 1e-323)
       Eyt           <- runif(sumn, y*0.98, y*1.02)
+      GEyt          <- lapply(1:nCl, function(x_2) unlist(lapply(1:M, function(x_1) Glist[[x_1]][[x_2]] %*% Eyt[(igr[x_1, 1]:igr[x_1, 2]) + 1])))
+      GEyt          <- as.matrix(as.data.frame(GEyt)); colnames(GEyt) <- head(coln, nCl)
       dist0         <- Inf
-      fnewye(ye = Eyt, Gye = GEyt, theta = theta, X = X, G = Glist, lCa = lCa, nCa = nCa, nCl = nCl, igroup = igr, 
+      fnewye(ye = Eyt, Gye = GEyt, theta = theta, X = X, G = Glist, lCa = lCa, nCa = nCa, igroup = igr, 
              ngroup = M, K = K, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta, Rbar = Rbar, tol = npl.tol, 
              maxit = npl.maxit, R = Rmax)
       ctr[[par0]] <- thetat
@@ -680,7 +681,7 @@ cdnet    <- function(formula,
   }
   
   tmp      <- fcovCDI(theta = theta, Gamma2 = Gamma2, Gye = GEyt, X = X, ixWi = ixWi, G = Glist, lCa = lCa, nCa = nCa, 
-                       nCl = nCl, igroup = igr, ngroup = M, K = K, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta,
+                      igroup = igr, ngroup = M, K = K, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta,
                        Rbar = Rbar, R = Rmax, S = npl.S, ccov = cov)
   # Marginal effects
   imeff    <- tmp$imeff; colnames(imeff) <- colnme
@@ -706,7 +707,7 @@ cdnet    <- function(formula,
                                "n.lambda"   = nCl,
                                "Rbar"       = Rbar,
                                "Rmax"       = Rmax,
-                               "cost.group" = cost.group,
+                               "group"      = group,
                                "log.like"   = llht, 
                                "npl.iter"   = t,
                                "AIC"        = AIC,
@@ -751,7 +752,7 @@ cdnet    <- function(formula,
     Rmax        <- object$info$Rmax
     Kz          <- object$info$Kz
     nCl         <- object$info$n.lambda
-    cost.group  <- object$info$cost.group
+    group  <- object$info$group
     M           <- object$info$M
     nvec        <- object$info$n
     sumn        <- sum(nvec)
@@ -764,8 +765,8 @@ cdnet    <- function(formula,
     idelta      <- matrix(c(0, cumsum(ndelta)[-length(ndelta)], cumsum(ndelta) - 1), ncol = 2); idelta[ndelta == 0,] <- NA
     
     # Cost group
-    uCa         <- sort(unique(cost.group))
-    lCa         <- lapply(uCa, function(x_) which(cost.group == x_) - 1)
+    uCa         <- sort(unique(group))
+    lCa         <- lapply(uCa, function(x_) which(group == x_) - 1)
     na          <- sapply(lCa, length)
     
     # Network
@@ -815,7 +816,7 @@ cdnet    <- function(formula,
       ixWi      <- ixWi[tail(coln, Kz) != "(Intercept)"]
     }
     tmp         <- fcovCDI(theta = theta, Gamma2 = Gamma2, Gye = GEyt, X = X, ixWi = ixWi, G = Glist, lCa = lCa, nCa = nCa, 
-                           nCl = nCl, igroup = igr, ngroup = M, K = Kz, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta,
+                           igroup = igr, ngroup = M, K = Kz, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta,
                            Rbar = Rbar, R = Rmax, S = npl.S, ccov = TRUE)
     
     # Covariances

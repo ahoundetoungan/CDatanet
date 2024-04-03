@@ -362,7 +362,6 @@ formula.to.data <- function(formula,
     Xone           <- Xone[, -1, drop = FALSE]
     cnames         <- cnames[-1]
   }
-  
   # GX and Gy
   Gy                 <- NULL
   if (is.null(theta0)) {
@@ -416,7 +415,6 @@ formula.to.data <- function(formula,
       cnames         <- c(cnames,  paste0("G: ", colnames(X)))
     }
   }
-  
   if(type != "network") {
     if(rankMatrix(Xone)[1] != ncol(Xone))  {
       stop("X or [X, GX] is not a full rank matrix. May be there is an intercept in X and in GX.")
