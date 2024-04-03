@@ -127,6 +127,7 @@ simcdnet   <- function(formula,
                        maxit      = 500,
                        data) {
   if(missing(Rmax)) Rmax <- Inf
+  if(is.null(Rmax)) Rmax <- Inf
   stopifnot((Rmax >= 1) & (Rmax <= Inf))
   if(!missing(Rbar)){
     stopifnot(all(Rbar <= Rmax))
@@ -152,7 +153,10 @@ simcdnet   <- function(formula,
   
   # group
   if(missing(group)){
-    group <- rep(0, sumn)
+    group  <- rep(0, sumn)
+  }
+  if(is.null(group)){
+    group  <- rep(0, sumn)
   }
   if(length(group) != sumn) stop("length(group) != n")
   uCa      <- sort(unique(group))
