@@ -568,9 +568,8 @@ sart <- function(formula,
     meff         <- list(ameff = apply(imeff, 2, mean), imeff = imeff)
     
     # Covariances
-    covm         <- covt$covm
-    covt         <- covt$covt
-    Rmax         <- tmp$Rmax
+    covm         <- tmp$covm
+    covt         <- tmp$covt
     
     covm            <- covm[indexWI, indexWI]
     colnames(covt)  <- c(coln, "sigma")

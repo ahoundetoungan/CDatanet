@@ -633,7 +633,7 @@ cdnet    <- function(formula,
       print(theta)
     }
     
-    if((ninc.d > npl.incdit) | !is.finite(llht)) {
+    if((ninc.d > npl.incdit) | (!is.finite(llht)) | (llht == 1e250)) {
       cont          <- (t < (npl.maxit - 1))
       cat("** Non-convergence ** Redefining theta and computing a new E(y)\n")
       thetat        <- thetat0
