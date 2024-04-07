@@ -534,7 +534,8 @@ cdnet    <- function(formula,
     if(length(thetat) != (K + nCl)) {
       stop("theta length is inappropriate.")
     }
-    if(any(head(thetat, nCl) < 0)) stop("Negative peer effects are not supported in this version.")
+    t0il      <- c(0, cumsum(rep(nCa, nCa)))
+    if(any(sapply(1:nCa, function(x_) sum(thetat[(t0il[x_] + 1):t0il[x_ + 1]])) < 0)) stop("Negative peer effects are not supported in this version.")
     lmbd0     <- head(thetat, nCl)
     thetat    <- c(fcdlambdat(head(thetat, nCl), nCa, lb_sl, ub_sl), tail(thetat, K))
     if(any(Deltat <= 0)) stop("all(delta) > 0 is not true for starting values.")
@@ -601,6 +602,8 @@ cdnet    <- function(formula,
     Eyt0        <- Eyt + 0    #copy in different memory
     
     # compute theta
+    # print(ctr$Gye)
+    # print(ctr[[par]])
     REt         <- do.call(get(optimizer), ctr)
     thetat      <- REt[[par1]]
     llht        <- -REt[[like]]
@@ -636,16 +639,27 @@ cdnet    <- function(formula,
     if((ninc.d > npl.incdit) | (!is.finite(llht)) | (llht == 1e250)) {
       cont          <- (t < (npl.maxit - 1))
       cat("** Non-convergence ** Redefining theta and computing a new E(y)\n")
-      thetat        <- thetat0
-      thetat[1:nCl] <- -4.5
-      theta         <- c(fcdlambda(head(thetat, nCl), nCa, lb_sl, ub_sl), thetat[(nCl + 1):(K + nCl)], exp(tail(thetat, sum(ndelta))) + 1e-323)
+      if(t > 1){
+        thetat      <- steps[[t - 1]][[par1]]
+        if(any(!is.finite(thetat))){
+          thetat        <- thetat0
+          thetat[1:nCl] <- 1e-7
+          theta         <- c(thetat[1:(K + nCl)], exp(tail(thetat, sum(ndelta))) + 1e-323)
+          thetat        <- c(fcdlambdat(head(theta, nCl), nCa, lb_sl, ub_sl), theta[(nCl + 1):(K + nCl)], log(tail(theta, sum(ndelta))))
+        }
+      } else {
+        thetat          <- thetat0
+        thetat[1:nCl]   <- 1e-7
+        theta           <- c(thetat[1:(K + nCl)], exp(tail(thetat, sum(ndelta))) + 1e-323)
+        thetat          <- c(fcdlambdat(head(theta, nCl), nCa, lb_sl, ub_sl), theta[(nCl + 1):(K + nCl)], log(tail(theta, sum(ndelta))))
+      }
       Eyt           <- runif(sumn, y*0.98, y*1.02)
       GEyt          <- lapply(1:nCl, function(x_2) unlist(lapply(1:M, function(x_1) Glist[[x_1]][[x_2]] %*% Eyt[(igr[x_1, 1]:igr[x_1, 2]) + 1])))
       GEyt          <- as.matrix(as.data.frame(GEyt)); colnames(GEyt) <- head(coln, nCl)
       dist0         <- Inf
-      fnewye(ye = Eyt, Gye = GEyt, theta = theta, X = X, G = Glist, lCa = lCa, nCa = nCa, igroup = igr, 
-             ngroup = M, K = K, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta, Rbar = Rbar, tol = npl.tol, 
-             maxit = npl.maxit, R = Rmax)
+      # fnewye(ye = Eyt, Gye = GEyt, theta = theta, X = X, G = Glist, lCa = lCa, nCa = nCa, igroup = igr, 
+      #        ngroup = M, K = K, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta, Rbar = Rbar, tol = npl.tol, 
+      #        maxit = npl.maxit, R = Rmax)
       ctr[[par0]] <- thetat
     }
   }
