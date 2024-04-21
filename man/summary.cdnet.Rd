@@ -27,7 +27,7 @@ in the model. If not found in data, the variables are taken from \code{environme
 \item{...}{further arguments passed to or from other methods.}
 
 \item{x}{an object of class \code{summary.cdnet}, output of the function \code{\link{summary.cdnet}}
-or class \code{cdnet} of the function \code{\link{cdnet}}.}
+or class \code{cdnet}, output of the function \code{\link{cdnet}}.}
 }
 \value{
 A list of the same objects in \code{object}.

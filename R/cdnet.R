@@ -700,7 +700,7 @@ cdnet    <- function(formula,
   
   tmp      <- fcovCDI(theta = theta, Gamma2 = Gamma2, Gye = GEyt, X = X, ixWi = ixWi, G = Glist, lCa = lCa, nCa = nCa, 
                       igroup = igr, ngroup = M, K = K, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta,
-                       Rbar = Rbar, R = Rmax, S = npl.S, ccov = cov)
+                      Rbar = Rbar, R = Rmax, S = npl.S, ccov = cov)
   # Marginal effects
   imeff    <- tmp$imeff; colnames(imeff) <- colnme
   meff     <- list(ameff = apply(imeff, 2, mean), imeff = imeff)
@@ -723,6 +723,7 @@ cdnet    <- function(formula,
                                "Kz"         = K,
                                "formula"    = formula,
                                "n.lambda"   = nCl,
+                               "bslambda"   = c(lb_sl, ub_sl),
                                "Rbar"       = Rbar,
                                "Rmax"       = Rmax,
                                "group"      = group,
@@ -747,7 +748,7 @@ cdnet    <- function(formula,
 #' @description Summary and print methods for the class `cdnet` as returned by the function \link{cdnet}.
 #' @param object an object of class `cdnet`, output of the function \code{\link{cdnet}}.
 #' @param x an object of class `summary.cdnet`, output of the function \code{\link{summary.cdnet}}
-#' or class `cdnet` of the function \code{\link{cdnet}}.
+#' or class `cdnet`, output of the function \code{\link{cdnet}}.
 #' @param Glist adjacency matrix. For networks consisting of multiple subnets, `Glist` can be a list of subnets with the `m`-th element being an `ns*ns` adjacency matrix, where `ns` is the number of nodes in the `m`-th subnet.
 #' For heterogenous peer effects (e.g., boy-boy, boy-girl friendship effects), the `m`-th element can be a list of many `ns*ns` adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
 #' For heterogeneous peer effects in the case of a single large network, `Glist` must be a one-item list. This item must be a list of many specifications of large networks.
@@ -912,11 +913,11 @@ cdnet    <- function(formula,
     cat("Group ", k, ", Rbar = ", Rbar[k], "\n", sep = "")
     if(Rbar[k] > 1){
       cat("delta:", delta[(csRbar[k] + 1):(csRbar[k + 1] - 1)], "\n", sep = " ")
-     if(Rmax > Rbar[k]){
-       cat("deltabar: ", delta[csRbar[k + 1]], "\n\n", sep = "")
-     } else {
-       cat("deltabar not defined: Rbar = Rmax\n\n", sep = "")
-     }
+      if(Rmax > Rbar[k]){
+        cat("deltabar: ", delta[csRbar[k + 1]], "\n\n", sep = "")
+      } else {
+        cat("deltabar not defined: Rbar = Rmax\n\n", sep = "")
+      }
     } else {
       if(Rmax > Rbar[k]){
         cat("delta not defined: Rbar = 1\n", sep = " ")
@@ -939,4 +940,58 @@ cdnet    <- function(formula,
 "print.cdnet" <- function(x, ...) {
   stopifnot(class(x) == "cdnet")
   print(summary(x, ...))
+}
+
+#' @title Simulating the distribution of the NPL estimator for count data models with social interactions
+#' @param object an object of class `summary.cdnet`, output of the function \code{\link{summary.cdnet}}
+#' or class `cdnet`, output of the function \code{\link{cdnet}}.
+#' @param n.simu is the number of simu
+#' @param ... further arguments passed to \link[MASS]{mvrnorm}.
+#' @description
+#' `simcdpar` simulate from the distribution of the NPL estimator for count data models with social interactions. 
+#' Because constraints are imposed on the parameters, these simulations are performed using the unconstrained parameters, 
+#' and the results are transformed into constrained parameters. This ensures that the simulations verify the same constraints 
+#' as the parameters.
+#' @return A vector of the same dimension as the parameter estimate from `cdnet` if `n.simu= 1` or a matrix with each row being one simulation otherwise.
+#' @export 
+#' @importFrom MASS mvrnorm
+simcdpar <- function(object, n.simu = 10L, ...){
+  stopifnot(inherits(object, c("cdnet", "summary.cdnet")))
+  if(is.null(object$cov$parms)) stop("`object` does not include a covariance matrix")
+  Kz     <- object$info$Kz
+  Rmax   <- object$info$Rmax
+  Rbar   <- object$info$Rbar
+  nCa    <- length(Rbar)
+  nCl    <- object$info$n.lambda
+  bsl    <- object$info$bslambd
+  lb_sl  <- bsl[1]; if(is.null(lb_sl)) lb_sl <- 0
+  ub_sl  <- bsl[2]; if(is.null(ub_sl)) ub_sl <- 1
+  theta  <- object$estimate$parms
+  nth    <- length(theta)
+  lambda <- object$estimate$lambda
+  delta  <- object$estimate$delta
+  nd     <- length(delta)
+  id0    <- Kz + nCl + 1
+  
+  thet   <- c(fcdlambdat(lambda = lambda, nCa = nCa, a = lb_sl, b = ub_sl), 
+              theta[(nCl + 1):(Kz + nCl)], 
+              log(tail(theta, nd)))
+  matR   <- diag(length(theta))
+  matR[1:nCa, 1:nCa]       <- fcddlambdat(lambda = lambda, nCa = nCa, a = lb_sl, b = ub_sl)
+  if(nd > 0){
+    matR[id0:nth, id0:nth] <- matR[id0:nth, id0:nth]*(1/delta)
+  }
+  
+  covtt  <- matR %*% object$cov$parms %*% t(matR)
+  stheta <- mvrnorm(n = n.simu, mu = thet, Sigma = covtt); if(n.simu == 1) stheta <- matrix(stheta, 1)
+  stheta <- apply(stheta, 1, function(x){c(fcdlambda(head(x, nCl), nCa = nCa, a = lb_sl, b = ub_sl), 
+                                           x[(nCl + 1):(Kz + nCl)], exp(tail(x, nd)))})
+  if(n.simu > 1){ 
+    stheta          <- t(stheta)
+    colnames(stheta) <- names(theta)
+  } else {
+    stheta          <- c(stheta)
+    names(stheta)   <- names(theta)
+  }
+  stheta
 }

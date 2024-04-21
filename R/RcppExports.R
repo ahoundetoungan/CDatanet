@@ -37,6 +37,10 @@ fcdlambdat <- function(lambda, nCa, a, b) {
     .Call(`_CDatanet_fcdlambdat`, lambda, nCa, a, b)
 }
 
+fcddlambdat <- function(lambda, nCa, a, b) {
+    .Call(`_CDatanet_fcddlambdat`, lambda, nCa, a, b)
+}
+
 fcdlambda <- function(lambdat, nCa, a, b) {
     .Call(`_CDatanet_fcdlambda`, lambdat, nCa, a, b)
 }

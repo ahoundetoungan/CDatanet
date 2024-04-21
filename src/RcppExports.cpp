@@ -127,6 +127,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fcddlambdat
+arma::mat fcddlambdat(const arma::vec& lambda, const int& nCa, const double& a, const double& b);
+RcppExport SEXP _CDatanet_fcddlambdat(SEXP lambdaSEXP, SEXP nCaSEXP, SEXP aSEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< const int& >::type nCa(nCaSEXP);
+    Rcpp::traits::input_parameter< const double& >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const double& >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(fcddlambdat(lambda, nCa, a, b));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fcdlambda
 arma::vec fcdlambda(const arma::vec& lambdat, const int& nCa, const double& a, const double& b);
 RcppExport SEXP _CDatanet_fcdlambda(SEXP lambdatSEXP, SEXP nCaSEXP, SEXP aSEXP, SEXP bSEXP) {
@@ -1123,6 +1137,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CDatanet_frMtoV", (DL_FUNC) &_CDatanet_frMtoV, 3},
     {"_CDatanet_frMceiltoV", (DL_FUNC) &_CDatanet_frMceiltoV, 3},
     {"_CDatanet_fcdlambdat", (DL_FUNC) &_CDatanet_fcdlambdat, 4},
+    {"_CDatanet_fcddlambdat", (DL_FUNC) &_CDatanet_fcddlambdat, 4},
     {"_CDatanet_fcdlambda", (DL_FUNC) &_CDatanet_fcdlambda, 4},
     {"_CDatanet_fcddlambda", (DL_FUNC) &_CDatanet_fcddlambda, 4},
     {"_CDatanet_fL", (DL_FUNC) &_CDatanet_fL, 9},

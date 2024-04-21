@@ -67,6 +67,24 @@ arma::vec fcdlambdat(const arma::vec& lambda,
   return lt; 
 }
 
+//fdlambdat computes derivative of lambdatilde wrt lambda
+//[[Rcpp::export]]
+arma::mat fcddlambdat(const arma::vec& lambda, 
+                      const int& nCa,
+                      const double& a, 
+                      const double& b){
+  double sl(sum(lambda)), tp1(1/(sl - a)), tp2(1/(b - sl));
+  arma::mat out(nCa, nCa, arma::fill::eye);
+  out.row(nCa - 1).zeros();
+  if(b == R_PosInf){//a to +Inf
+    out.row(nCa - 1) += tp1;
+  } else{ //a to b
+    out.row(nCa - 1) += (tp1 + tp2);
+  }
+  return out; 
+}
+
+
 // flambda converts lambdatilde to lambda given lambda in (a, b)
 //[[Rcpp::export]]
 arma::vec fcdlambda(const arma::vec& lambdat, 
@@ -107,7 +125,6 @@ arma::mat fcddlambda(const arma::vec& lambda,
   }
   return out; 
 }
-
 
 // fgamma select gamma
 double fgamma(const arma::vec& delta,
