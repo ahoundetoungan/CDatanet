@@ -771,7 +771,7 @@ cdnet    <- function(formula,
     Rmax        <- object$info$Rmax
     Kz          <- object$info$Kz
     nCl         <- object$info$n.lambda
-    group  <- object$info$group
+    group       <- object$info$group
     M           <- object$info$M
     nvec        <- object$info$n
     sumn        <- sum(nvec)
@@ -952,6 +952,7 @@ cdnet    <- function(formula,
 #' @param tol the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of `y`. The process stops if the \eqn{\ell_1}-distance 
 #' between two consecutive \eqn{E(y)} is less than `tol`.
 #' @param maxit the maximal number of iterations in the Fixed Point Iteration Method.
+#' @param group the vector indicating the individual groups (see function \code{\link{cdnet}}). If missing, the former group saved in `object` will be used.
 #' @description
 #' `simcdpar` computes the average expected outcomes for count data models with social interactions and standard errors using the Delta method. 
 #' This function can be used to examine the effects of changes in the network or in the control variables.
@@ -965,6 +966,7 @@ cdnet    <- function(formula,
 simcdEy <- function(object,
                     Glist,
                     data,
+                    group,
                     tol   = 1e-10,
                     maxit = 500,
                     S     = 1e3){
@@ -975,11 +977,18 @@ simcdEy <- function(object,
   Rmax        <- object$info$Rmax
   Kz          <- object$info$Kz
   nCl         <- object$info$n.lambda
-  group       <- object$info$group
+  if(missing(group)){
+    group     <- object$info$group
+  }
+  uCa         <- sort(unique(group))
+  nCa         <- length(uCa)
+  lCa         <- lapply(uCa, function(x_) which(group == x_) - 1)
+  na          <- sapply(lCa, length)
+  if(nCa != length(Rbar)) stop("length(Rbar) is not equal to the number of groups.")
+  if((nCa^2) != nCl) stop("The number of network specifications does not match the number of groups.")
   M           <- object$info$M
   nvec        <- object$info$n
   sumn        <- sum(nvec)
-  nCa         <- length(Rbar)
   theta       <- object$estimate$parms
   lambda      <- object$estimate$lambda
   Gamma       <- object$estimate$Gamma
@@ -988,10 +997,7 @@ simcdEy <- function(object,
   idelta      <- matrix(c(0, cumsum(ndelta)[-length(ndelta)], cumsum(ndelta) - 1), ncol = 2); idelta[ndelta == 0,] <- NA
   delta       <- c(fdelta(deltat = delta, lambda = lambda, idelta = idelta, ndelta = ndelta, nCa = nCa))
   
-  # Cost group
-  uCa         <- sort(unique(group))
-  lCa         <- lapply(uCa, function(x_) which(group == x_) - 1)
-  na          <- sapply(lCa, length)
+
   
   # Network
   stopifnot(inherits(Glist, c("list", "matrix", "array")))

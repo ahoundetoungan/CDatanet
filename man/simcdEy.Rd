@@ -4,7 +4,7 @@
 \alias{simcdEy}
 \title{Counterfactual analyses with count data models and social interactions}
 \usage{
-simcdEy(object, Glist, data, tol = 1e-10, maxit = 500, S = 1000)
+simcdEy(object, Glist, data, group, tol = 1e-10, maxit = 500, S = 1000)
 }
 \arguments{
 \item{object}{an object of class \code{summary.cdnet}, output of the function \code{\link{summary.cdnet}}
@@ -16,6 +16,8 @@ For heterogeneous peer effects in the case of a single large network, \code{Glis
 
 \item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{summary.cdnet} is called.}
+
+\item{group}{the vector indicating the individual groups (see function \code{\link{cdnet}}). If missing, the former group saved in \code{object} will be used.}
 
 \item{tol}{the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of \code{y}. The process stops if the \eqn{\ell_1}-distance
 between two consecutive \eqn{E(y)} is less than \code{tol}.}

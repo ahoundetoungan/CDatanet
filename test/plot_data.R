@@ -1,14 +1,12 @@
 # This code plots examples of simulated data
 rm(list = ls())
-set.seed(1234)
+set.seed(1)
 library(CDatanet)
 library(ggplot2)
 library(latex2exp)
 
 # Parameters
 Gamma   <- c(0.5, 1.5, -1.2, 0.5, -0.9)
-Xlab    <- c("", "", "y", "y")
-Ylab    <- c("Frequency", "", "Frequency", "")
 llambda <- list(0.25, 0.25,
                 c(0.3, 0.15, 0.1, 0.15),
                 c(0.4, -0.1, 0.2, 0.1))
@@ -17,11 +15,9 @@ ldelta  <- list(0.3,
                 c(1.8, 1, 0.6, 0.45, 0.25, 0.15, 0.08, 0.05, 0.04, 0.03, 0.02, 0.01, 0.005),
                 c(1.8, 1, 0.6, 0.45, 0.25, 0.15, 0.08, 0.05, 0.04, 0.03, 0.02, 0.01, 0.005))
 
-PAT     <- LETTERS[1:4]
-
 n       <- 2000
 
-fgraph  <- function(j) {
+fsim    <- function(j) {
   delta <- ldelta[[j]]
   lamb  <- llambda[[j]]
   Rbar  <- length(delta)
@@ -50,45 +46,18 @@ fgraph  <- function(j) {
   data  <- data.frame(X, peer.avg(norm.network(G), X)); colnames(data) <- c("x1", "x2", "gx1", "gx2")
   ytmp  <- simcdnet(formula = ~ x1 + x2 + gx1 + gx2, Glist = Gmu, group = grp, lambda = lamb, 
                     Gamma = Gamma, delta = delta, Rbar = Rbar, data = data)
-  
-  y     <- ytmp$y
-  
-  ggplot(data = data.frame(y = y), aes(x = y)) +
-    geom_bar(color = "black", fill = "#eeeeee") + 
-    theme_bw() + xlab(Xlab[j]) + ylab(Ylab[j]) + 
-    ggtitle(TeX(sprintf(paste0("DGP ", PAT[j])))) + 
-    ylab("") + theme(plot.title = element_text(size = 8, vjust = -12, hjust = 0.96))
+  data.frame(y = ytmp$y, DGP = paste0("DGP ", LETTERS[j]))
 }
 
-multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
-  require(grid)
-  
-  plots <- c(list(...), plotlist)
-  
-  numPlots = length(plots)
-  
-  if (is.null(layout)) {
-    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
-                     ncol = cols, nrow = ceiling(numPlots/cols))
-  }
-  
-  if (numPlots == 1) {
-    print(plots[[1]])
-    
-  } else {
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    
-    for (i in 1:numPlots) {
-      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
-    }
-  }
-}
+out     <- do.call(rbind, lapply(1:4, fsim))
 
-Graph <- lapply(1:4, fgraph)
+(graph  <- ggplot(out, aes(x = y)) +
+  geom_bar(color = "black", fill = "#eeeeee") + 
+  theme_bw() + xlab("y") + ylab("Frequency") + 
+  facet_wrap(~ DGP, ncol = , scales = "free") + 
+    theme(strip.text = element_text(face = "italic"), 
+          text = element_text(size = 12, family = "Palatino"),
+          axis.title = element_text(size = 12, family = "Palatino")))
 
-multiplot(Graph[[1]], Graph[[3]], Graph[[2]], Graph[[4]], cols = 2)
-# save with dimension 5 x 6
+ggsave("mc_plot.pdf", path = "~/Dropbox/Papers - In progress/CountDNtw/Code/Monte Carlo/_output", 
+       plot = graph, device = "pdf", width = 7, height = 4)
