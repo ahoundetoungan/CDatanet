@@ -73,6 +73,10 @@ fmeffects <- function(ZtLambda, lambda, Gamma2, lCa, nCa, delta, idelta, sumn, R
     .Call(`_CDatanet_fmeffects`, ZtLambda, lambda, Gamma2, lCa, nCa, delta, idelta, sumn, Rbar, R)
 }
 
+fdelta <- function(deltat, lambda, idelta, ndelta, nCa) {
+    .Call(`_CDatanet_fdelta`, deltat, lambda, idelta, ndelta, nCa)
+}
+
 foptimREM <- function(ye, Gye, theta, lb_sl, ub_sl, X, G, lCa, nCa, igroup, ngroup, K, n, sumn, Rbar, R, idelta, ndelta, y, maxy, tol = 1e-13, maxit = 1e3L) {
     .Call(`_CDatanet_foptimREM`, ye, Gye, theta, lb_sl, ub_sl, X, G, lCa, nCa, igroup, ngroup, K, n, sumn, Rbar, R, idelta, ndelta, y, maxy, tol, maxit)
 }
@@ -99,6 +103,10 @@ flogintphi <- function(Mean, lCa, nCa, a, b, sumn, S, simu) {
 
 fcovCDI <- function(theta, Gamma2, Gye, X, ixWi, G, lCa, nCa, igroup, ngroup, K, n, sumn, idelta, ndelta, Rbar, R, S, ccov) {
     .Call(`_CDatanet_fcovCDI`, theta, Gamma2, Gye, X, ixWi, G, lCa, nCa, igroup, ngroup, K, n, sumn, idelta, ndelta, Rbar, R, S, ccov)
+}
+
+fcddEy <- function(theta, Gye, X, psi, G, lCa, nCa, igroup, ngroup, K, n, sumn, idelta, ndelta, Rbar, R, S) {
+    .Call(`_CDatanet_fcddEy`, theta, Gye, X, psi, G, lCa, nCa, igroup, ngroup, K, n, sumn, idelta, ndelta, Rbar, R, S)
 }
 
 fdummies <- function(out, limit, M, n) {

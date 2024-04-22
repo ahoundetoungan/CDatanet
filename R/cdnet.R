@@ -198,8 +198,8 @@ simcdnet   <- function(formula,
   ndelta  <- ifelse(Rbar == Rmax, Rbar - 1, Rbar)
   stopifnot(all(Rbar <= Rmax))
   if(any(Rmax > 1)) stopifnot(all(delta > 0))
-  delta   <- delta + unlist(lapply(1:nCa, function(x) rep(sum(lambda[((x - 1)*nCa + 1):(x*nCa)]), ndelta[x])))
   idelta  <- matrix(c(0, cumsum(ndelta)[-length(ndelta)], cumsum(ndelta) - 1), ncol = 2); idelta[ndelta == 0,] <- NA
+  delta   <- c(fdelta(deltat = delta, lambda = lambda, idelta = idelta, ndelta = ndelta, nCa = nCa))
   
   # data
   f.t.data  <- formula.to.data(formula = formula, contextual = FALSE, Glist = Glist, M = M, igr = igr, 
@@ -222,7 +222,7 @@ simcdnet   <- function(formula,
   t         <- fye(ye = Ey, Gye = GEy, G = Glist, lCa = lCa, nCa = nCa, igroup = igr, ngroup = M, 
                    psi = xb, lambda = lambda, delta = delta, idelta = idelta, n = na, sumn = sumn,
                    Rbar = Rbar, R = Rmax, tol = tol, maxit = maxit)
-  
+  if(t >= maxit) warning("Point-fixed: The maximum number of iterations has been reached.")
   # y
   Ztlamda  <- c(GEy %*% lambda + xb)
   yst      <- Ztlamda + eps
@@ -686,7 +686,7 @@ cdnet    <- function(formula,
   }
   
   if (npl.maxit == t) {
-    warning("NPL: maximum number of iterations has been reached.")
+    warning("NPL: The maximum number of iterations has been reached.")
   }
   # covariance and ME
   Gamma2   <- Gam
@@ -799,9 +799,9 @@ cdnet    <- function(formula,
       stopifnot(all(sapply(Glist, function(x_) inherits(x_, c("matrix", "array")))))
       Glist     <- lapply(Glist, function(x_) list(x_))
     }
-    if(M != length(Glist)) stop("`Glist` structure does not match. Perhaps another `Glist` is used in `cdnet`.")
-    if(any(nvec != sapply(Glist, function(x_) nrow(x_[[1]])))) stop("`Glist` structure does not match. Perhaps another `Glist` is used in `cdnet`.")
-    if(nCl != length(Glist[[1]])) stop("`Glist` structure does not match. Perhaps another `Glist` is used in `cdnet`.")
+    if(M != length(Glist)) stop("`Glist` structure does not match. Perhaps another `Glist` structure is used in `cdnet`.")
+    if(any(nvec != sapply(Glist, function(x_) nrow(x_[[1]])))) stop("`Glist` structure does not match. Perhaps another `Glist` structure is used in `cdnet`.")
+    if(nCl != length(Glist[[1]])) stop("`Glist` structure does not match. Perhaps another `Glist` structure is used in `cdnet`.")
     igr         <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
     
     # Data
@@ -881,7 +881,6 @@ cdnet    <- function(formula,
   
   llh                  <- x$info$log.like
   
-  
   tmp                  <- fcoefficients(coef, std)
   out_print            <- tmp$out_print
   out                  <- tmp$out
@@ -928,7 +927,6 @@ cdnet    <- function(formula,
     }
   }
   
-  
   cat("log pseudo-likelihood: ", llh, sep = "", "\n")
   cat("AIC: ", AIC, " -- BIC: ", BIC, sep = "", "\n")
   
@@ -942,56 +940,137 @@ cdnet    <- function(formula,
   print(summary(x, ...))
 }
 
-#' @title Simulating the distribution of the NPL estimator for count data models with social interactions
+#' @title Counterfactual analyses with count data models and social interactions 
 #' @param object an object of class `summary.cdnet`, output of the function \code{\link{summary.cdnet}}
 #' or class `cdnet`, output of the function \code{\link{cdnet}}.
-#' @param n.simu is the number of simu
-#' @param ... further arguments passed to \link[MASS]{mvrnorm}.
+#' @param Glist adjacency matrix. For networks consisting of multiple subnets, `Glist` can be a list of subnets with the `m`-th element being an `ns*ns` adjacency matrix, where `ns` is the number of nodes in the `m`-th subnet.
+#' For heterogenous peer effects (e.g., boy-boy, boy-girl friendship effects), the `m`-th element can be a list of many `ns*ns` adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
+#' For heterogeneous peer effects in the case of a single large network, `Glist` must be a one-item list. This item must be a list of many specifications of large networks.
+#' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
+#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `summary.cdnet` is called.
+#' @param S number of simulations to be used to compute integral in the covariance by important sampling.
+#' @param tol the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of `y`. The process stops if the \eqn{\ell_1}-distance 
+#' between two consecutive \eqn{E(y)} is less than `tol`.
+#' @param maxit the maximal number of iterations in the Fixed Point Iteration Method.
 #' @description
-#' `simcdpar` simulate from the distribution of the NPL estimator for count data models with social interactions. 
-#' Because constraints are imposed on the parameters, these simulations are performed using the unconstrained parameters, 
-#' and the results are transformed into constrained parameters. This ensures that the simulations verify the same constraints 
-#' as the parameters.
-#' @return A vector of the same dimension as the parameter estimate from `cdnet` if `n.simu= 1` or a matrix with each row being one simulation otherwise.
+#' `simcdpar` computes the average expected outcomes for count data models with social interactions and standard errors using the Delta method. 
+#' This function can be used to examine the effects of changes in the network or in the control variables.
+#' @seealso \code{\link{simcdnet}}
+#' @return A list consisting of:
+#'     \item{Ey}{\eqn{E(y)}, the expectation of y.}
+#'     \item{GEy}{the average of \eqn{E(y)} friends.}
+#'     \item{aEy}{the sampling mean of \eqn{E(y)}.}
+#'     \item{se.aEy}{the standard error of the sampling mean of \eqn{E(y)}.}
 #' @export 
-#' @importFrom MASS mvrnorm
-simcdpar <- function(object, n.simu = 10L, ...){
+simcdEy <- function(object,
+                    Glist,
+                    data,
+                    tol   = 1e-10,
+                    maxit = 500,
+                    S     = 1e3){
   stopifnot(inherits(object, c("cdnet", "summary.cdnet")))
   if(is.null(object$cov$parms)) stop("`object` does not include a covariance matrix")
-  Kz     <- object$info$Kz
-  Rmax   <- object$info$Rmax
-  Rbar   <- object$info$Rbar
-  nCa    <- length(Rbar)
-  nCl    <- object$info$n.lambda
-  bsl    <- object$info$bslambd
-  lb_sl  <- bsl[1]; if(is.null(lb_sl)) lb_sl <- 0
-  ub_sl  <- bsl[2]; if(is.null(ub_sl)) ub_sl <- 1
-  theta  <- object$estimate$parms
-  nth    <- length(theta)
-  lambda <- object$estimate$lambda
-  delta  <- object$estimate$delta
-  nd     <- length(delta)
-  id0    <- Kz + nCl + 1
+  env.formula <- environment(object$info$formula)
+  Rbar        <- object$info$Rbar
+  Rmax        <- object$info$Rmax
+  Kz          <- object$info$Kz
+  nCl         <- object$info$n.lambda
+  group       <- object$info$group
+  M           <- object$info$M
+  nvec        <- object$info$n
+  sumn        <- sum(nvec)
+  nCa         <- length(Rbar)
+  theta       <- object$estimate$parms
+  lambda      <- object$estimate$lambda
+  Gamma       <- object$estimate$Gamma
+  delta       <- object$estimate$delta
+  ndelta      <- ifelse(Rbar == Rmax, Rbar - 1, Rbar)
+  idelta      <- matrix(c(0, cumsum(ndelta)[-length(ndelta)], cumsum(ndelta) - 1), ncol = 2); idelta[ndelta == 0,] <- NA
+  delta       <- c(fdelta(deltat = delta, lambda = lambda, idelta = idelta, ndelta = ndelta, nCa = nCa))
   
-  thet   <- c(fcdlambdat(lambda = lambda, nCa = nCa, a = lb_sl, b = ub_sl), 
-              theta[(nCl + 1):(Kz + nCl)], 
-              log(tail(theta, nd)))
-  matR   <- diag(length(theta))
-  matR[1:nCa, 1:nCa]       <- fcddlambdat(lambda = lambda, nCa = nCa, a = lb_sl, b = ub_sl)
-  if(nd > 0){
-    matR[id0:nth, id0:nth] <- matR[id0:nth, id0:nth]*(1/delta)
-  }
+  # Cost group
+  uCa         <- sort(unique(group))
+  lCa         <- lapply(uCa, function(x_) which(group == x_) - 1)
+  na          <- sapply(lCa, length)
   
-  covtt  <- matR %*% object$cov$parms %*% t(matR)
-  stheta <- mvrnorm(n = n.simu, mu = thet, Sigma = covtt); if(n.simu == 1) stheta <- matrix(stheta, 1)
-  stheta <- apply(stheta, 1, function(x){c(fcdlambda(head(x, nCl), nCa = nCa, a = lb_sl, b = ub_sl), 
-                                           x[(nCl + 1):(Kz + nCl)], exp(tail(x, nd)))})
-  if(n.simu > 1){ 
-    stheta          <- t(stheta)
-    colnames(stheta) <- names(theta)
-  } else {
-    stheta          <- c(stheta)
-    names(stheta)   <- names(theta)
+  # Network
+  stopifnot(inherits(Glist, c("list", "matrix", "array")))
+  if (!is.list(Glist)) {
+    Glist     <- list(Glist)
   }
-  stheta
+  if(inherits(Glist[[1]], "list")){
+    stopifnot(all(sapply(Glist, function(x_) inherits(x_, "list"))))
+  } else if(inherits(Glist[[1]], c("matrix", "array"))) {
+    stopifnot(all(sapply(Glist, function(x_) inherits(x_, c("matrix", "array")))))
+    Glist     <- lapply(Glist, function(x_) list(x_))
+  }
+  if(M != length(Glist)) stop("`Glist` structure does not match. Perhaps another `Glist` structure is used in `cdnet`.")
+  if(any(nvec != sapply(Glist, function(x_) nrow(x_[[1]])))) stop("`Glist` structure does not match. Perhaps another `Glist` structure is used in `cdnet`.")
+  if(nCl != length(Glist[[1]])) stop("`Glist` structure does not match. Perhaps another `Glist` structure is used in `cdnet`.")
+  igr         <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
+  
+  # Data
+  npl.S       <- S
+  if (is.null(npl.S)) {
+    npl.S     <- 1e3L
+  }
+  formula     <- object$info$formula
+  f.t.data    <- formula.to.data(formula, FALSE, Glist, M, igr, data, theta0 = 0) #because G are directly included in X
+  X           <- f.t.data$X
+  if(Kz != ncol(X)) stop("`data` structure does not match. Perhaps another `data` is used in `cdnet` or `formula` has been changed.")
+  if(sumn != nrow(X)) stop("`data` structure does not match. Perhaps another `data` is used in `cdnet` or `formula` has been changed.")
+  if(any(colnames(X) != names(Gamma))) stop("`data` structure does not match. Perhaps another `data` is used in `cdnet` or `formula` has been changed.")
+  
+  # E(y) and G*E(y)
+  Ey          <- rep(0, sumn)
+  GEy         <- matrix(0, sumn, nCl)
+  xb          <- c(X %*% Gamma)
+  t           <- fye(ye = Ey, Gye = GEy, G = Glist, lCa = lCa, nCa = nCa, igroup = igr, ngroup = M, 
+                   psi = xb, lambda = lambda, delta = delta, idelta = idelta, n = na, sumn = sumn,
+                   Rbar = Rbar, R = Rmax, tol = tol, maxit = maxit)
+  if(t >= maxit) warning("Point-fixed: The maximum number of iterations has been reached.")
+  
+  dEy         <- fcddEy(theta = theta, Gye = GEy, X = X, psi = xb, G = Glist, lCa = lCa, nCa = nCa, igroup = igr, 
+                        ngroup = M, K = Kz, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta, Rbar = Rbar,
+                        R = Rmax, S = npl.S)
+  
+  if(nCl == 1){
+    GEy       <- c(GEy)
+  }
+  Ey          <- c(Ey)
+  aEy         <- mean(Ey)
+  adEy        <- apply(dEy, 2, mean)
+  se.aEy      <- sqrt(c(t(adEy) %*% object$cov$parms %*% adEy))
+  
+  out         <- list(Ey     = Ey,
+                      GEy    = GEy,
+                      aEy    = aEy,
+                      se.aEy = se.aEy)
+  class(out)  <- "simcdEy"
+  out
 }
+
+#' @title Printing the average expected outcomes for count data models with social interactions
+#' @description Summary and print methods for the class `simcdEy` as returned by the function \link{simcdEy}.
+#' @param object an object of class `simcdEy`, output of the function \code{\link{simcdEy}}.
+#' @param x an object of class `summary.simcdEy`, output of the function \code{\link{summary.simcdEy}}
+#' or class `simcdEy`, output of the function \code{\link{simcdEy}}.
+#' @param ... further arguments passed to or from other methods.
+#' @return A list of the same objects in `object`.
+#' @export 
+print.simcdEy <- function(x, ...){
+  stopifnot(class(x) == "simcdEy")
+  cat("Average expected outcome\n\n")
+  tp           <- cbind("Estimate" = x$aEy, "Std. Error" = x$se.aEy)
+  rownames(tp) <- ""
+  print(tp, ...)
+  invisible(x)
+}
+
+#' @rdname print.simcdEy
+#' @export
+"summary.simcdEy"  <- function(object, ...) return(object)
+
+#' @rdname print.simcdEy
+#' @export
+"print.summary.simcdEy"  <- function(x, ...) print.simcdEy(x, ...)

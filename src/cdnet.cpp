@@ -393,7 +393,7 @@ List fmeffects(const arma::vec& ZtLambda,
     meff1.submat(lCas, tp) = tp0.elem(lCas)*lambda.elem(tp).t();
     tp += nCa;
   }
-
+  
   // for Z
   arma::mat meff2(tp0*Gamma2.t());
   // for (int m(0); m < ngroup; ++ m) {
@@ -492,6 +492,7 @@ arma::vec flogpncond(const arma::uvec& y,
 }
 
 //fdelta computes delta from deltat, lambda and nCa
+//[[Rcpp::export]]
 arma::vec fdelta(const arma::vec& deltat, 
                  const arma::vec& lambda,
                  const arma::umat& idelta,
@@ -1295,7 +1296,7 @@ List fcovCDI(const arma::vec& theta,
       Omega.cols(lCas) = Omegas;
       il              += nCa;
     }
-
+    
     // Fill upper triangular Sigma
     for(int k(0); k < (nparms - 1); ++ k){
       Sigma.submat(k, k + 1, k, nparms - 1) = arma::trans(Sigma.submat(k + 1, k, nparms - 1, k));
@@ -1339,7 +1340,7 @@ List fcovCDI(const arma::vec& theta,
     }
     arma::mat meff2(d*Gamma2.t());
     arma::mat meffects(arma::join_rows(meff1, meff2));
-
+    
     arma::mat tp3(Kzm - nCl, nparms, arma::fill::zeros); 
     tp3.cols(nCl + ixWi) = arma::eye(Kzm - nCl, Kzm - nCl)*sum(d);
     Qth                 += arma::join_cols(tp2, tp3);
@@ -1351,4 +1352,130 @@ List fcovCDI(const arma::vec& theta,
                         Named("covm")  = covm);
   }
   return fmeffects(ZtLambda, lambda, Gamma2, lCa, nCa, delta, idelta, sumn, Rbar, R);
+}
+
+// Compute the derivative of the expected outcome wrt theta
+//[[Rcpp::export]]
+arma::mat fcddEy(const arma::vec& theta,
+                 const arma::mat& Gye,
+                 const arma::mat& X,
+                 const arma::vec& psi,
+                 List& G,
+                 List& lCa,
+                 const int& nCa,
+                 const arma::mat& igroup,
+                 const int& ngroup,
+                 const int& K,
+                 const arma::vec& n,
+                 const int sumn,
+                 const arma::umat& idelta,
+                 const arma::uvec& ndelta,
+                 const arma::vec& Rbar,
+                 const double& R,
+                 const int& S) {
+  int nCl(nCa*nCa);
+  arma::vec lambda(theta.head(nCl));
+  arma::vec beta(theta.subvec(nCl, nCl + K - 1));
+  arma::vec tdelta(theta.tail(sum(ndelta)) + 1e-323);
+  arma::vec delta(fdelta(tdelta, lambda, idelta, ndelta, nCa));
+  arma::vec ZtLambda(Gye*lambda + psi);
+  
+  arma::rowvec simu(S, arma::fill::randu);
+  int Kz(K + nCl), nparms(Kz + sum(ndelta));
+  
+  // I compute l(Phir - Phir+1) and lphi from r = 0
+  arma::mat ldPhi; // l(Phir - Phir+1) from r = 0
+  arma::mat lphi(R_NegInf*arma::ones<arma::vec>(sumn)); // lphi from r = 0
+  {
+    NumericVector ZtL(wrap(ZtLambda));
+    NumericVector ldPhi0(Rcpp::pnorm5(ZtL, 0, 1, false, true));
+    ldPhi                = as<arma::vec>(ldPhi0);
+  }
+  // arma::mat zcheck       = Gye;          // Gye - r from r = 0
+  int Rmax  = 0;
+  bool next = (Rmax < (R + 1));
+  arma::vec a2(nCa, arma::fill::zeros), a1(nCa);
+  
+  // log of f and log(diff F1 F2)
+  while(next) {
+    ++ Rmax;
+    arma::vec lfr(sumn);
+    for(int ca(0); ca < nCa; ++ ca){
+      arma::uvec lCas = lCa[ca];
+      arma::vec ZtL(ZtLambda.elem(lCas));
+      NumericVector ZtLs = wrap(ZtL);
+      a1(ca)          = a2(ca);
+      a2(ca)         += fgamma(delta, idelta(ca, 0), Rmax + 1, Rbar(ca), R);
+      NumericVector lfrs(Rcpp::dnorm4(ZtLs - a1(ca), 0, 1, true));
+      lfr.elem(lCas)  = as<arma::vec>(lfrs);
+    }
+    lphi  = arma::join_rows(lphi, lfr);
+    ldPhi = arma::join_rows(ldPhi, flogintphi(ZtLambda, lCa, nCa, a1, a2, sumn, S, simu));
+    // zcheck  = arma::join_rows(zcheck, Gye - Rmax);
+    next  = (((max(lfr) > -1000) || (Rmax <= (Rbar.max() + 2))) && (Rmax < (R + 1)));
+  }
+  // log(0, 1, 2, ...)
+  arma::rowvec tp0(log(arma::regspace<arma::rowvec>(0, Rmax)));
+  
+  arma::mat B(sumn, nparms);
+  arma::vec d(sumn);
+  arma::uvec il(arma::regspace<arma::uvec>(0, nCa - 1));
+  for(int ca(0); ca < nCa; ++ ca){
+    arma::uvec lCas = lCa[ca];
+    arma::vec ZtL(ZtLambda.elem(lCas));
+    arma::mat Gyes(Gye.submat(lCas, il)), lphis(lphi.rows(lCas)), ldPhis(ldPhi.rows(lCas)), Xs(X.rows(lCas));
+    int iida(idelta(ca, 0)), ida(Kz + iida);
+    bool hdbar(R > Rbar(ca));
+    
+    {
+      // compute B and d, d is diag(D) of the paper
+      arma::mat tp1(n(ca), Rbar(ca) + 1 + hdbar);
+      for(int l(0); l <= Rbar(ca); ++ l){
+        tp1.col(l) = exp(lsumexp(lphis.cols(l, Rmax - 1))); //for sum fr from r = l
+      }
+      if(hdbar){
+        tp1.col(Rbar(ca) + 1) = exp(lsumexp(lphis.cols(Rbar(ca) + 1, Rmax - 1).each_row() + tp0.subvec(1, Rmax - Rbar(ca) - 1))); //for sum (r - Rbar) fr from r = Rbar + 1
+      }
+      arma::vec tp3 = exp(lsumexp(lphis.cols(1, Rmax - 1).each_row() + tp0.subvec(0, Rmax - 2))); // sum (r - 1)*phir from r = 1
+      if(R == 1){
+        tp3.zeros();
+      }
+      
+      // compute d
+      arma::vec ds(tp1.col(1)); //for sum fr from r = 1
+      
+      // Compute B
+      // I start with B2
+      arma::mat Bs(n(ca), nparms, arma::fill::zeros);
+      for(int k(0); k < Rbar(ca) - 1 + hdbar; ++ k) {
+        Bs.col(ida + k)    = -tp1.col(2 + k);
+      }
+      // add B1
+      Bs.cols(il)          = (Gyes.each_col()%ds).each_col() - tp3;
+      
+      // add DZ
+      Bs.cols(nCl, Kz - 1) = Xs.each_col()%ds;
+      B.rows(lCas)         = Bs;
+      d.elem(lCas)         = ds;
+    }
+    il                    += nCa;
+  }
+  
+  // Compute G*inv(S)*B
+  arma::mat invSB(sumn, nparms, arma::fill::zeros);
+  for (int m(0); m < ngroup; ++ m) {
+    int n1(igroup(m,0));
+    int n2(igroup(m,1));
+    int nm(n2 - n1 + 1);
+    List Gm = G[m];
+    arma::mat Sm(nm, nm, arma::fill::zeros);
+    for(int cl(0); cl < nCl; ++ cl){
+      arma::mat Gms = Gm[cl];
+      Sm           += lambda(cl)*(Gms.each_col() % d.subvec(n1, n2));
+    }
+    Sm                  = arma::eye<arma::mat>(nm, nm) - Sm;
+    invSB.rows(n1, n2)  = arma::solve(Sm, B.rows(n1, n2));
+  }
+  
+  return invSB;
 }
