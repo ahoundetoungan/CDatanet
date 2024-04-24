@@ -181,7 +181,7 @@ simcdnet   <- function(formula,
       if(Rmax > 1){
         stop("delta is missing.")
       } else {
-        delta <- c()
+        delta <- numeric(0)
       }
     }
     if(nCa == 1){
@@ -967,11 +967,12 @@ simcdEy <- function(object,
                     Glist,
                     data,
                     group,
-                    tol   = 1e-10,
-                    maxit = 500,
-                    S     = 1e3){
+                    tol          = 1e-10,
+                    maxit        = 500,
+                    S            = 1e3){
   stopifnot(inherits(object, c("cdnet", "summary.cdnet")))
-  if(is.null(object$cov$parms)) stop("`object` does not include a covariance matrix")
+  covparms    <- object$cov$parms
+  if(is.null(covparms)) stop("`object` does not include a covariance matrix")
   env.formula <- environment(object$info$formula)
   Rbar        <- object$info$Rbar
   Rmax        <- object$info$Rmax
@@ -1045,8 +1046,13 @@ simcdEy <- function(object,
   }
   Ey          <- c(Ey)
   aEy         <- mean(Ey)
+  
+  # if(fixed.lambda){
+  #   dEy       <- dEy[, -(1:nCl), drop = FALSE]
+  #   covparms  <- covparms[-(1:nCl), -(1:nCl), drop = FALSE]
+  # }
   adEy        <- apply(dEy, 2, mean)
-  se.aEy      <- sqrt(c(t(adEy) %*% object$cov$parms %*% adEy))
+  se.aEy      <- sqrt(c(t(adEy) %*% covparms %*% adEy))
   
   out         <- list(Ey     = Ey,
                       GEy    = GEy,
