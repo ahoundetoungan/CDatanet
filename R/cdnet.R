@@ -410,6 +410,7 @@ cdnet    <- function(formula,
   stopifnot((Rmax >= 1) & (Rmax <= Inf))
   stopifnot(length(ubslambda) == 1)
   stopifnot(ubslambda > 0)
+  if(Rmax == 1) Rbar <- 1
   lb_sl       <- 0
   ub_sl       <- ubslambda
   env.formula <- environment(formula)
@@ -474,19 +475,26 @@ cdnet    <- function(formula,
   if((nCa^2) != nCl) stop("The number of network specifications does not match the number of groups.")
   
   # starting values
-  thetat   <- c(starting$lambda, starting$Gamma)
-  Deltat   <- starting$delta
+  thetat   <- NULL
+  Deltat   <- NULL
   if(!inherits(starting, "list") & !is.null(starting)) {
     Deltat <- tail(starting, sum(ifelse(Rbar == Rmax, Rbar - 1, Rbar)))
     Lmdt   <- starting[1:nCl]
     Gamt   <- starting[(nCl + 1):(length(starting) - sum(ifelse(Rbar == Rmax, Rbar - 1, Rbar)))]
     thetat <- c(Lmdt, Gamt)
   }
+  if(inherits(starting, "list")){
+    if(!is.null(starting$lambda)){
+      thetat <- c(starting$lambda, starting$Gamma)
+      Deltat <- starting$delta
+      if(Rmax == 1) Deltat <- numeric(0)
+    }
+  }
   if(!is.null(Deltat)){
     if(length(Deltat) != sum(ifelse(Rbar == Rmax, Rbar - 1, Rbar))) stop("`length(delta)` does not match Rbar and Rmax.")
   }
   tmp      <- c(is.null(thetat), is.null(Deltat))
-  if(all(tmp) != any(tmp)){
+  if((all(tmp) != any(tmp))){
     stop("Starting parameters are defined, but not all of them.")
   }
   
