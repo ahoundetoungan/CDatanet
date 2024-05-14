@@ -1,6 +1,6 @@
 ## InferenceTSE
-**Replication codes for *[Count Data Models with Heterogeneous Peer Effects under Rational Expectations](https://dx.doi.org/10.2139/ssrn.3721250)* By Aristide Houndetoungan**
-  
+**Replication codes for *[Count Data Models with Heterogeneous Peer Effects under Rational Expectations](https://dx.doi.org/10.2139/ssrn.3721250)***
+
 ### Simulations
 - `simu-dgpA.R` replicates the simulation results for DGP A.
 - `simu-dgpB.R` replicates the simulation results for DGP B.
