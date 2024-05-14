@@ -51,6 +51,7 @@ fsim    <- function(j) {
 
 out     <- do.call(rbind, lapply(1:4, fsim))
 
+# Figure 2: Simulated data using the count data model with social interactions
 (graph  <- ggplot(out, aes(x = y)) +
   geom_bar(color = "black", fill = "#eeeeee") + 
   theme_bw() + xlab("y") + ylab("Frequency") + 
