@@ -1,7 +1,7 @@
 Package: CDatanet
 Type: Package
 Title: Econometrics of Network Data
-Version: 2.2.0
+Version: 2.2.1
 Date: 2024-06-01
 Authors@R: person("Aristide", "Houndetoungan", role = c("cre","aut"), email =  "ahoundetoungan@gmail.com")
 Description: Simulating and estimating peer effect models and network formation models. The class of peer effect models includes linear-in-means models (Lee, 2004; <doi:10.1111/j.1468-0262.2004.00558.x>), Tobit models (Xu and Lee, 2015; <doi:10.1016/j.jeconom.2015.05.004>), and discrete numerical data models (Houndetoungan, 2024; <doi:10.2139/ssrn.3721250>). The network formation models include pair-wise regressions with degree heterogeneity (Graham, 2017; <doi:10.3982/ECTA12679>) and exponential random graph models (Mele, 2017; <doi:10.3982/ECTA10400>).

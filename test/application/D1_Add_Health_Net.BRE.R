@@ -7,15 +7,14 @@ library(dplyr)
 
 # Data
 load("MydataCount.rda")
-obj            <- ls()
-rm(list = obj[!(obj %in%c("Gnet", "form.net", "datanet"))])
-gc()
 
 form.net       <- as.formula(paste0(c("~ ", paste0(va.net, collapse = " + ")), collapse = ""))
+rm(list = ls()[!(ls() %in% c("Gnet", "form.net", "datanet"))])
+gc()
 
 set.seed(123)
-out            <- homophily(network =  Gnet, formula = form.net, fixed.effects = TRUE,
-                            iteration = 2e4, data = datanet)
+out            <- homophily.re(network =  Gnet, formula = form.net, group.fe = TRUE,
+                               re.way = 2, iteration = 2e4, data = datanet)
 
 save(out, file = "Net.RE.rda")
 

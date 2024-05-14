@@ -47,3 +47,5 @@ Fixed effect is allowed in the model SAR.
 # Changes in version 2.2.0
 - Following the revision of the paper Count Data Model with Social Interaction under Rational Expectations, `cdnet` now allows heterogeneity in peer effects. For example peer effects can be estimated between Blacks and Whites, Girls and Boys etc.
 - `cdnet` allows heterogeneity in the cut-points. The cost function in the utility function is nonparametric and depends on some characteristics X such as gender, race, etc.
+
+# Changes in version 2.2.1
