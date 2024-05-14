@@ -16,5 +16,5 @@ install.packages("CDatanet")
 It may be possible that I updated the package without submitting the new version to CRAN. The latest version (*but not necessary stable*) of **CDatanet** can be installed from this GitHub repos.
 ```R
 library(remotes)
-install_github("ahoundetoungan/CDatanet", build_vignettes = TRUE)
+install_github("ahoundetoungan/CDatanet")
 ```
