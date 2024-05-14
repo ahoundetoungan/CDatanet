@@ -16,4 +16,4 @@
 - `D1_Add_Health_Net.BRE.R` replicates the Bayesian estimation of the dyadic linking model (Online Appendix B.3.3).
 - `D2_Add_Health_Net.FE.R` replicates the logit estimation of the dyadic linking model.
 - `D3_Add_Health_Endo-R` replicates the estimations with heterogeneity in peer effects by addressing network endogeneity (Models 8-9).
-- `E_counterfactual.R` replicated the counterfactual analysis.
+- `E_counterfactual.R` replicates the counterfactual analysis.
