@@ -21,25 +21,35 @@ npl.ctr  <- list(maxit   = 2e3, tol = 5e-4, print = FALSE)
 
 # Functions
 # This function performs the iteration in the Monte Carlo
-f.estim  <- function(n){
-  G      <- matrix(0, n, n)
-  for (i in 1:n) {
-    max_d        <- 10
-    tmp          <- sample((1:n)[-i], sample(0:max_d, 1))
-    G[i, tmp]    <- 1
+f.estim  <- function(nvec){
+  n      <- sum(nvec)
+  S      <- length(nvec)
+  
+  G      <- list()
+  for(s in 1:S){
+    ns           <- nvec[s]
+    Gs           <- matrix(0, ns, ns)
+    for (i in 1:ns) {
+      max_d      <- 10
+      tmp        <- sample((1:ns)[-i], sample(0:max_d, 1))
+      Gs[i, tmp] <- 1
+    }
+    G[[s]]       <- Gs
   }
   
   X       <- cbind(runif(n, 0, 5), rpois(n, 2))
-  grp     <- 1*(X[,1] > 2.5)
-  Gmu     <- list(norm.network(list(G * ((1 - grp) %*% t(1 - grp)), 
-                                    G * ((1 - grp) %*% t(grp)), 
-                                    G * (grp %*% t(1 - grp)), 
-                                    G * (grp %*% t(grp)))))
-  
+  nc      <- c(0, cumsum(nvec))
+  grp     <- lapply(1:S, function(s) 1*(X[(nc[s] + 1):nc[s + 1], 1] > 2.5))
+  Gmu     <- lapply(1:S, function(s) norm.network(list(G[[s]] * ((1 - grp[[s]]) %*% t(1 - grp[[s]])), 
+                                                   G[[s]] * ((1 - grp[[s]]) %*% t(grp[[s]])), 
+                                                   G[[s]] * (grp[[s]] %*% t(1 - grp[[s]])), 
+                                                   G[[s]] * (grp[[s]] %*% t(grp[[s]])))))
+  grp     <- unlist(grp)
+ 
   data    <- data.frame(X, peer.avg(norm.network(G), X)); colnames(data) <- c("x1", "x2", "gx1", "gx2")
   
   ytmp    <- simcdnet(formula = ~ x1 + x2 + gx1 + gx2, Glist = Gmu, group = grp, lambda = lambda, 
-                      Gamma = Gamma, delta = rep(delta, 2), Rbar = rep(Rbar, 2), data = data)
+                      Gamma = Gamma, delta = rep(delta, 2), Rbar = rep(Rbar, 2), data = data, Rmax = 100)
   data$y  <- ytmp$y
   # hist(data$y, breaks = max(data$y) + 1)
   ameff   <- ytmp$meff$ameff; names(ameff) <- paste("ameff", names(ameff))
@@ -51,7 +61,7 @@ f.estim  <- function(n){
   while(cont){
     Rbh         <- Rbh + 1
     tp          <- cdnet(y ~ x1 + x2 + gx1 + gx2, Glist = Gmu, group = grp, npl.ctr = npl.ctr, 
-                         opt.ctr = opt.ctr0, Rbar = rep(Rbh, 2), data = data, cov = FALSE)
+                         opt.ctr = opt.ctr0, Rbar = rep(Rbh, 2), data = data, cov = FALSE, Rmax = 100)
     starting    <- NULL
     Ey0         <- NULL
     if(!is.null(tp$estimate$parms)){
@@ -62,7 +72,7 @@ f.estim  <- function(n){
     }
     ecd[[Rbh]]  <- cdnet(y ~ x1 + x2 + gx1 + gx2, Glist = Gmu, group = grp, npl.ctr = npl.ctr, 
                          opt.ctr = opt.ctr1, Rbar = rep(Rbh, 2), data = data, cov = FALSE, 
-                         optimizer = "optim", starting = starting, Ey0 = Ey0)
+                         optimizer = "optim", starting = starting, Ey0 = Ey0, Rmax = 100)
     cont        <- (BIC > ecd[[Rbh]]$info$BIC)
     BIC         <- ecd[[Rbh]]$info$BIC
   }
@@ -90,11 +100,11 @@ sum.func     <- function(x) {
 nsimu     <- 1000
 RNGkind("L'Ecuyer-CMRG")
 set.seed(1234)
-n         <- 500
-out500    <- mclapply(1:nsimu, function(x){cat(x, "\n"); f.estim(n = n)}, mc.cores = 4L)
+nvec      <- rep(250, 2)
+out500    <- mclapply(1:nsimu, function(x){cat(x, "\n"); f.estim(nvec)}, mc.cores = 4L)
 
-n         <- 2000
-out2000   <- mclapply(1:nsimu, function(x){cat(x, "\n"); f.estim(n = n)}, mc.cores = 4L)
+nvec      <- rep(250, 8)
+out2000   <- mclapply(1:nsimu, function(x){cat(x, "\n"); f.estim(nvec)}, mc.cores = 4L)
 
 save(out500, out2000, file = "dgpC.rda")
 write.csv(cbind(t(apply(do.call(cbind, out500), 1, sum.func)), 
