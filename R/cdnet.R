@@ -52,7 +52,7 @@
 #'     \item{Rmax}{infinite sums in the marginal effects are approximated by sums up to Rmax.}
 #'     \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 #' @references 
-#' Houndetoungan, E. A. (2024). Count Data Models with Social Interactions under Rational Expectations. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
+#' Houndetoungan, A. (2024). Count Data Models with Heterogeneous Peer Effects. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
 #' @examples 
 #' \donttest{
 #' set.seed(123)
@@ -320,7 +320,7 @@ simcdnet   <- function(formula,
 #' \item{S}{the number of simulations performed use to compute integral in the covariance by important sampling.} 
 #' }
 #' @references 
-#' Houndetoungan, E. A. (2024). Count Data Models with Social Interactions under Rational Expectations. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
+#' Houndetoungan, A. (2024). Count Data Models with Heterogeneous Peer Effects. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
 #' @seealso \code{\link{sart}}, \code{\link{sar}}, \code{\link{simcdnet}}.
 #' @examples 
 #' \donttest{
