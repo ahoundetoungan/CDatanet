@@ -59,14 +59,14 @@ void fySar(arma::vec& y,
 
 //[[Rcpp::export]]
 void fySarRE(arma::vec& y,
-           arma::vec& Gye,
-           arma::vec& ye,
-           List& G,
-           const arma::vec& eps,
-           const arma::mat& igroup,
-           const int& ngroup,
-           const arma::vec& psi,
-           const double& lambda) {
+             arma::vec& Gye,
+             arma::vec& ye,
+             List& G,
+             const arma::vec& eps,
+             const arma::mat& igroup,
+             const int& ngroup,
+             const arma::vec& psi,
+             const double& lambda) {
   int nm;
   arma::vec yem;
   arma::mat Am;
@@ -76,7 +76,7 @@ void fySarRE(arma::vec& y,
     arma::mat Gm  = G[m];
     Am            = arma::diagmat(arma::ones(nm)) - lambda*Gm;
     yem           = arma::solve(Am, psi.subvec(igroup(m, 0), igroup(m, 1)));
-
+    
     y.rows(igroup(m,0), igroup(m,1))    = yem + eps.subvec(igroup(m,0), igroup(m,1));
     ye.rows(igroup(m,0), igroup(m,1))   = yem;
     Gye.rows(igroup(m,0), igroup(m,1))  = Gm * yem;
@@ -113,7 +113,7 @@ double foptimSAR(const double& alphatilde,
   arma::vec beta       = invXX*(X.t()*yrem);
   arma::vec e          = yrem - X*beta;
   double s2            = sum(e%e)/nst;
-
+  
   
   double logdetA(0);
   for (int i(0); i < ngroup; ++ i) {
@@ -249,15 +249,15 @@ double foptimSAR_RE(const double& alphatilde,
 
 // [[Rcpp::export]]
 double foptimSAR0_RE(const double& alphatilde,
-                    const arma::mat& X,
-                    List& G,
-                    List& I,
-                    const arma::vec& y,
-                    const arma::vec& Gy,
-                    const arma::mat igroup,
-                    const int& ngroup,
-                    const int& n,
-                    const int& K){
+                     const arma::mat& X,
+                     List& G,
+                     List& I,
+                     const arma::vec& y,
+                     const arma::vec& Gy,
+                     const arma::mat igroup,
+                     const int& ngroup,
+                     const int& n,
+                     const int& K){
   int n1, n2;
   double lambda    = 1.0/(1.0 + exp(-alphatilde));
   arma::mat M(n, K);

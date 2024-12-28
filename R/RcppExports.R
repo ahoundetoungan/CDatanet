@@ -153,6 +153,18 @@ fhomobetasym <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, ep
     .Call(`_CDatanet_fhomobetasym`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, hasX, Print)
 }
 
+NewRaph2f <- function(theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX = TRUE, Print = TRUE, tol = 1e-4, maxit = 50L) {
+    .Call(`_CDatanet_NewRaph2f`, theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX, Print, tol, maxit)
+}
+
+NewRaph1f <- function(theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX = TRUE, Print = TRUE, tol = 1e-4, maxit = 50L) {
+    .Call(`_CDatanet_NewRaph1f`, theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX, Print, tol, maxit)
+}
+
+NewRaphsym <- function(theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX = TRUE, Print = TRUE, tol = 1e-4, maxit = 50L) {
+    .Call(`_CDatanet_NewRaphsym`, theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX, Print, tol, maxit)
+}
+
 hdataF2L <- function(data, nvec, index, M) {
     .Call(`_CDatanet_hdataF2L`, data, nvec, index, M)
 }

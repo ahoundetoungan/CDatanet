@@ -226,7 +226,7 @@ sar <- function(formula,
   nvec       <- unlist(lapply(Glist, nrow))
   n          <- sum(nvec)
   igr        <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
-
+  
   f.t.data   <- formula.to.data(formula, contextual, Glist, M, igr, data, 
                                 theta0 = NULL, fixed.effects = fixed.effects)
   formula    <- f.t.data$formula
@@ -236,7 +236,7 @@ sar <- function(formula,
   coln       <- c("lambda", colnames(X), "sigma")
   
   K          <- ncol(X)
-
+  
   # variables
   Nvec       <- sapply(Glist, nrow)
   

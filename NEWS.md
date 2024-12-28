@@ -49,3 +49,4 @@ Fixed effect is allowed in the model SAR.
 - `cdnet` allows heterogeneity in the cut-points. The cost function in the utility function is nonparametric and depends on some characteristics X such as gender, race, etc.
 
 # Changes in version 2.2.1
+- The Newton-Raphson method has been added for estimating the homophily model.

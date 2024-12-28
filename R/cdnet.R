@@ -2,8 +2,8 @@
 #' @param formula a class object \link[stats]{formula}: a symbolic description of the model. `formula` must be as, for example, \code{y ~ x1 + x2 + gx1 + gx2}
 #' where `y` is the endogenous vector and `x1`, `x2`, `gx1` and `gx2` are control variables, which can include contextual variables, i.e. averages among the peers.
 #' Peer averages can be computed using the function \code{\link{peer.avg}}.
-#' @param Glist adjacency matrix. For networks consisting of multiple subnets, `Glist` can be a list of subnets with the `m`-th element being an \eqn{n_s\times n_s}-adjacency matrix, where \eqn{n_s} is the number of nodes in the `m`-th subnet.
-#' For heterogeneous peer effects (`length(unique(group)) = h > 1`), the `m`-th element must be a list of \eqn{h^2} \eqn{n_s\times n_s}-adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
+#' @param Glist adjacency matrix. For networks consisting of multiple subnets (e.g., schools), `Glist` can be a list of subnets with the `m`-th element being an \eqn{n_m\times n_m}-adjacency matrix, where \eqn{n_m} is the number of nodes in the `m`-th subnet.
+#' For heterogeneous peer effects (`length(unique(group)) = h > 1`), the `m`-th element must be a list of \eqn{h^2} \eqn{n_m\times n_m}-adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
 #' For heterogeneous peer effects in the case of a single large network, `Glist` must be a one-item list. This item must be a list of \eqn{h^2} network specifications. 
 #' The order in which the networks in are specified are important and must match `sort(unique(group))` (see examples).
 #' @param group the vector indicating the individual groups. The default assumes a common group. For 2 groups; that is, `length(unique(group)) = 2`, (e.g., `A` and `B`), 
@@ -259,12 +259,13 @@ simcdnet   <- function(formula,
 #' @param formula a class object \link[stats]{formula}: a symbolic description of the model. `formula` must be as, for example, \code{y ~ x1 + x2 + gx1 + gx2}
 #' where `y` is the endogenous vector and `x1`, `x2`, `gx1` and `gx2` are control variables, which can include contextual variables, i.e. averages among the peers.
 #' Peer averages can be computed using the function \code{\link{peer.avg}}.
-#' @param Glist adjacency matrix. For networks consisting of multiple subnets, `Glist` can be a list of subnets with the `m`-th element being an \eqn{n_s\times n_s}-adjacency matrix, where \eqn{n_s} is the number of nodes in the `m`-th subnet.
-#' For heterogeneous peer effects (`length(unique(group)) = h > 1`), the `m`-th element must be a list of \eqn{h^2} \eqn{n_s\times n_s}-adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
-#' For heterogeneous peer effects in the case of a single large network, `Glist` must be a one-item list. This item must be a list of \eqn{h^2} network specifications. 
-#' The order in which the networks in are specified are important and must match `sort(unique(group))` (see examples).
+#' @param Glist adjacency matrix. For networks consisting of multiple subnets (e.g., schools), `Glist` can be a list of subnets with the `m`-th element being an \eqn{n_m\times n_m}-adjacency matrix, where \eqn{n_m} is the number of nodes in the `m`-th subnet.
+#' For heterogeneous peer effects (i.e., when `length(unique(group)) = h > 1`), the `m`-th element must be a list of \eqn{h^2} \eqn{n_m\times n_m}-adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024, Section 2.1).
+#' For heterogeneous peer effects in the case of a single large network (a single school), `Glist` must be a one-item list (because there is one school). This item must be a list of \eqn{h^2} network specifications. 
+#' The order in which the networks in are specified are important and must match the order of the groups in `sort(unique(group))` (see argument `group` and examples).
 #' @param group the vector indicating the individual groups. The default assumes a common group. For 2 groups; that is, `length(unique(group)) = 2`, (e.g., `A` and `B`), 
-#' four types of peer effects are defined: peer effects of `A` on `A`, of `A` on `B`, of `B` on `A`, and of `B` on `B`.
+#' four types of peer effects are defined: peer effects of `A` on `A`, of `A` on `B`, of `B` on `A`, and of `B` on `B`. 
+#' In this case, in the argument `Glist`, the networks must be defined in this order: `AA`, `AB`, `BA`, `BB`.
 #' @param Rmax an integer indicating the theoretical upper bound of `y`. (see the model specification in details).
 #' @param Rbar an \eqn{L}-vector, where  \eqn{L} is the number of groups. For large `Rmax` the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}). 
 #' @param starting (optional) a starting value for \eqn{\theta = (\lambda, \Gamma', \delta')'}, where \eqn{\lambda}, \eqn{\Gamma}, and \eqn{\delta} are the parameters to be estimated (see details).

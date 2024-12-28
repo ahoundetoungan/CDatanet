@@ -27,8 +27,8 @@ Peer averages can be computed using the function \code{\link{peer.avg}}.}
 \item{group}{the vector indicating the individual groups. The default assumes a common group. For 2 groups; that is, \code{length(unique(group)) = 2}, (e.g., \code{A} and \code{B}),
 four types of peer effects are defined: peer effects of \code{A} on \code{A}, of \code{A} on \code{B}, of \code{B} on \code{A}, and of \code{B} on \code{B}.}
 
-\item{Glist}{adjacency matrix. For networks consisting of multiple subnets, \code{Glist} can be a list of subnets with the \code{m}-th element being an \eqn{n_s\times n_s}-adjacency matrix, where \eqn{n_s} is the number of nodes in the \code{m}-th subnet.
-For heterogeneous peer effects (\code{length(unique(group)) = h > 1}), the \code{m}-th element must be a list of \eqn{h^2} \eqn{n_s\times n_s}-adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
+\item{Glist}{adjacency matrix. For networks consisting of multiple subnets (e.g., schools), \code{Glist} can be a list of subnets with the \code{m}-th element being an \eqn{n_m\times n_m}-adjacency matrix, where \eqn{n_m} is the number of nodes in the \code{m}-th subnet.
+For heterogeneous peer effects (\code{length(unique(group)) = h > 1}), the \code{m}-th element must be a list of \eqn{h^2} \eqn{n_m\times n_m}-adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
 For heterogeneous peer effects in the case of a single large network, \code{Glist} must be a one-item list. This item must be a list of \eqn{h^2} network specifications.
 The order in which the networks in are specified are important and must match \code{sort(unique(group))} (see examples).}
 
@@ -147,7 +147,7 @@ hist(y, breaks = max(y) + 1)
 table(y)}
 }
 \references{
-Houndetoungan, E. A. (2024). Count Data Models with Social Interactions under Rational Expectations. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
+Houndetoungan, A. (2024). Count Data Models with Heterogeneous Peer Effects. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
 }
 \seealso{
 \code{\link{cdnet}}, \code{\link{simsart}}, \code{\link{simsar}}.

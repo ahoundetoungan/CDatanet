@@ -64,9 +64,9 @@ out     <- do.call(rbind, lapply(1:4, fsim))
     geom_bar(color = "black", fill = "#eeeeee") + 
     theme_bw() + xlab("y") + ylab("Frequency") + 
     facet_wrap(~ DGP, ncol = , scales = "free") + 
-    theme(strip.text = element_text(face = "italic"), 
-          text = element_text(size = 12, family = "Palatino"),
-          axis.title = element_text(size = 12, family = "Palatino")))
+    theme(#strip.text = element_text(face = "italic"), 
+          text = element_text(size = 13, family = "Palatino"),
+          axis.title = element_text(size = 13, family = "Palatino")))
 
-ggsave("mc_plot.pdf", path = "~/Dropbox/Papers - In progress/CountDNtw/Code/Monte Carlo/_output", 
+ggsave("mc_plot.pdf", path = "~/Dropbox/Academy/1.Papers/CountDNtw/Code/Monte Carlo/_output", 
        plot = graph, device = "pdf", width = 7, height = 4)
