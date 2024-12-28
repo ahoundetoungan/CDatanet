@@ -11,7 +11,9 @@ homophily.fe(
   symmetry = FALSE,
   fe.way = 1,
   init = NULL,
-  opt.ctr = list(maxit = 10000, eps_f = 1e-09, eps_g = 1e-09),
+  method = c("L-BFGS", "Block-NRaphson"),
+  ctr = list(maxit = ifelse(method == "L-BFGS", 10000, 50), eps_f = 1e-09, eps_g = 1e-09,
+    tol = 1e-04),
   print = TRUE
 )
 }
@@ -32,7 +34,9 @@ in the model. If not found in data, the variables are taken from \code{environme
 \code{mu} an n-dimensional vector, and \code{nu} an n-dimensional vector,
 where K is the number of explanatory variables and n is the number of individuals; or a vector of starting value for \code{c(beta, mu, nu)}.}
 
-\item{opt.ctr}{(optional) is a list of \code{maxit}, \code{eps_f}, and \code{eps_g}, which are control parameters used by the solver \code{optim_lbfgs}, of the package \pkg{RcppNumerical}.}
+\item{method}{A character string specifying the optimization method. Expected values are \code{"L-BFGS"} or \code{"Block-NRaphson"}, where \code{"Block-NRaphson"} refers to the \code{Newton-Raphson} method applied to each subnetwork.}
+
+\item{ctr}{(optional) A list containing control parameters for the solver. For the \code{optim_lbfgs} method from the \pkg{RcppNumerical} package, the list should include \code{maxit}, \code{eps_f}, and \code{eps_g}. For the \code{Block-NRaphson} method, the list should include \code{maxit} and \code{tol}.}
 
 \item{print}{Boolean indicating if the estimation progression should be printed.}
 }
@@ -45,7 +49,7 @@ number of observations, etc.}
 \item{optim}{returned value of the optimization solver, which contains details of the optimization. The solver used is \code{optim_lbfgs} of the
 package \pkg{RcppNumerical}.}
 \item{init}{returned list of starting value.}
-\item{loglike(init)}{log-likelihood at the starting value.}
+\item{loglike.init}{log-likelihood at the starting value.}
 }
 \description{
 \code{homophily.fe} implements a Logit estimator for network formation model with homophily. The model includes degree heterogeneity using fixed effects (see details).
