@@ -373,7 +373,8 @@ void updatemunu(arma::vec& mu,
   int j1, j2, igr1, igr2, nm, j = 0;
   double tmpmu, tmpnu;
   arma::vec num, mum, numj, mumj, munub, munu; 
-  arma::uvec indexj, indexm;
+  arma::uvec indexj;
+  arma::umat indexm;
   arma::mat smunu(2, 2), vmunu(2, 2), invvmunu;
   // ast minus dxbeta
   arma::vec astmdxbeta = ast - dxbeta;
@@ -471,7 +472,8 @@ void updatemu(arma::vec& mu,
   int j1, j2, igr1, igr2, nm, j = 0;
   double tmp, smu, mub, invvmu;
   arma::vec mum, mumj; 
-  arma::uvec indexj, indexm;
+  arma::uvec indexj;
+  arma::umat indexm;
   // ast minus dxbeta
   arma::vec astmdxbeta = ast - dxbeta;
   
@@ -554,7 +556,8 @@ void updatemusym(arma::vec& mu,
   int j1, j2, igr1, igr2, nm, j = 0;
   double smu, mub, invvmu;
   arma::vec mum, mumj; 
-  arma::uvec indexj, indexm;
+  arma::uvec indexj;
+  arma::umat indexm;
   // ast minus dxbeta
   arma::vec astmdxbeta = ast - dxbeta;
   
