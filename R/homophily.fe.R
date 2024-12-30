@@ -223,10 +223,10 @@ homophily.LogitFE <- function(network, fe.way, M, nvec, n, N, Nvec, index, index
     tol           <- 1e-4
   }
   if(is.null(eps_f)){
-    eps_f         <- ifelse(met == 2, 1e-4, 1e-6)
+    eps_f         <- 1e-6
   }
   if(is.null(eps_g)){
-    eps_g         <- ifelse(met == 2, 1e-3, 1e-5)
+    eps_g         <- 1e-5
   }
   
   #starting value
@@ -390,10 +390,10 @@ homophily.LogitFESym <- function(network, M, nvec, n, N, Nvec, index, indexgr, f
     tol           <- 1e-4
   }
   if(is.null(eps_f)){
-    eps_f         <- ifelse(met == 2, 1e-4, 1e-6)
+    eps_f         <- 1e-6
   }
   if(is.null(eps_g)){
-    eps_g         <- ifelse(met == 2, 1e-3, 1e-5)
+    eps_g         <- 1e-5
   }
   
   #starting value
