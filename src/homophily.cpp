@@ -1255,7 +1255,7 @@ double fhomobetamunu2f(arma::vec& theta,
     mu.subvec(igr1, igr2)             = arma::vec(thetaEi.segment(0, nm).data(), nm, false, false); 
     nu.subvec(igr1 - m, igr2 - m - 1) = arma::vec(thetaEi.segment(nm, nm - 1).data(), nm - 1, false, false); 
     if(Print){
-      Rcpp::Rcout << "group: " << m + 1 << "  -- log-likelihood: " << sum(llh) << "\n";
+      Rcpp::Rcout << "group: " << m + 1 << " -- log-likelihood: " << sum(llh) << "\n";
     }
   }
   
@@ -1608,7 +1608,7 @@ double fhomobetamu1f(arma::vec& theta,
     llh(m)     = -fopt;
     mu.subvec(igr1, igr2) = arma::vec(thetaEi.data(), nm, false, false); 
     if(Print){
-      Rcpp::Rcout << "group: " << m + 1 << "  -- log-likelihood: " << sum(llh) << "\n";
+      Rcpp::Rcout << "group: " << m + 1 << " -- log-likelihood: " << sum(llh) << "\n";
     }
   }
   
@@ -1959,7 +1959,7 @@ double fhomobetamusym(arma::vec& theta,
     llh(m)     = -fopt;
     mu.subvec(igr1, igr2) = arma::vec(thetaEi.data(), nm, false, false); 
     if(Print){
-      Rcpp::Rcout << "group: " << m + 1<< "  -- log-likelihood: " << sum(llh) << "\n";
+      Rcpp::Rcout << "group: " << m + 1<< " -- log-likelihood: " << sum(llh) << "\n";
     }
   }
   
