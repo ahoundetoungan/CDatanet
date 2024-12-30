@@ -2201,15 +2201,12 @@ Rcpp::List NewRaph2f(arma::vec& theta,
   double llh, dist;
   bool cont(true);
   
+  if (hasX) {
+    dxb   = dx*beta;
+  }
+  
   while (cont) {
     arma::vec betap(beta), mup(mu), nup(nu);
-    
-    // beta
-    if (hasX) {
-      fHGbeta2f(grad, Hess, dx, a, beta, mu, nu, nvec, M, N, index, indexgr);
-      beta = betap - arma::solve(Hess, grad);
-      dxb  = dx*beta;
-    }
     
     // mu, nu
     for (int m(0); m < M; ++ m) {
@@ -2234,7 +2231,11 @@ Rcpp::List NewRaph2f(arma::vec& theta,
       mu.subvec(igr1, igr2)              = tp.tail(nm);
     }
     
+    // beta
     if (hasX) {
+      fHGbeta2f(grad, Hess, dx, a, beta, mu, nu, nvec, M, N, index, indexgr);
+      beta = betap - arma::solve(Hess, grad);
+      dxb  = dx*beta;
       arma::vec tpdis{max(abs(beta - betap)), max(abs(mu - mup)), max(abs(nu - nup))};
       dist   = max(tpdis);
     } else {
@@ -2333,15 +2334,12 @@ Rcpp::List NewRaph1f(arma::vec& theta,
   double llh, dist;
   bool cont(true);
   
+  if (hasX) {
+    dxb   = dx*beta;
+  }
+  
   while (cont) {
     arma::vec betap(beta), mup(mu);
-    
-    // beta
-    if (hasX) {
-      fHGbeta1f(grad, Hess, dx, a, beta, mu, nvec, M, N, index, indexgr);
-      beta = betap - arma::solve(Hess, grad);
-      dxb  = dx*beta;
-    }
     
     // mu
     for (int m(0); m < M; ++ m) {
@@ -2363,7 +2361,11 @@ Rcpp::List NewRaph1f(arma::vec& theta,
       mu.subvec(igr1, igr2) = mu.subvec(igr1, igr2) - arma::solve(Hess, grad);
     }
     
+    // beta
     if (hasX) {
+      fHGbeta1f(grad, Hess, dx, a, beta, mu, nvec, M, N, index, indexgr);
+      beta = betap - arma::solve(Hess, grad);
+      dxb  = dx*beta;
       arma::vec tpdis{max(abs(beta - betap)), max(abs(mu - mup))};
       dist   = max(tpdis);
     } else {
@@ -2457,16 +2459,13 @@ Rcpp::List NewRaphsym(arma::vec& theta,
   double llh, dist;
   bool cont(true);
   
+  if (hasX) {
+    dxb   = dx*beta;
+  }
+  
   while (cont) {
     arma::vec betap(beta), mup(mu);
-    
-    // beta
-    if (hasX) {
-      fHGbetasym(grad, Hess, dx, a, beta, mu, nvec, M, N, index, indexgr);
-      beta = betap - arma::solve(Hess, grad);
-      dxb  = dx*beta;
-    }
-    
+
     // mu
     for (int m(0); m < M; ++ m) {
       igr1   = indexgr(m, 0);
@@ -2487,7 +2486,11 @@ Rcpp::List NewRaphsym(arma::vec& theta,
       mu.subvec(igr1, igr2) = mu.subvec(igr1, igr2) - arma::solve(Hess, grad);
     }
     
+    // beta
     if (hasX) {
+      fHGbetasym(grad, Hess, dx, a, beta, mu, nvec, M, N, index, indexgr);
+      beta = betap - arma::solve(Hess, grad);
+      dxb  = dx*beta;
       arma::vec tpdis{max(abs(beta - betap)), max(abs(mu - mup))};
       dist   = max(tpdis);
     } else {
@@ -2584,14 +2587,21 @@ Rcpp::List NewRaphLBFGS2f(arma::vec& theta,
   bool cont(true);
   
   while (cont) {
+    arma::vec thetap(theta);
     ++ k;
-    arma::vec thetap(theta), mu(theta.subvec(m1, m2)), nu(theta.subvec(n1, n2));
+    // mu, nu
+    llh    = fhomobetamunu2f(theta, a, dx, nvec, index, indexgr, N, M, maxitopt, eps_f, eps_g, hasX, Print);
     
     // beta
+    arma::vec mu(theta.subvec(m1, m2)), nu(theta.subvec(n1, n2));
     if (hasX) {
       fHGbeta2f(grad, Hess, dx, a, theta.head(Kx), mu, nu, nvec, M, N, index, indexgr);
       theta.head(Kx) -= arma::solve(Hess, grad);
     }
+    
+    dist   = max(abs(theta - thetap));
+    cont   = ((dist >= tol) & (k < maxitNR));
+    
     if (Print) {
       Rcpp::Rcout << "\nIteration: " << k << "\n";
       if(hasX){
@@ -2600,14 +2610,6 @@ Rcpp::List NewRaphLBFGS2f(arma::vec& theta,
         Rcpp::Rcout << "beta: \n";
         Rcpp::print(betacpp);
       }
-    }
-    
-    // mu, nu
-    llh    = fhomobetamunu2f(theta, a, dx, nvec, index, indexgr, N, M, maxitopt, eps_f, eps_g, hasX, Print);
-    dist   = max(abs(theta - thetap));
-    cont   = ((dist >= tol) & (k < maxitNR));
-    
-    if (Print) {
       Rcpp::Rcout << "Distance: " << dist << "\n";
     }
   }
@@ -2649,29 +2651,32 @@ Rcpp::List NewRaphLBFGS1f(arma::vec& theta,
   bool cont(true);
   
   while (cont) {
+    arma::vec thetap(theta);
     ++ k;
-    arma::vec thetap(theta), mu(theta.subvec(m1, m2));
+    if (Print) {
+      Rcpp::Rcout << "\nIteration: " << k << "\n";
+    }
+    
+    // mu
+    llh    = fhomobetamu1f(theta, a, dx, nvec, index, indexgr, N, M, maxitopt, eps_f, eps_g, hasX, Print);
     
     // beta
+    arma::vec mu(theta.subvec(m1, m2));
     if (hasX) {
       fHGbeta1f(grad, Hess, dx, a, theta.head(Kx), mu, nvec, M, N, index, indexgr);
       theta.head(Kx) -= arma::solve(Hess, grad);
     }
+
+    dist   = max(abs(theta - thetap));
+    cont   = ((dist >= tol) & (k < maxitNR));
+    
     if (Print) {
-      Rcpp::Rcout << "\nIteration: " << k << "\n";
       if(hasX){
         NumericVector betacpp  = wrap(theta.head(Kx));
         betacpp.attr("dim")    = R_NilValue;
         Rcpp::Rcout << "beta: \n";
         Rcpp::print(betacpp);
       }
-    }
-    // mu, nu
-    llh    = fhomobetamu1f(theta, a, dx, nvec, index, indexgr, N, M, maxitopt, eps_f, eps_g, hasX, Print);
-    dist   = max(abs(theta - thetap));
-    cont   = ((dist >= tol) & (k < maxitNR));
-    
-    if (Print) {
       Rcpp::Rcout << "Distance: " << dist << "\n";
     }
   }
@@ -2713,29 +2718,32 @@ Rcpp::List NewRaphLBFGSsym(arma::vec& theta,
   bool cont(true);
   
   while (cont) {
+    arma::vec thetap(theta);
     ++ k;
-    arma::vec thetap(theta), mu(theta.subvec(m1, m2));
+    if (Print) {
+      Rcpp::Rcout << "\nIteration: " << k << "\n";
+    }
+    
+    // mu 
+    llh    = fhomobetamusym(theta, a, dx, nvec, index, indexgr, N, M, maxitopt, eps_f, eps_g, hasX, Print);
     
     // beta
+    arma::vec mu(theta.subvec(m1, m2));
     if (hasX) {
       fHGbetasym(grad, Hess, dx, a, theta.head(Kx), mu, nvec, M, N, index, indexgr);
       theta.head(Kx) -= arma::solve(Hess, grad);
     }
+
+    dist   = max(abs(theta - thetap));
+    cont   = ((dist >= tol) & (k < maxitNR));
+    
     if (Print) {
-      Rcpp::Rcout << "\nIteration: " << k << "\n";
       if(hasX){
         NumericVector betacpp  = wrap(theta.head(Kx));
         betacpp.attr("dim")    = R_NilValue;
         Rcpp::Rcout << "beta: \n";
         Rcpp::print(betacpp);
       }
-    }
-    
-    // mu, nu
-    llh    = fhomobetamusym(theta, a, dx, nvec, index, indexgr, N, M, maxitopt, eps_f, eps_g, hasX, Print);
-    dist   = max(abs(theta - thetap));
-    cont   = ((dist >= tol) & (k < maxitNR));
-    if (Print) {
       Rcpp::Rcout << "Distance: " << dist << "\n";
     }
   }
