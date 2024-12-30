@@ -9,8 +9,8 @@
 #' @param init (optional) either a list of starting values containing `beta`, an K-dimensional vector of the explanatory variables parameter, 
 #' `mu` an n-dimensional vector, and `nu` an n-dimensional vector, 
 #' where K is the number of explanatory variables and n is the number of individuals; or a vector of starting value for `c(beta, mu, nu)`.  
-#' @param method A character string specifying the optimization method. Expected values are `"L-BFGS"` or `"Block-NRaphson"`, where `"Block-NRaphson"` refers to the `Newton-Raphson` method applied to each subnetwork.
-#' @param ctr (optional) A list containing control parameters for the solver. For the `optim_lbfgs` method from the \pkg{RcppNumerical} package, the list should include `maxit`, `eps_f`, and `eps_g`. For the `Block-NRaphson` method, the list should include `maxit` and `tol`.
+#' @param method A character string specifying the optimization method. Expected values are `"L-BFGS"`, `"Block-NRaphson"`, or `"Mix"`. `"Block-NRaphson"` refers to the `Newton-Raphson` method applied to each subnetwork, and `"Mix"` combines the `Newton-Raphson` method for `beta` with the `L-BFGS` method for the fixed effects.
+#' @param ctr (optional) A list containing control parameters for the solver. For the `optim_lbfgs` method from the \pkg{RcppNumerical} package, the list should include `maxit.opt` (corresponding to `maxit` for the `L-BFGS` method), `eps_f`, and `eps_g`. For the `Block-NRaphson` method, the list should include `maxit.nr` (corresponding to `maxit` for the `Newton-Raphson` method) and `tol`.
 #' @param print Boolean indicating if the estimation progression should be printed.
 #' @description 
 #' `homophily.fe` implements a Logit estimator for network formation model with homophily. The model includes degree heterogeneity using fixed effects (see details).
@@ -37,7 +37,6 @@
 #'     package \pkg{RcppNumerical}.}
 #'     \item{init}{returned list of starting value.}
 #'     \item{loglike.init}{log-likelihood at the starting value.}
-#' @importFrom stats glm
 #' @importFrom stats binomial
 #' @importFrom matrixcalc is.symmetric.matrix
 #' @examples 
@@ -96,17 +95,17 @@
 homophily.fe <- function(network,
                          formula,
                          data,
-                         symmetry = FALSE,
-                         fe.way   = 1,
-                         init     = NULL,
-                         method   = c("L-BFGS", "Block-NRaphson"),
-                         ctr      = list(maxit = ifelse(method == "L-BFGS", 1e4, 50), eps_f = 1e-9, eps_g = 1e-9, tol = 1e-4),
-                         print    = TRUE){
+                         symmetry   = FALSE,
+                         fe.way     = 1,
+                         init       = NULL,
+                         method     = c("L-BFGS", "Block-NRaphson", "Mix"),
+                         ctr        = list(maxit.opt = 1e4, maxit.nr = 50, eps_f = 1e-9, eps_g = 1e-9, tol = 1e-4),
+                         print      = TRUE){
   t1      <- Sys.time()
   method  <- method[1]
   meth    <- tolower(method)
-  if (!(meth %in% c("l-bfgs", "block-nraphson"))) stop("`method` must be eiter 'L-BFGS' or 'Block-NRaphson'.")
-  NRaph   <- meth == "block-nraphson"
+  if (!(meth %in% c("l-bfgs", "block-nraphson", "mix"))) stop("`method` must be eiter 'L-BFGS', 'Block-NRaphson', or 'mix'.")
+  meth    <- (0:2)[c("l-bfgs", "block-nraphson", "mix") == meth]
   fe.way  <- as.numeric(fe.way[1])
   if(symmetry & fe.way == 2) stop("Two side fixed effects are not allowed for symmetric network models.")
   stopifnot(fe.way %in% (1:2))
@@ -175,11 +174,11 @@ homophily.fe <- function(network,
   if(symmetry){
     out           <- homophily.LogitFESym(network = network, M = M, nvec = nvec, n = n, N = N, Nvec = Nvec, index = index, 
                                           indexgr = indexgr, formula = formula, dX = dX, coln = coln, K = K, init = init, 
-                                          nlinks = nlinks, ctr = ctr, hasX = hasX, print = print, NRaph = NRaph)
+                                          nlinks = nlinks, ctr = ctr, hasX = hasX, print = print, meth = meth)
   } else {
     out           <- homophily.LogitFE(network = network, fe.way = fe.way, M = M, nvec = nvec, n = n, N = N, Nvec = Nvec, 
                                        index = index, indexgr = indexgr, formula = formula, dX = dX, coln = coln, K = K, 
-                                       init = init, nlinks = nlinks, ctr = ctr, hasX = hasX, print = print, NRaph = NRaph) 
+                                       init = init, nlinks = nlinks, ctr = ctr, hasX = hasX, print = print, meth = meth) 
   }
   
   t2              <- Sys.time()
@@ -207,20 +206,18 @@ homophily.fe <- function(network,
 
 
 homophily.LogitFE <- function(network, fe.way, M, nvec, n, N, Nvec, index, indexgr, formula, 
-                              dX, coln, K, init, nlinks, ctr, hasX, print, NRaph){
-  maxit           <- ctr$maxit
-  eps_f           <- NULL
-  eps_g           <- NULL
-  tol             <- NULL
-  if (NRaph) {
-    tol           <- ctr$tol
-  } else {
-    eps_f         <- ctr$eps_f
-    eps_g         <- ctr$eps_g
-  }
+                              dX, coln, K, init, nlinks, ctr, hasX, print, meth){
+  maxit.opt       <- ctr$maxit.opt
+  maxit.nr        <- ctr$maxit.nr
+  tol             <- ctr$tol
+  eps_f           <- ctr$eps_f
+  eps_g           <- ctr$eps_g
   
-  if(is.null(maxit)){
-    maxit         <- ifelse(NRaph, 50, 500)
+  if(is.null(maxit.opt)){
+    maxit.opt     <- 500
+  }
+  if(is.null(maxit.nr)){
+    maxit.nr      <- 50
   }
   if(is.null(tol)){
     tol           <- 1e-4
@@ -241,42 +238,46 @@ homophily.LogitFE <- function(network, fe.way, M, nvec, n, N, Nvec, index, index
     mu            <- NULL
     mylogit       <- NULL
     if(hasX){
-      mylogit     <- glm(network ~ 1 + dX, family = binomial(link = "logit"))
+      mylogit     <- finithasX(dx = dX, theta = rep(0, K), a = network, updateb = TRUE, tol = tol, maxit = maxit.nr) 
     } else {
-      mylogit     <- glm(network ~ 1, family = binomial(link = "logit"))
+      mylogit     <- finit(a = network, tol = tol, maxit = maxit.nr) 
     }
     
-    beta          <- mylogit$coefficients[-1]
-    mu            <- rep(mylogit$coefficients[1], n)
+    beta          <- c(mylogit$theta[-1])
+    mu            <- rep(mylogit$theta[1], n)
     names(mu)     <- NULL
     nu            <- NULL
     if(fe.way == 2){
       nu          <- rep(0, n - M)
+    } else {
+      mu          <- mu/2
     }
     init          <- c(beta, mu, nu)
-    initllh       <- -0.5*mylogit$deviance
+    initllh       <- mylogit$llh
   } else {
     if(is.list(init)){
       beta        <- c(init$beta)
       mu          <- c(init$mu)
       nu          <- c(init$nu)
-      if((is.null(beta) || is.null(mu)) & hasX){
+      if(is.null(beta) || is.null(mu)){
         if(print) cat("starting point searching\n")
-        mylogit   <- glm(network ~ 1 + dX, family = binomial(link = "logit"))
-        initllh   <- -0.5*mylogit$deviance
-        if(is.null(mu)){
-          mu      <- rep(mylogit$coefficients[1], n); names(mu) <- NULL
+        mylogit    <- NULL
+        if(hasX){
+          if (is.null(beta)) {
+            mylogit  <- finithasX(dx = dX, theta = rep(0, K), a = network, updateb = TRUE, tol = tol, maxit = maxit.nr) 
+          } else {
+            mylogit  <- finithasX(dx = dX, theta = beta, a = network, updateb = FALSE, tol = tol, maxit = maxit.nr) 
+          }
+        } else {
+          mylogit     <- finit(a = network, tol = tol, maxit = maxit.nr) 
         }
-        if(is.null(beta)){
-          beta    <- mylogit$coefficients[-1]
-        }
-      }
-      if((is.null(beta) || is.null(mu)) & !hasX){
-        if(print) cat("starting point searching\n")
-        mylogit   <- glm(network ~ 1, family = binomial(link = "logit"))
-        initllh   <- -0.5*mylogit$deviance
-        if(is.null(mu)){
-          mu      <- rep(mylogit$coefficients[1], n); names(mu) <- NULL
+        beta     <- c(mylogit$theta[-1])
+        mu       <- rep(mylogit$theta[1], n)
+        initllh  <- mylogit$llh
+        if(fe.way == 2){
+          nu     <- rep(0, n - M)
+        }  else {
+          mu     <- mu/2
         }
       }
       if(is.null(nu) & (fe.way == 2)){
@@ -296,10 +297,9 @@ homophily.LogitFE <- function(network, fe.way, M, nvec, n, N, Nvec, index, index
       }
     } 
   }
-  
   quiet(gc())
   
-  theta           <- init
+  theta           <- 1*init
   
   estim           <- NULL
   quiet(gc())
@@ -308,21 +308,31 @@ homophily.LogitFE <- function(network, fe.way, M, nvec, n, N, Nvec, index, index
     cat("maximizer searching\n")
   } 
   estim           <- NULL
-  if (NRaph) {
+  if (meth == 0) {
+    if(fe.way == 2){
+      estim       <- fhomobeta2f(theta = theta, a = c(network), dx = dX, nvec = nvec, index = index, indexgr = indexgr, 
+                                 M = M, maxit = maxit.opt, eps_f = eps_f, eps_g = eps_g, hasX = hasX, Print = print)
+    } else {
+      estim       <- fhomobeta1f(theta = theta, a = c(network), dx = dX, nvec = nvec, index = index, indexgr = indexgr, 
+                                 M = M, maxit = maxit.opt, eps_f = eps_f, eps_g = eps_g, hasX = hasX, Print = print)
+    }
+  } else if (meth == 1) {
     if(fe.way == 2){
       estim       <- NewRaph2f(theta = theta, a = c(network), dx = dX, nvec = nvec, Nvec = Nvec, index = index, indexgr = indexgr, 
-                               M = M, N = N, hasX = hasX, Print = print, tol = tol, maxit = maxit)
+                               M = M, N = N, hasX = hasX, Print = print, tol = tol, maxit = maxit.nr)
     } else {
       estim       <- NewRaph1f(theta = theta, a = c(network), dx = dX, nvec = nvec, Nvec = Nvec, index = index, indexgr = indexgr, 
-                               M = M, N = N, hasX = hasX, Print = print, tol = tol, maxit = maxit)
+                               M = M, N = N, hasX = hasX, Print = print, tol = tol, maxit = maxit.nr)
     }
   } else {
     if(fe.way == 2){
-      estim       <- fhomobeta2f(theta = theta, a = c(network), dx = dX, nvec = nvec, index = index, indexgr = indexgr, 
-                                 M = M, maxit = maxit, eps_f = eps_f, eps_g = eps_g, hasX = hasX, Print = print)
+      estim       <- NewRaphLBFGS2f(theta = theta, a = c(network), dx = dX, nvec = nvec, Nvec = Nvec, index = index, indexgr = indexgr, 
+                                    M = M, N = N, hasX = hasX, Print = print, tol = tol, maxitNR = maxit.nr, maxitopt = maxit.opt, 
+                                    eps_f = eps_f, eps_g = eps_g)
     } else {
-      estim       <- fhomobeta1f(theta = theta, a = c(network), dx = dX, nvec = nvec, index = index, indexgr = indexgr, 
-                                 M = M, maxit = maxit, eps_f = eps_f, eps_g = eps_g, hasX = hasX, Print = print)
+      estim       <- NewRaphLBFGS1f(theta = theta, a = c(network), dx = dX, nvec = nvec, Nvec = Nvec, index = index, indexgr = indexgr, 
+                                    M = M, N = N, hasX = hasX, Print = print, tol = tol, maxitNR = maxit.nr, maxitopt = maxit.opt,
+                                    eps_f = eps_f, eps_g = eps_g)
     }
   }
   
@@ -342,7 +352,6 @@ homophily.LogitFE <- function(network, fe.way, M, nvec, n, N, Nvec, index, index
   
   estim$estimate  <- c(estim$estimate)
   estim$gradient  <- c(estim$gradient)
-  
   out             <- list("model.info"     = list("model"       = "logit", 
                                                   "sym.network" = FALSE,
                                                   "fe.way"      = fe.way, 
@@ -364,20 +373,18 @@ homophily.LogitFE <- function(network, fe.way, M, nvec, n, N, Nvec, index, index
 
 
 homophily.LogitFESym <- function(network, M, nvec, n, N, Nvec, index, indexgr, formula, 
-                                 dX, coln, K, init, nlinks, ctr, hasX, print, NRaph){
-  maxit           <- ctr$maxit
-  eps_f           <- NULL
-  eps_g           <- NULL
-  tol             <- NULL
-  if (NRaph) {
-    tol           <- ctr$tol
-  } else {
-    eps_f         <- ctr$eps_f
-    eps_g         <- ctr$eps_g
-  }
+                                 dX, coln, K, init, nlinks, ctr, hasX, print, meth){
+  maxit.opt       <- ctr$maxit.opt
+  maxit.nr        <- ctr$maxit.nr
+  tol             <- ctr$tol
+  eps_f           <- ctr$eps_f
+  eps_g           <- ctr$eps_g
   
-  if(is.null(maxit)){
-    maxit         <- ifelse(NRaph, 50, 500)
+  if(is.null(maxit.opt)){
+    maxit.opt     <- 500
+  }
+  if(is.null(maxit.nr)){
+    maxit.nr      <- 50
   }
   if(is.null(tol)){
     tol           <- 1e-4
@@ -394,45 +401,40 @@ homophily.LogitFESym <- function(network, M, nvec, n, N, Nvec, index, indexgr, f
   quiet(gc())
   if(is.null(init)){
     if(print) cat("starting point searching\n")
-    
     beta          <- NULL
     mu            <- NULL
     mylogit       <- NULL
     if(hasX){
-      mylogit     <- glm(network ~ 1 + dX, family = binomial(link = "logit"))
+      mylogit     <- finithasX(dx = dX, theta = rep(0, K), a = network, updateb = TRUE, tol = tol, maxit = maxit.nr) 
     } else {
-      mylogit     <- glm(network ~ 1, family = binomial(link = "logit"))
+      mylogit     <- finit(a = network, tol = tol, maxit = maxit.nr) 
     }
     
-    beta          <- mylogit$coefficients[-1]
-    mu            <- rep(mylogit$coefficients[1], n)
+    beta          <- c(mylogit$theta[-1])
+    mu            <- rep(mylogit$theta[1], n)/2
+    initllh       <- mylogit$llh
     names(mu)     <- NULL
     init          <- c(beta, mu)
-    initllh       <- -0.5*mylogit$deviance
   } else {
     if(is.list(init)){
       beta        <- c(init$beta)
       mu          <- c(init$mu)
-      if((is.null(beta) || is.null(mu)) & hasX){
+      if(is.null(beta) || is.null(mu)){
         if(print) cat("starting point searching\n")
-        mylogit   <- glm(network ~ 1 + dX, family = binomial(link = "logit"))
-        initllh   <- -0.5*mylogit$deviance
-        if(is.null(mu)){
-          mu      <- rep(mylogit$coefficients[1], n); names(mu) <- NULL
+        mylogit       <- NULL
+        if(hasX){
+          if (is.null(beta)) {
+            mylogit  <- finithasX(dx = dX, theta = rep(0, K), a = network, updateb = TRUE, tol = tol, maxit = maxit.nr) 
+          } else {
+            mylogit  <- finithasX(dx = dX, theta = beta, a = network, updateb = FALSE, tol = tol, maxit = maxit.nr) 
+          }
+        } else {
+          mylogit     <- finit(a = network, tol = tol, maxit = maxit.nr) 
         }
-        if(is.null(beta)){
-          beta    <- mylogit$coefficients[-1]
-        }
+        beta     <- c(mylogit$theta[-1])
+        mu       <- rep(mylogit$theta[1], n)/2
+        initllh  <- mylogit$llh
       }
-      if((is.null(beta) || is.null(mu)) & !hasX){
-        if(print) cat("starting point searching\n")
-        mylogit   <- glm(network ~ 1, family = binomial(link = "logit"))
-        initllh   <- -0.5*mylogit$deviance
-        if(is.null(mu)){
-          mu      <- rep(mylogit$coefficients[1], n); names(mu) <- NULL
-        }
-      }
-      
       stopifnot(length(beta) == K)
       stopifnot(length(mu) == n)
       init        <- c(beta, mu)
@@ -443,7 +445,7 @@ homophily.LogitFESym <- function(network, M, nvec, n, N, Nvec, index, indexgr, f
   
   quiet(gc())
   
-  theta           <- init
+  theta           <- 1*init
   
   estim           <- NULL
   quiet(gc())
@@ -453,12 +455,16 @@ homophily.LogitFESym <- function(network, M, nvec, n, N, Nvec, index, indexgr, f
   } 
   
   estim           <- NULL
-  if (NRaph) {
-    estim         <- NewRaphsym(theta = theta, a = c(network), dx = dX, nvec = nvec, Nvec = Nvec, index = index, indexgr = indexgr, 
-                                M = M, N = N, hasX = hasX, Print = print, tol = tol, maxit = maxit)
-  } else {
+  if (meth == 0) {
     estim         <- fhomobetasym(theta = theta, a = c(network), dx = dX, nvec = nvec, index = index, indexgr = indexgr, 
-                                  M = M, maxit = maxit, eps_f = eps_f, eps_g = eps_g, hasX = hasX, Print = print)
+                                  M = M, maxit = maxit.nr, eps_f = eps_f, eps_g = eps_g, hasX = hasX, Print = print)
+  } else if (meth == 1) {
+    estim         <- NewRaphsym(theta = theta, a = c(network), dx = dX, nvec = nvec, Nvec = Nvec, index = index, indexgr = indexgr, 
+                                M = M, N = N, hasX = hasX, Print = print, tol = tol, maxit = maxit.opt)
+  } else {
+    estim         <- NewRaphLBFGSsym(theta = theta, a = c(network), dx = dX, nvec = nvec, Nvec = Nvec, index = index, indexgr = indexgr, 
+                                    M = M, N = N, hasX = hasX, Print = print, tol = tol, maxitNR = maxit.nr, maxitopt = maxit.opt, 
+                                    eps_f = eps_f, eps_g = eps_g)
   }
   
   

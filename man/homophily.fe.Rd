@@ -11,9 +11,8 @@ homophily.fe(
   symmetry = FALSE,
   fe.way = 1,
   init = NULL,
-  method = c("L-BFGS", "Block-NRaphson"),
-  ctr = list(maxit = ifelse(method == "L-BFGS", 10000, 50), eps_f = 1e-09, eps_g = 1e-09,
-    tol = 1e-04),
+  method = c("L-BFGS", "Block-NRaphson", "Mix"),
+  ctr = list(maxit.opt = 10000, maxit.nr = 50, eps_f = 1e-09, eps_g = 1e-09, tol = 1e-04),
   print = TRUE
 )
 }
@@ -34,9 +33,9 @@ in the model. If not found in data, the variables are taken from \code{environme
 \code{mu} an n-dimensional vector, and \code{nu} an n-dimensional vector,
 where K is the number of explanatory variables and n is the number of individuals; or a vector of starting value for \code{c(beta, mu, nu)}.}
 
-\item{method}{A character string specifying the optimization method. Expected values are \code{"L-BFGS"} or \code{"Block-NRaphson"}, where \code{"Block-NRaphson"} refers to the \code{Newton-Raphson} method applied to each subnetwork.}
+\item{method}{A character string specifying the optimization method. Expected values are \code{"L-BFGS"}, \code{"Block-NRaphson"}, or \code{"Mix"}. \code{"Block-NRaphson"} refers to the \code{Newton-Raphson} method applied to each subnetwork, and \code{"Mix"} combines the \code{Newton-Raphson} method for \code{beta} with the \code{L-BFGS} method for the fixed effects.}
 
-\item{ctr}{(optional) A list containing control parameters for the solver. For the \code{optim_lbfgs} method from the \pkg{RcppNumerical} package, the list should include \code{maxit}, \code{eps_f}, and \code{eps_g}. For the \code{Block-NRaphson} method, the list should include \code{maxit} and \code{tol}.}
+\item{ctr}{(optional) A list containing control parameters for the solver. For the \code{optim_lbfgs} method from the \pkg{RcppNumerical} package, the list should include \code{maxit.opt} (corresponding to \code{maxit} for the \code{L-BFGS} method), \code{eps_f}, and \code{eps_g}. For the \code{Block-NRaphson} method, the list should include \code{maxit.nr} (corresponding to \code{maxit} for the \code{Newton-Raphson} method) and \code{tol}.}
 
 \item{print}{Boolean indicating if the estimation progression should be printed.}
 }

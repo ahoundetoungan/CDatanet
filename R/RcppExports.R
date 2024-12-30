@@ -145,12 +145,24 @@ fhomobeta2f <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps
     .Call(`_CDatanet_fhomobeta2f`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, hasX, Print)
 }
 
+fhomobetamunu2f <- function(theta, a, dx, nvec, index, indexgr, N, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
+    .Call(`_CDatanet_fhomobetamunu2f`, theta, a, dx, nvec, index, indexgr, N, M, maxit, eps_f, eps_g, hasX, Print)
+}
+
 fhomobeta1f <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
     .Call(`_CDatanet_fhomobeta1f`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, hasX, Print)
 }
 
+fhomobetamu1f <- function(theta, a, dx, nvec, index, indexgr, N, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
+    .Call(`_CDatanet_fhomobetamu1f`, theta, a, dx, nvec, index, indexgr, N, M, maxit, eps_f, eps_g, hasX, Print)
+}
+
 fhomobetasym <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
     .Call(`_CDatanet_fhomobetasym`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, hasX, Print)
+}
+
+fhomobetamusym <- function(theta, a, dx, nvec, index, indexgr, N, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
+    .Call(`_CDatanet_fhomobetamusym`, theta, a, dx, nvec, index, indexgr, N, M, maxit, eps_f, eps_g, hasX, Print)
 }
 
 NewRaph2f <- function(theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX = TRUE, Print = TRUE, tol = 1e-4, maxit = 50L) {
@@ -165,6 +177,18 @@ NewRaphsym <- function(theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX = TR
     .Call(`_CDatanet_NewRaphsym`, theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX, Print, tol, maxit)
 }
 
+NewRaphLBFGS2f <- function(theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX = TRUE, Print = TRUE, tol = 1e-4, maxitNR = 50L, maxitopt = 1e9L, eps_f = 1e-6, eps_g = 1e-5) {
+    .Call(`_CDatanet_NewRaphLBFGS2f`, theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX, Print, tol, maxitNR, maxitopt, eps_f, eps_g)
+}
+
+NewRaphLBFGS1f <- function(theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX = TRUE, Print = TRUE, tol = 1e-4, maxitNR = 50L, maxitopt = 1e9L, eps_f = 1e-6, eps_g = 1e-5) {
+    .Call(`_CDatanet_NewRaphLBFGS1f`, theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX, Print, tol, maxitNR, maxitopt, eps_f, eps_g)
+}
+
+NewRaphLBFGSsym <- function(theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX = TRUE, Print = TRUE, tol = 1e-4, maxitNR = 50L, maxitopt = 1e9L, eps_f = 1e-6, eps_g = 1e-5) {
+    .Call(`_CDatanet_NewRaphLBFGSsym`, theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX, Print, tol, maxitNR, maxitopt, eps_f, eps_g)
+}
+
 hdataF2L <- function(data, nvec, index, M) {
     .Call(`_CDatanet_hdataF2L`, data, nvec, index, M)
 }
@@ -175,6 +199,14 @@ hdataF2U <- function(data, nvec, index, indexgr, M) {
 
 hdata2S <- function(data, nvec, index, indexgr, M) {
     .Call(`_CDatanet_hdata2S`, data, nvec, index, indexgr, M)
+}
+
+finithasX <- function(dx, theta, a, updateb = FALSE, tol = 1e-9, maxit = 100L) {
+    .Call(`_CDatanet_finithasX`, dx, theta, a, updateb, tol, maxit)
+}
+
+finit <- function(a, tol = 1e-9, maxit = 100L) {
+    .Call(`_CDatanet_finit`, a, tol, maxit)
 }
 
 fySar <- function(y, Gy, G, eps, igroup, ngroup, psi, lambda) {
