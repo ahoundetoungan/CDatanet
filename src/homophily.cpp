@@ -2605,6 +2605,7 @@ Rcpp::List NewRaphLBFGS2f(arma::vec& theta,
         Rcpp::Rcout << "beta: \n";
         Rcpp::print(betacpp);
       }
+      Rcpp::Rcout << "log-likelihood: " << llh << "\n";
       Rcpp::Rcout << "Distance: " << dist << "\n";
     }
   }
@@ -2675,6 +2676,7 @@ Rcpp::List NewRaphLBFGS1f(arma::vec& theta,
         Rcpp::Rcout << "beta: \n";
         Rcpp::print(betacpp);
       }
+      Rcpp::Rcout << "log-likelihood: " << llh << "\n";
       Rcpp::Rcout << "Distance: " << dist << "\n";
     }
   }
@@ -2745,6 +2747,7 @@ Rcpp::List NewRaphLBFGSsym(arma::vec& theta,
         Rcpp::Rcout << "beta: \n";
         Rcpp::print(betacpp);
       }
+      Rcpp::Rcout << "log-likelihood: " << llh << "\n";
       Rcpp::Rcout << "Distance: " << dist << "\n";
     }
   }
