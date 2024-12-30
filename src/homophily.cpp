@@ -1195,28 +1195,25 @@ public:
 //[[Rcpp::export]]
 double fhomobetamunu2f(arma::vec& theta,
                        const arma::vec& a,
-                       const arma::mat& dx,
+                       const arma::vec& dxb,
                        const arma::uvec& nvec,
                        const arma::umat& index,
                        const arma::umat& indexgr,
                        const int& N,
-                       const int& M,       
+                       const int& M,   
+                       const int& Kx,
                        const int maxit = 300, 
                        const double& eps_f = 1e-6, 
                        const double& eps_g = 1e-5,
                        const bool& hasX = true,
                        const bool& Print = true){
-  int n(sum(nvec)), Kx(0);
-  arma::vec dxb(N, arma::fill::zeros), adxb(N, arma::fill::zeros);
+  int n(sum(nvec)), j(0);
+  arma::vec adxb(N, arma::fill::zeros), mu(theta.subvec(Kx, Kx + n - 1)), nu(theta.subvec(Kx + n, Kx + 2*n - M - 1)),
+  d(n), b(n), mumj, llh(M), musum(arma::zeros<arma::vec>(N));
   if(hasX){
-    Kx          = dx.n_cols;
-    dxb         = dx*theta.head(Kx);
     adxb        = a%dxb;
   } 
-  arma::vec mu(theta.subvec(Kx, Kx + n - 1)), nu(theta.subvec(Kx + n, Kx + 2*n - M - 1));
   
-  arma::vec d(n), b(n), mumj, llh(M), musum(arma::zeros<arma::vec>(N));
-  int j(0);
   for (int m(0); m < M; ++ m) {
     int nm(nvec(m)), igr1(indexgr(m, 0)), igr2(indexgr(m, 1));
     arma::umat indexm(index.rows(igr1, igr2)); // ith row is the row at each i interacts with others, where the link goes from i
@@ -1554,29 +1551,25 @@ public:
 //[[Rcpp::export]]
 double fhomobetamu1f(arma::vec& theta,
                      const arma::vec& a,
-                     const arma::mat& dx,
+                     const arma::vec& dxb,
                      const arma::uvec& nvec,
                      const arma::umat& index,
                      const arma::umat& indexgr,
                      const int& N,
-                     const int& M,       
+                     const int& M,     
+                     const int& Kx,
                      const int maxit = 300, 
                      const double& eps_f = 1e-6, 
                      const double& eps_g = 1e-5,
                      const bool& hasX = true,
                      const bool& Print = true){
-  int n(sum(nvec)), Kx(0);
-  arma::vec dxb(N, arma::fill::zeros),  adxb(N, arma::fill::zeros);
-  
+  int n(sum(nvec)), j(0);
+  arma::vec adxb(N, arma::fill::zeros), mu(theta.subvec(Kx, Kx + n - 1)), d(n), b(n), mumj, 
+  llh(M), musum(arma::zeros<arma::vec>(N));
   if(hasX){
-    Kx          = dx.n_cols;
-    dxb         = dx*theta.head(Kx);
     adxb        = a%dxb;
   } 
-  arma::vec mu(theta.subvec(Kx, Kx + n - 1));
-  
-  arma::vec d(n), b(n), mumj, llh(M), musum(arma::zeros<arma::vec>(N));
-  int j(0);
+
   for (int m(0); m < M; ++ m) {
     int nm(nvec(m)), igr1(indexgr(m, 0)), igr2(indexgr(m, 1));
     arma::umat indexm(index.rows(igr1, igr2)); // ith row is the row at each i interacts with others, where the link goes from i
@@ -1911,30 +1904,24 @@ public:
 //[[Rcpp::export]]
 double fhomobetamusym(arma::vec& theta,
                       const arma::vec& a,
-                      const arma::mat& dx,
+                      const arma::vec& dxb,
                       const arma::uvec& nvec,
                       const arma::umat& index,
                       const arma::umat& indexgr,
                       const int& N,
                       const int& M,       
+                      const int& Kx,
                       const int maxit = 300, 
                       const double& eps_f = 1e-6, 
                       const double& eps_g = 1e-5,
                       const bool& hasX = true,
                       const bool& Print = true){
-   int n(sum(nvec)), Kx(0);
-  arma::vec dxb(N, arma::fill::zeros), adxb(N, arma::fill::zeros);
+   int n(sum(nvec)), j(0);
+  arma::vec adxb(N, arma::fill::zeros), mu(theta.subvec(Kx, Kx + n - 1)), d(n), b(n), mumj, 
+  llh(M), musum(arma::zeros<arma::vec>(N));
   if(hasX){
-    Kx          = dx.n_cols;
-    dxb         = dx*theta.head(Kx);
     adxb        = a%dxb;
   } 
-  arma::vec mu(theta.subvec(Kx, Kx + n - 1));
-  
-  
-  
-  arma::vec d(n), b(n), mumj, llh(M), musum(arma::zeros<arma::vec>(N));
-  int j(0);
   
   for (int m(0); m < M; ++ m) {
     int nm(nvec(m)), igr1(indexgr(m, 0)), igr2(indexgr(m, 1));
@@ -1980,6 +1967,100 @@ double fhomobetamusym(arma::vec& theta,
   return sum(llh);
 }
 
+// These functions compute likelihoods
+double fllh2f(const arma::vec& a,
+              const arma::vec& dxb,
+              const arma::vec& mu,
+              const arma::vec& nu,
+              const arma::umat& index,
+              const arma::umat& indexgr,
+              const arma::uvec& nvec,
+              const arma::uvec& Nvec,
+              const int& M) {
+  double llh(0);
+  int igr1, igr2, nm;
+  arma::umat indexm;
+  arma::vec num, mum, mumj;
+  for (int m(0); m < M; ++ m) {
+    igr1   = indexgr(m, 0);
+    igr2   = indexgr(m, 1);
+    indexm = index.rows(igr1, igr2) - index(igr1, 0);
+    nm     = nvec(m);
+    mum    = mu.subvec(igr1, igr2);
+    num    = arma::zeros(nm); num.head(nm - 1) = nu.subvec(igr1 - m, igr2 - m - 1);
+    arma::vec musum(Nvec(m), arma::fill::zeros);
+    for(int i(0); i < nm; ++ i){
+      mumj = mum;   // all mu in his group
+      mumj.shed_row(i); // all mu excepted mu(i)
+      musum.subvec(indexm(i, 0), indexm(i, 1)) = num(i) + mumj;
+    }
+    arma::vec axb(dxb.subvec(index(igr1, 0), index(igr2, 1)) + musum);
+    llh   += sum(a.subvec(index(igr1, 0), index(igr2, 1))%axb - log(1 + exp(axb)));
+  }
+  return llh;
+}
+
+
+double fllh1f(const arma::vec& a,
+              const arma::vec& dxb,
+              const arma::vec& mu,
+              const arma::umat& index,
+              const arma::umat& indexgr,
+              const arma::uvec& nvec,
+              const arma::uvec& Nvec,
+              const int& M) {
+  double llh(0);
+  int igr1, igr2, nm;
+  arma::umat indexm;
+  arma::vec mum, mumj;
+  for (int m(0); m < M; ++ m) {
+    igr1   = indexgr(m, 0);
+    igr2   = indexgr(m, 1);
+    indexm = index.rows(igr1, igr2) - index(igr1, 0);
+    nm     = nvec(m);
+    mum    = mu.subvec(igr1, igr2);
+    arma::vec musum(Nvec(m), arma::fill::zeros);
+    for(int i(0); i < nm; ++ i){
+      mumj = mum;   // all mu in his group
+      mumj.shed_row(i); // all mu excepted mu(i)
+      musum.subvec(indexm(i, 0), indexm(i, 1)) = mum(i) + mumj;
+    }
+    arma::vec axb(dxb.subvec(index(igr1, 0), index(igr2, 1)) + musum);
+    llh   += sum(a.subvec(index(igr1, 0), index(igr2, 1))%axb - log(1 + exp(axb)));
+  }
+  return llh;
+}
+
+
+double fllhsym(const arma::vec& a,
+              const arma::vec& dxb,
+              const arma::vec& mu,
+              const arma::umat& index,
+              const arma::umat& indexgr,
+              const arma::uvec& nvec,
+              const arma::uvec& Nvec,
+              const int& M) {
+  double llh(0);
+  int igr1, igr2, nm;
+  arma::umat indexm;
+  arma::vec mum, mumj;
+  for (int m(0); m < M; ++ m) {
+    igr1   = indexgr(m, 0);
+    igr2   = indexgr(m, 1);
+    indexm = index.rows(igr1, igr2) - index(igr1, 0);
+    nm     = nvec(m);
+    mum    = mu.subvec(igr1, igr2);
+    arma::vec musum(Nvec(m), arma::fill::zeros);
+    for(int i(0); i < nm; ++ i){
+      if(i < (nm - 1)){
+        musum.subvec(indexm(i, 0), indexm(i, 1)) = mum(i) + mum.tail(nm - 1 - i);
+      }
+    }
+    arma::vec axb(dxb.subvec(index(igr1, 0), index(igr2, 1)) + musum);
+    llh   += sum(a.subvec(index(igr1, 0), index(igr2, 1))%axb - log(1 + exp(axb)));
+  }
+  return llh;
+}
 
 // Block of Newton Raphson
 // These functions compute Hessian and grandients for beta
@@ -2253,46 +2334,14 @@ Rcpp::List NewRaph2f(arma::vec& theta,
         Rcpp::Rcout << "beta: \n";
         Rcpp::print(betacpp);
       }
-      llh      = 0;
-      for (int m(0); m < M; ++ m) {
-        igr1   = indexgr(m, 0);
-        igr2   = indexgr(m, 1);
-        indexm = index.rows(igr1, igr2) - index(igr1, 0);
-        nm     = nvec(m);
-        mum    = mu.subvec(igr1, igr2);
-        num    = arma::zeros(nm); num.head(nm - 1) = nu.subvec(igr1 - m, igr2 - m - 1);
-        arma::vec musum(Nvec(m), arma::fill::zeros);
-        for(int i(0); i < nm; ++ i){
-          mumj = mum;   // all mu in his group
-          mumj.shed_row(i); // all mu excepted mu(i)
-          musum.subvec(indexm(i, 0), indexm(i, 1)) = num(i) + mumj;
-        }
-        arma::vec axb(dxb.subvec(index(igr1, 0), index(igr2, 1)) + musum);
-        llh   += sum(a.subvec(index(igr1, 0), index(igr2, 1))%axb - log(1 + exp(axb)));
-      }
+      llh      = fllh2f(a, dxb, mu, nu, index, indexgr, nvec, Nvec, M);
       Rcpp::Rcout << "log-likelihood: " << llh << "\n";
       Rcpp::Rcout << "Distance: " << dist << "\n";
     }
   }
   
   if (!Print) {
-    llh      = 0;
-    for (int m(0); m < M; ++ m) {
-      igr1   = indexgr(m, 0);
-      igr2   = indexgr(m, 1);
-      indexm = index.rows(igr1, igr2) - index(igr1, 0);
-      nm     = nvec(m);
-      mum    = mu.subvec(igr1, igr2);
-      num    = arma::zeros(nm); num.head(nm - 1) = nu.subvec(igr1 - m, igr2 - m - 1);
-      arma::vec musum(Nvec(m), arma::fill::zeros);
-      for(int i(0); i < nm; ++ i){
-        mumj = mum;   // all mu in his group
-        mumj.shed_row(i); // all mu excepted mu(i)
-        musum.subvec(indexm(i, 0), indexm(i, 1)) = num(i) + mumj;
-      }
-      arma::vec axb(dxb.subvec(index(igr1, 0), index(igr2, 1)) + musum);
-      llh   += sum(a.subvec(index(igr1, 0), index(igr2, 1))%axb - log(1 + exp(axb)));
-    }
+    llh        = fllh2f(a, dxb, mu, nu, index, indexgr, nvec, Nvec, M);
   }
   theta.head(Kx)       = beta; 
   theta.subvec(m1, m2) = mu; 
@@ -2382,44 +2431,14 @@ Rcpp::List NewRaph1f(arma::vec& theta,
         Rcpp::Rcout << "beta: \n";
         Rcpp::print(betacpp);
       }
-      llh      = 0;
-      for (int m(0); m < M; ++ m) {
-        igr1   = indexgr(m, 0);
-        igr2   = indexgr(m, 1);
-        indexm = index.rows(igr1, igr2) - index(igr1, 0);
-        nm     = nvec(m);
-        mum    = mu.subvec(igr1, igr2);
-        arma::vec musum(Nvec(m), arma::fill::zeros);
-        for(int i(0); i < nm; ++ i){
-          mumj = mum;   // all mu in his group
-          mumj.shed_row(i); // all mu excepted mu(i)
-          musum.subvec(indexm(i, 0), indexm(i, 1)) = mum(i) + mumj;
-        }
-        arma::vec axb(dxb.subvec(index(igr1, 0), index(igr2, 1)) + musum);
-        llh   += sum(a.subvec(index(igr1, 0), index(igr2, 1))%axb - log(1 + exp(axb)));
-      }
+      llh  = fllh1f(a, dxb, mu, index, indexgr, nvec, Nvec, M);
       Rcpp::Rcout << "log-likelihood: " << llh << "\n";
       Rcpp::Rcout << "Distance: " << dist << "\n";
     }
   }
   
   if (!Print) {
-    llh      = 0;
-    for (int m(0); m < M; ++ m) {
-      igr1   = indexgr(m, 0);
-      igr2   = indexgr(m, 1);
-      indexm = index.rows(igr1, igr2) - index(igr1, 0);
-      nm     = nvec(m);
-      mum    = mu.subvec(igr1, igr2);
-      arma::vec musum(Nvec(m), arma::fill::zeros);
-      for(int i(0); i < nm; ++ i){
-        mumj = mum;   // all mu in his group
-        mumj.shed_row(i); // all mu excepted mu(i)
-        musum.subvec(indexm(i, 0), indexm(i, 1)) = mum(i) + mumj;
-      }
-      arma::vec axb(dxb.subvec(index(igr1, 0), index(igr2, 1)) + musum);
-      llh   += sum(a.subvec(index(igr1, 0), index(igr2, 1))%axb - log(1 + exp(axb)));
-    }
+    llh    = fllh1f(a, dxb, mu, index, indexgr, nvec, Nvec, M);
   }
   theta.head(Kx)       = beta; 
   theta.subvec(m1, m2) = mu; 
@@ -2507,44 +2526,14 @@ Rcpp::List NewRaphsym(arma::vec& theta,
         Rcpp::Rcout << "beta: \n";
         Rcpp::print(betacpp);
       }
-      llh      = 0;
-      for (int m(0); m < M; ++ m) {
-        igr1   = indexgr(m, 0);
-        igr2   = indexgr(m, 1);
-        indexm = index.rows(igr1, igr2) - index(igr1, 0);
-        nm     = nvec(m);
-        mum    = mu.subvec(igr1, igr2);
-        arma::vec musum(Nvec(m), arma::fill::zeros);
-        for(int i(0); i < nm; ++ i){
-          if(i < (nm - 1)){
-            musum.subvec(indexm(i, 0), indexm(i, 1)) = mum(i) + mum.tail(nm - 1 - i);
-          }
-        }
-        arma::vec axb(dxb.subvec(index(igr1, 0), index(igr2, 1)) + musum);
-        llh   += sum(a.subvec(index(igr1, 0), index(igr2, 1))%axb - log(1 + exp(axb)));
-      }
+      llh  = fllhsym(a, dxb, mu, index, indexgr, nvec, Nvec, M);
       Rcpp::Rcout << "log-likelihood: " << llh << "\n";
       Rcpp::Rcout << "Distance: " << dist << "\n";
     }
   }
   
   if (!Print) {
-    llh      = 0;
-    for (int m(0); m < M; ++ m) {
-      igr1   = indexgr(m, 0);
-      igr2   = indexgr(m, 1);
-      indexm = index.rows(igr1, igr2) - index(igr1, 0);
-      nm     = nvec(m);
-      mum    = mu.subvec(igr1, igr2);
-      arma::vec musum(Nvec(m), arma::fill::zeros);
-      for(int i(0); i < nm; ++ i){
-        if(i < (nm - 1)){
-          musum.subvec(indexm(i, 0), indexm(i, 1)) = mum(i) + mum.tail(nm - 1 - i);
-        }
-      }
-      arma::vec axb(dxb.subvec(index(igr1, 0), index(igr2, 1)) + musum);
-      llh   += sum(a.subvec(index(igr1, 0), index(igr2, 1))%axb - log(1 + exp(axb)));
-    }
+    llh    = fllhsym(a, dxb, mu, index, indexgr, nvec, Nvec, M);
   }
   theta.head(Kx)       = beta; 
   theta.subvec(m1, m2) = mu; 
@@ -2576,34 +2565,40 @@ Rcpp::List NewRaphLBFGS2f(arma::vec& theta,
                           const double& eps_f = 1e-6, 
                           const double& eps_g = 1e-5) {
   int Kx(0), n = sum(nvec);
-  if (hasX) {
-    Kx = dx.n_cols;
-  }
-  int b2(Kx - 1), m1(b2 + 1), m2(m1 + n - 1), n1(m2 + 1), n2(n1 + n - M - 1), k(0);
-  arma::vec grad;
+  arma::vec grad, dxb(N, arma::fill::zeros);
   arma::mat Hess;
+  if (hasX) {
+    Kx  = dx.n_cols;
+    dxb = dx*theta.head(Kx);
+  }
   
+  int b2(Kx - 1), m1(b2 + 1), m2(m1 + n - 1), n1(m2 + 1), n2(n1 + n - M - 1), k(0);
   double llh, dist;
   bool cont(true);
-  
+
   while (cont) {
     arma::vec thetap(theta);
     ++ k;
+    if (Print) {
+      Rcpp::Rcout << "\nIteration: " << k << "\n";
+    }
+    
     // mu, nu
-    llh    = fhomobetamunu2f(theta, a, dx, nvec, index, indexgr, N, M, maxitopt, eps_f, eps_g, hasX, Print);
+    llh    = fhomobetamunu2f(theta, a, dxb, nvec, index, indexgr, N, M, Kx, maxitopt, eps_f, eps_g, hasX, Print);
     
     // beta
     arma::vec mu(theta.subvec(m1, m2)), nu(theta.subvec(n1, n2));
     if (hasX) {
       fHGbeta2f(grad, Hess, dx, a, theta.head(Kx), mu, nu, nvec, M, N, index, indexgr);
       theta.head(Kx) -= arma::solve(Hess, grad);
+      dxb             = dx*theta.head(Kx);
     }
     
     dist   = max(abs(theta - thetap));
     cont   = ((dist >= tol) & (k < maxitNR));
+    llh    = fllh2f(a, dxb, mu, nu, index, indexgr, nvec, Nvec, M);
     
     if (Print) {
-      Rcpp::Rcout << "\nIteration: " << k << "\n";
       if(hasX){
         NumericVector betacpp  = wrap(theta.head(Kx));
         betacpp.attr("dim")    = R_NilValue;
@@ -2640,13 +2635,14 @@ Rcpp::List NewRaphLBFGS1f(arma::vec& theta,
                           const double& eps_f = 1e-6, 
                           const double& eps_g = 1e-5) {
   int Kx(0), n = sum(nvec);
+  arma::vec grad, dxb(N, arma::fill::zeros);
+  arma::mat Hess;
   if (hasX) {
     Kx = dx.n_cols;
+    dxb   = dx*theta.head(Kx);
   }
-  int b2(Kx - 1), m1(b2 + 1), m2(m1 + n - 1), k(0);
-  arma::vec grad;
-  arma::mat Hess;
   
+  int b2(Kx - 1), m1(b2 + 1), m2(m1 + n - 1), k(0);
   double llh, dist;
   bool cont(true);
   
@@ -2658,17 +2654,19 @@ Rcpp::List NewRaphLBFGS1f(arma::vec& theta,
     }
     
     // mu
-    llh    = fhomobetamu1f(theta, a, dx, nvec, index, indexgr, N, M, maxitopt, eps_f, eps_g, hasX, Print);
+    llh    = fhomobetamu1f(theta, a, dxb, nvec, index, indexgr, N, M, Kx, maxitopt, eps_f, eps_g, hasX, Print);
     
     // beta
     arma::vec mu(theta.subvec(m1, m2));
     if (hasX) {
       fHGbeta1f(grad, Hess, dx, a, theta.head(Kx), mu, nvec, M, N, index, indexgr);
       theta.head(Kx) -= arma::solve(Hess, grad);
+      dxb             = dx*theta.head(Kx);
     }
 
     dist   = max(abs(theta - thetap));
     cont   = ((dist >= tol) & (k < maxitNR));
+    llh    = fllh1f(a, dxb, mu, index, indexgr, nvec, Nvec, M);
     
     if (Print) {
       if(hasX){
@@ -2707,13 +2705,14 @@ Rcpp::List NewRaphLBFGSsym(arma::vec& theta,
                            const double& eps_f = 1e-6, 
                            const double& eps_g = 1e-5) {
   int Kx(0), n = sum(nvec);
-  if (hasX) {
-    Kx = dx.n_cols;
-  }
-  int b2(Kx - 1), m1(b2 + 1), m2(m1 + n - 1), k(0);
-  arma::vec grad;
+  arma::vec grad, dxb(N, arma::fill::zeros);
   arma::mat Hess;
+  if (hasX) {
+    Kx  = dx.n_cols;
+    dxb = dx*theta.head(Kx);
+  }
   
+  int b2(Kx - 1), m1(b2 + 1), m2(m1 + n - 1), k(0);
   double llh, dist;
   bool cont(true);
   
@@ -2725,17 +2724,19 @@ Rcpp::List NewRaphLBFGSsym(arma::vec& theta,
     }
     
     // mu 
-    llh    = fhomobetamusym(theta, a, dx, nvec, index, indexgr, N, M, maxitopt, eps_f, eps_g, hasX, Print);
+    llh    = fhomobetamusym(theta, a, dxb, nvec, index, indexgr, N, M, Kx, maxitopt, eps_f, eps_g, hasX, Print);
     
     // beta
     arma::vec mu(theta.subvec(m1, m2));
     if (hasX) {
       fHGbetasym(grad, Hess, dx, a, theta.head(Kx), mu, nvec, M, N, index, indexgr);
       theta.head(Kx) -= arma::solve(Hess, grad);
+      dxb             = dx*theta.head(Kx);
     }
 
     dist   = max(abs(theta - thetap));
     cont   = ((dist >= tol) & (k < maxitNR));
+    llh    = fllhsym(a, dxb, mu, index, indexgr, nvec, Nvec, M);
     
     if (Print) {
       if(hasX){

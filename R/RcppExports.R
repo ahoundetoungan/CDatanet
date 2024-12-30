@@ -145,24 +145,24 @@ fhomobeta2f <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps
     .Call(`_CDatanet_fhomobeta2f`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, hasX, Print)
 }
 
-fhomobetamunu2f <- function(theta, a, dx, nvec, index, indexgr, N, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
-    .Call(`_CDatanet_fhomobetamunu2f`, theta, a, dx, nvec, index, indexgr, N, M, maxit, eps_f, eps_g, hasX, Print)
+fhomobetamunu2f <- function(theta, a, dxb, nvec, index, indexgr, N, M, Kx, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
+    .Call(`_CDatanet_fhomobetamunu2f`, theta, a, dxb, nvec, index, indexgr, N, M, Kx, maxit, eps_f, eps_g, hasX, Print)
 }
 
 fhomobeta1f <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
     .Call(`_CDatanet_fhomobeta1f`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, hasX, Print)
 }
 
-fhomobetamu1f <- function(theta, a, dx, nvec, index, indexgr, N, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
-    .Call(`_CDatanet_fhomobetamu1f`, theta, a, dx, nvec, index, indexgr, N, M, maxit, eps_f, eps_g, hasX, Print)
+fhomobetamu1f <- function(theta, a, dxb, nvec, index, indexgr, N, M, Kx, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
+    .Call(`_CDatanet_fhomobetamu1f`, theta, a, dxb, nvec, index, indexgr, N, M, Kx, maxit, eps_f, eps_g, hasX, Print)
 }
 
 fhomobetasym <- function(theta, a, dx, nvec, index, indexgr, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
     .Call(`_CDatanet_fhomobetasym`, theta, a, dx, nvec, index, indexgr, M, maxit, eps_f, eps_g, hasX, Print)
 }
 
-fhomobetamusym <- function(theta, a, dx, nvec, index, indexgr, N, M, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
-    .Call(`_CDatanet_fhomobetamusym`, theta, a, dx, nvec, index, indexgr, N, M, maxit, eps_f, eps_g, hasX, Print)
+fhomobetamusym <- function(theta, a, dxb, nvec, index, indexgr, N, M, Kx, maxit = 300L, eps_f = 1e-6, eps_g = 1e-5, hasX = TRUE, Print = TRUE) {
+    .Call(`_CDatanet_fhomobetamusym`, theta, a, dxb, nvec, index, indexgr, N, M, Kx, maxit, eps_f, eps_g, hasX, Print)
 }
 
 NewRaph2f <- function(theta, a, dx, nvec, Nvec, index, indexgr, M, N, hasX = TRUE, Print = TRUE, tol = 1e-4, maxit = 50L) {
