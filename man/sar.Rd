@@ -2,7 +2,7 @@
 % Please edit documentation in R/sar.R
 \name{sar}
 \alias{sar}
-\title{Estimating linear-in-mean models with social interactions}
+\title{Estimating Linear-in-mean Models with Social Interactions}
 \usage{
 sar(
   formula,
@@ -53,13 +53,13 @@ A list consisting of:
 \code{sar} computes quasi-maximum likelihood estimators for linear-in-mean models with social interactions (see Lee, 2004 and Lee et al., 2010).
 }
 \details{
-For a complete information model, the outcome \eqn{y_i} is defined as:
+In the complete information model, the outcome \eqn{y_i} for individual \eqn{i} is defined as:
 \deqn{y_i = \lambda \bar{y}_i + \mathbf{z}_i'\Gamma + \epsilon_i,}
-where \eqn{\bar{y}_i} is the average of \eqn{y} among peers,
-\eqn{\mathbf{z}_i} is a vector of control variables,
-and \eqn{\epsilon_i \sim N(0, \sigma^2)}.
-In the case of incomplete information models with rational expectations, \eqn{y_i} is defined as:
-\deqn{y_i = \lambda E(\bar{y}_i) + \mathbf{z}_i'\Gamma + \epsilon_i.}
+where \eqn{\bar{y}_i} represents the average outcome \eqn{y} among individual \eqn{i}'s peers,
+\eqn{\mathbf{z}_i} is a vector of control variables, and \eqn{\epsilon_i \sim N(0, \sigma^2)} is the error term.
+In the case of incomplete information models with rational expectations, the outcome \eqn{y_i} is defined as:
+\deqn{y_i = \lambda E(\bar{y}_i) + \mathbf{z}_i'\Gamma + \epsilon_i,}
+where \eqn{E(\bar{y}_i)} is the expected average outcome of \eqn{i}'s peers, as perceived by individual \eqn{i}.
 }
 \examples{
 \donttest{
@@ -102,7 +102,7 @@ ytmp    <- simsar(formula = ~ x1 + x2 + gx1 + gx2, Glist = G,
                   theta = theta, data = data) 
 data$y  <- ytmp$y
 
-out     <- sar(formula = y ~ x1 + x2 + + gx1 + gx2, Glist = G, 
+out     <- sar(formula = y ~ x1 + x2 + gx1 + gx2, Glist = G, 
                optimizer = "optim", data = data)
 summary(out)
 }

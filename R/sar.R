@@ -1,30 +1,38 @@
-#' @title Simulating data from linear-in-mean models with social interactions
-#' @param formula a class object \link[stats]{formula}: a symbolic description of the model. `formula` must be as, for example, \code{y ~ x1 + x2 + gx1 + gx2}
-#' where `y` is the endogenous vector and `x1`, `x2`, `gx1` and `gx2` are control variables, which can include contextual variables, i.e. averages among the peers.
-#' Peer averages can be computed using the function \code{\link{peer.avg}}.
-#' @param Glist The network matrix. For networks consisting of multiple subnets, `Glist` can be a list of subnets with the `m`-th element being an `ns*ns` adjacency matrix, where `ns` is the number of nodes in the `m`-th subnet.
-#' @param theta a vector defining the true value of \eqn{\theta = (\lambda, \Gamma, \sigma)} (see the model specification in details). 
-#' @param cinfo a Boolean indicating whether information is complete (`cinfo = TRUE`) or incomplete (`cinfo = FALSE`). In the case of incomplete information, the model is defined under rational expectations. 
-#' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `simsar` is called.
+#' @title Simulating Data from Linear-in-Mean Models with Social Interactions
+#' @param formula A symbolic description of the model, passed as a class object of type \link[stats]{formula}. 
+#'        The formula must specify the endogenous variable and control variables, for example: 
+#'        \code{y ~ x1 + x2 + gx1 + gx2}, where `y` is the endogenous vector, 
+#'        and `x1`, `x2`, `gx1`, and `gx2` are the control variables, which may include contextual variables (peer averages). 
+#'        Peer averages can be computed using the function \code{\link{peer.avg}}.
+#' @param Glist A list of network adjacency matrices representing multiple subnets. The \code{m}-th element in the list should be an 
+#'        \code{ns * ns} matrix, where \code{ns} is the number of nodes in the \code{m}-th subnet.
+#' @param theta A numeric vector defining the true values of the model parameters \eqn{\theta = (\lambda, \Gamma, \sigma)}. 
+#'        These parameters are used to define the model specification in the details section.
+#' @param cinfo A Boolean flag indicating whether the information is complete (`cinfo = TRUE`) or incomplete (`cinfo = FALSE`). 
+#'        If information is incomplete, the model operates under rational expectations.
+#' @param data An optional data frame, list, or environment (or an object coercible by \link[base]{as.data.frame} to a data frame) 
+#'        containing the variables in the model. If not provided, the variables are taken from the environment of the function call.
 #' @description
-#' `simsar` simulates continuous variables with social interactions (see Lee, 2004 and Lee et al., 2010). 
+#' `simsar` simulates continuous variables under linear-in-mean models with social interactions, following the specifications described 
+#' in Lee (2004) and Lee et al. (2010). The model incorporates peer interactions, where the value of an individual’s outcome depends 
+#' not only on their own characteristics but also on the average characteristics of their peers in the network.
 #' @references  
 #' Lee, L. F. (2004). Asymptotic distributions of quasi-maximum likelihood estimators for spatial autoregressive models. \emph{Econometrica}, 72(6), 1899-1925, \doi{10.1111/j.1468-0262.2004.00558.x}.
 #' @references  
 #' Lee, L. F., Liu, X., & Lin, X. (2010). Specification and estimation of social interaction models with network structures. The Econometrics Journal, 13(2), 145-176, \doi{10.1111/j.1368-423X.2010.00310.x}
 #' @details 
-#' For a complete information model, the outcome \eqn{y_i} is defined as:
+#' In the complete information model, the outcome \eqn{y_i} for individual \eqn{i} is defined as:
 #' \deqn{y_i = \lambda \bar{y}_i + \mathbf{z}_i'\Gamma + \epsilon_i,}
-#' where \eqn{\bar{y}_i} is the average of \eqn{y} among peers, 
-#' \eqn{\mathbf{z}_i} is a vector of control variables, 
-#' and \eqn{\epsilon_i \sim N(0, \sigma^2)}. 
-#' In the case of incomplete information models with rational expectations, \eqn{y_i} is defined as:
-#' \deqn{y_i = \lambda E(\bar{y}_i) + \mathbf{z}_i'\Gamma + \epsilon_i.}
-#' @seealso \code{\link{sar}}, \code{\link{simsart}}, \code{\link{simcdnet}}.
-#' @return A list consisting of:
+#' where \eqn{\bar{y}_i} represents the average outcome \eqn{y} among individual \eqn{i}'s peers, 
+#' \eqn{\mathbf{z}_i} is a vector of control variables, and \eqn{\epsilon_i \sim N(0, \sigma^2)} is the error term. 
+#' In the case of incomplete information models with rational expectations, the outcome \eqn{y_i} is defined as:
+#' \deqn{y_i = \lambda E(\bar{y}_i) + \mathbf{z}_i'\Gamma + \epsilon_i,}
+#' where \eqn{E(\bar{y}_i)} is the expected average outcome of \eqn{i}'s peers, as perceived by individual \eqn{i}.
+#' 
+#' @return A list containing the following elements:
 #'     \item{y}{the observed count data.}
 #'     \item{Gy}{the average of y among friends.}
+#' @seealso \code{\link{sar}}, \code{\link{simsart}}, \code{\link{simcdnet}}.
 #' @examples 
 #' \donttest{
 #' # Groups' size
@@ -121,7 +129,7 @@ simsar   <- function(formula,
 }
 
 
-#' @title Estimating linear-in-mean models with social interactions
+#' @title Estimating Linear-in-mean Models with Social Interactions
 #' @param formula a class object \link[stats]{formula}: a symbolic description of the model. `formula` must be as, for example, \code{y ~ x1 + x2 + gx1 + gx2}
 #' where `y` is the endogenous vector and `x1`, `x2`, `gx1` and `gx2` are control variables, which can include contextual variables, i.e. averages among the peers.
 #' Peer averages can be computed using the function \code{\link{peer.avg}}.
@@ -137,15 +145,15 @@ simsar   <- function(formula,
 #' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 #' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `sar` is called.
 #' @description
-#' `sar` computes quasi-maximum likelihood estimators for linear-in-mean models with social interactions (see Lee, 2004 and Lee et al., 2010). 
+#' `sar` computes quasi-maximum likelihood estimators for linear-in-mean models with social interactions (see Lee, 2004 and Lee et al., 2010).
 #' @details 
-#' For a complete information model, the outcome \eqn{y_i} is defined as:
+#' In the complete information model, the outcome \eqn{y_i} for individual \eqn{i} is defined as:
 #' \deqn{y_i = \lambda \bar{y}_i + \mathbf{z}_i'\Gamma + \epsilon_i,}
-#' where \eqn{\bar{y}_i} is the average of \eqn{y} among peers, 
-#' \eqn{\mathbf{z}_i} is a vector of control variables, 
-#' and \eqn{\epsilon_i \sim N(0, \sigma^2)}. 
-#' In the case of incomplete information models with rational expectations, \eqn{y_i} is defined as:
-#' \deqn{y_i = \lambda E(\bar{y}_i) + \mathbf{z}_i'\Gamma + \epsilon_i.}
+#' where \eqn{\bar{y}_i} represents the average outcome \eqn{y} among individual \eqn{i}'s peers, 
+#' \eqn{\mathbf{z}_i} is a vector of control variables, and \eqn{\epsilon_i \sim N(0, \sigma^2)} is the error term. 
+#' In the case of incomplete information models with rational expectations, the outcome \eqn{y_i} is defined as:
+#' \deqn{y_i = \lambda E(\bar{y}_i) + \mathbf{z}_i'\Gamma + \epsilon_i,}
+#' where \eqn{E(\bar{y}_i)} is the expected average outcome of \eqn{i}'s peers, as perceived by individual \eqn{i}.
 #' @references  
 #' Lee, L. F. (2004). Asymptotic distributions of quasi-maximum likelihood estimators for spatial autoregressive models. \emph{Econometrica}, 72(6), 1899-1925, \doi{10.1111/j.1468-0262.2004.00558.x}.
 #' @references  
@@ -192,7 +200,7 @@ simsar   <- function(formula,
 #'                   theta = theta, data = data) 
 #' data$y  <- ytmp$y
 #' 
-#' out     <- sar(formula = y ~ x1 + x2 + + gx1 + gx2, Glist = G, 
+#' out     <- sar(formula = y ~ x1 + x2 + gx1 + gx2, Glist = G, 
 #'                optimizer = "optim", data = data)
 #' summary(out)
 #' }
@@ -215,7 +223,6 @@ sar <- function(formula,
   stopifnot(length(cinfo) == 1)
   stopifnot(cinfo %in% c(TRUE, FALSE))
   if(!cinfo) stop("Incomplete information is not supported in this version.")
-  contextual  <- FALSE
   stopifnot(optimizer %in% c("optim", "nlm"))
   env.formula <- environment(formula)
   #size 
@@ -227,7 +234,7 @@ sar <- function(formula,
   n          <- sum(nvec)
   igr        <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
   
-  f.t.data   <- formula.to.data(formula, contextual, Glist, M, igr, data, 
+  f.t.data   <- formula.to.data(formula, contextual = FALSE, Glist, M, igr, data, 
                                 theta0 = NULL, fixed.effects = fixed.effects)
   formula    <- f.t.data$formula
   y          <- f.t.data$y
@@ -346,14 +353,14 @@ jacobSAR <- function(alpha, X, invXX, XX, y, N, G, I, Gy, ngroup, igroup,
 }
 
 
-#' @title Summary for the estimation of linear-in-mean models with social interactions
-#' @description Summary and print methods for the class `sar` as returned by the function \link{sar}.
+#' @title Summary for the Estimation of Linear-in-mean Models with Social Interactions
+#' @description Summary and print methods for the class `sar` as returned by the function \code{\link{sar}}.
 #' @param object an object of class `sar`, output of the function \code{\link{sar}}.
 #' @param x an object of class `summary.sar`, output of the function \code{\link{summary.sar}} or 
 #' class `sar`, output of the function \code{\link{sar}}.
 #' @param ... further arguments passed to or from other methods.
 #' @return A list of the same objects in `object`.
-#' @export 
+#' @export
 "summary.sar" <- function(object,
                           ...) {
   stopifnot(class(object) == "sar")

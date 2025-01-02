@@ -4,7 +4,7 @@
 \alias{norm.network}
 \alias{vec.to.mat}
 \alias{mat.to.vec}
-\title{Creating objects for network models}
+\title{Creating Objects for Network Models}
 \usage{
 norm.network(W)
 
@@ -13,43 +13,43 @@ vec.to.mat(u, N, normalise = FALSE, byrow = FALSE)
 mat.to.vec(W, ceiled = FALSE, byrow = FALSE)
 }
 \arguments{
-\item{W}{matrix or list of matrices to convert.}
+\item{W}{A matrix or list of matrices to convert.}
 
-\item{u}{numeric vector to convert.}
+\item{u}{A numeric vector to convert.}
 
-\item{N}{vector of sub-network sizes  such that \code{length(u) == sum(N*(N - 1))}.}
+\item{N}{A vector of sub-network sizes such that \code{length(u) == sum(N * (N - 1))}.}
 
-\item{normalise}{Boolean takes \code{TRUE} if the returned matrices should be row-normalized and \code{FALSE} otherwise.}
+\item{normalise}{A boolean indicating whether the returned matrices should be row-normalized (\code{TRUE}) or not (\code{FALSE}).}
 
-\item{byrow}{Boolean takes \code{TRUE} is entries in the matrices should be taken by row and \code{FALSE} if they should be taken by column.}
+\item{byrow}{A boolean indicating whether entries in the matrices should be taken by row (\code{TRUE}) or by column (\code{FALSE}).}
 
-\item{ceiled}{Boolean takes \code{TRUE} if the given matrices should be ceiled before conversion and \code{FALSE} otherwise.}
+\item{ceiled}{A boolean indicating whether the given matrices should be ceiled before conversion (\code{TRUE}) or not (\code{FALSE}).}
 }
 \value{
-a vector of size \code{sum(N*(N - 1))} or list of \code{length(N)} square matrices. The sizes of the matrices are \verb{N[1], N[2], ...}
+A vector of size \code{sum(N * (N - 1))} or a list of \code{length(N)} square matrices, with matrix sizes determined by \verb{N[1], N[2], ...}.
 }
 \description{
-\code{vec.to.mat} creates a list of square matrices from a given vector.
-The elements of the generated matrices are taken from the vector and placed column-wise (ie. the first column is filled up before filling the second column) and from the first matrix of the list to the last matrix of the list.
-The diagonal of the generated matrices are zeros.
-\code{mat.to.vec} creates a vector from a given list of square matrices .
-The elements of the generated vector are taken from column-wise and from the first matrix of the list to the last matrix of the list, while dropping the diagonal entry.
-\code{norm.network} row-normalizes matrices in a given list.
+The \code{vec.to.mat} function creates a list of square matrices from a given vector.
+Elements of the generated matrices are taken from the vector and placed column-wise or row-wise, progressing from the first matrix in the list to the last.
+The diagonals of the generated matrices are set to zeros.\cr
+The \code{mat.to.vec} function creates a vector from a given list of square matrices.
+Elements of the generated vector are taken column-wise or row-wise, starting from the first matrix in the list to the last, excluding diagonal entries.\cr
+The \code{norm.network} function row-normalizes matrices in a given list.
 }
 \examples{
 # Generate a list of adjacency matrices
-## sub-network size
+## Sub-network sizes
 N <- c(250, 370, 120)  
-## rate of friendship
-p <- c(.2, .15, .18)   
-## network data
-u <- unlist(lapply(1: 3, function(x) rbinom(N[x]*(N[x] - 1), 1, p[x])))
+## Rate of friendship
+p <- c(0.2, 0.15, 0.18)   
+## Network data
+u <- unlist(lapply(1:3, function(x) rbinom(N[x] * (N[x] - 1), 1, p[x])))
 W <- vec.to.mat(u, N)
 
-# Convert G into a list of row-normalized matrices
+# Convert W into a list of row-normalized matrices
 G <- norm.network(W)
 
-# recover u
+# Recover u
 v <- mat.to.vec(G, ceiled = TRUE)
 all.equal(u, v)
 }

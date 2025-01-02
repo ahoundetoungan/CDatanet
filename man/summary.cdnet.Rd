@@ -4,7 +4,7 @@
 \alias{summary.cdnet}
 \alias{print.summary.cdnet}
 \alias{print.cdnet}
-\title{Summary for the estimation of count data models with social interactions under rational expectations}
+\title{Summary for the Estimation of Count Data Models with Social Interactions under Rational Expectations}
 \usage{
 \method{summary}{cdnet}(object, Glist, data, S = 1000L, ...)
 
@@ -16,18 +16,16 @@
 \item{object}{an object of class \code{cdnet}, output of the function \code{\link{cdnet}}.}
 
 \item{Glist}{adjacency matrix. For networks consisting of multiple subnets, \code{Glist} can be a list of subnets with the \code{m}-th element being an \code{ns*ns} adjacency matrix, where \code{ns} is the number of nodes in the \code{m}-th subnet.
-For heterogenous peer effects (e.g., boy-boy, boy-girl friendship effects), the \code{m}-th element can be a list of many \code{ns*ns} adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
+For heterogeneous peer effects (e.g., boy-boy, boy-girl friendship effects), the \code{m}-th element can be a list of many \code{ns*ns} adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
 For heterogeneous peer effects in the case of a single large network, \code{Glist} must be a one-item list. This item must be a list of many specifications of large networks.}
 
-\item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{summary.cdnet} is called.}
+\item{data}{an optional data frame, list, or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{summary.cdnet} is called.}
 
 \item{S}{number of simulations to be used to compute integral in the covariance by important sampling.}
 
 \item{...}{further arguments passed to or from other methods.}
 
-\item{x}{an object of class \code{summary.cdnet}, output of the function \code{\link{summary.cdnet}}
-or class \code{cdnet}, output of the function \code{\link{cdnet}}.}
+\item{x}{an object of class \code{summary.cdnet}, output of the function \code{\link{summary.cdnet}} or class \code{cdnet}, output of the function \code{\link{cdnet}}.}
 }
 \value{
 A list of the same objects in \code{object}.

@@ -2,22 +2,22 @@
 % Please edit documentation in R/homophilidata.R
 \name{homophili.data}
 \alias{homophili.data}
-\title{Converting data between directed network models and symmetric network models.}
+\title{Converting Data between Directed Network Models and Symmetric Network Models.}
 \usage{
 homophili.data(data, nvec, to = c("lower", "upper", "symmetric"))
 }
 \arguments{
-\item{data}{is the \code{matrix} or \code{data.frame} of the explanatory variables of the network formation model. This
-corresponds to the \code{X} matrix in \code{\link{homophily.fe}} or in \code{\link{homophily.re}}.}
+\item{data}{A \code{matrix} or \code{data.frame} of the explanatory variables of the network formation model. This
+corresponds to the \code{X} matrix in \code{\link{homophily.fe}} or \code{\link{homophily.re}}.}
 
-\item{nvec}{is a vector of the number of individuals in the networks.}
+\item{nvec}{A vector of the number of individuals in the networks.}
 
-\item{to}{indicates the direction of the conversion. For a matrix of explanatory variable \code{X} (\code{n*(n-1)} rows), one can
-can select lower triangular entries (\code{to = "lower"}) or upper triangular entries (\verb{to = "upper}).
+\item{to}{Indicates the direction of the conversion. For a matrix of explanatory variables \code{X} (\code{n*(n-1)} rows), one can
+select lower triangular entries (\code{to = "lower"}) or upper triangular entries (\code{to = "upper"}).
 For a triangular \code{X} (\code{n*(n-1)/2} rows), one can convert to a full matrix of \code{n*(n-1)} rows by using symmetry (\code{to = "symmetric"}).}
 }
 \value{
-the transformed \code{data.frame}.
+The transformed \code{data.frame}.
 }
 \description{
 \code{homophili.data} converts the matrix of explanatory variables between directed network models and symmetric network models.

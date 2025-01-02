@@ -4,7 +4,7 @@
 \alias{summary.sart}
 \alias{print.summary.sart}
 \alias{print.sart}
-\title{Summary for the estimation of Tobit models with social interactions}
+\title{Summary for the Estimation of Tobit Models with Social Interactions}
 \usage{
 \method{summary}{sart}(object, Glist, data, ...)
 

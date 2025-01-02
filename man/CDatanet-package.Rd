@@ -4,12 +4,12 @@
 \name{CDatanet-package}
 \alias{CDatanet}
 \alias{CDatanet-package}
-\title{The CDatanet package}
+\title{The CDatanet Package}
 \description{
-The \pkg{CDatanet} package simulates and estimates peer effect models and network formation models. The class of peer effect models includes linear-in-means models (Lee, 2004; Lee et al., 2010),
+The \pkg{CDatanet} package simulates and estimates peer effect models and network formation models. The peer effect models include linear-in-means models (Lee, 2004; Lee et al., 2010),
 Tobit models (Xu and Lee, 2015), and discrete numerical data models (Houndetoungan, 2024).
-The network formation models include pair-wise regressions with degree heterogeneity (Graham, 2017; Yan et al., 2019) and exponential random graph models (Mele, 2017).
-To make the computations faster \pkg{CDatanet} uses \code{C++} through the \pkg{Rcpp} package (Eddelbuettel et al., 2011).
+The network formation models include pairwise regressions with degree heterogeneity (Graham, 2017; Yan et al., 2019) and exponential random graph models (Mele, 2017).
+To enhance computation speed, \pkg{CDatanet} uses \code{C++} via the \pkg{Rcpp} package (Eddelbuettel et al., 2011).
 }
 \references{
 Eddelbuettel, D., & Francois, R. (2011). \pkg{Rcpp}: Seamless \R and \code{C++} integration. \emph{Journal of Statistical Software}, 40(8), 1-18, \doi{10.18637/jss.v040.i08}.

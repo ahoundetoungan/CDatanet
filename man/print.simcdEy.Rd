@@ -4,7 +4,7 @@
 \alias{print.simcdEy}
 \alias{summary.simcdEy}
 \alias{print.summary.simcdEy}
-\title{Printing the average expected outcomes for count data models with social interactions}
+\title{Printing the Average Expected Outcomes for Count Data Models with Social Interactions}
 \usage{
 \method{print}{simcdEy}(x, ...)
 
@@ -13,8 +13,7 @@
 \method{print}{summary.simcdEy}(x, ...)
 }
 \arguments{
-\item{x}{an object of class \code{summary.simcdEy}, output of the function \code{\link{summary.simcdEy}}
-or class \code{simcdEy}, output of the function \code{\link{simcdEy}}.}
+\item{x}{an object of class \code{summary.simcdEy}, output of the function \code{\link{summary.simcdEy}} or class \code{simcdEy}, output of the function \code{\link{simcdEy}}.}
 
 \item{...}{further arguments passed to or from other methods.}
 

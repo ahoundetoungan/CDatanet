@@ -1,15 +1,15 @@
-#' @title Simulating network data
-#' @description `simnetwork` simulates adjacency matrices.
-#' @param dnetwork is a list of sub-network matrices, where the (i, j)-th position of the m-th matrix is the probability that i be connected to j, with i and j individuals from the m-th network.
-#' @param normalise boolean takes `TRUE` if the returned matrices should be row-normalized and `FALSE` otherwise.
-#' @return list of (row-normalized) adjacency matrices.
+#' @title Simulating Network Data
+#' @description `simnetwork` generates adjacency matrices based on specified probabilities.
+#' @param dnetwork A list of sub-network matrices, where the (i, j)-th position of the m-th matrix represents the probability that individual `i` is connected to individual `j` in the m-th network.
+#' @param normalise A boolean indicating whether the returned matrices should be row-normalized (`TRUE`) or not (`FALSE`).
+#' @return A list of (row-normalized) adjacency matrices.
 #' @examples 
 #' # Generate a list of adjacency matrices
-#' ## sub-network size
+#' ## Sub-network sizes
 #' N         <- c(250, 370, 120)  
-#' ## distribution
+#' ## Probability distributions
 #' dnetwork  <- lapply(N, function(x) matrix(runif(x^2), x))
-#' ## network
+#' ## Generate networks
 #' G         <- simnetwork(dnetwork)
 #' @export
 simnetwork <- function(dnetwork, normalise = FALSE) {
@@ -19,7 +19,7 @@ simnetwork <- function(dnetwork, normalise = FALSE) {
       dnetwork  <- list(dnetwork)
       trsf      <- TRUE
     } else {
-      stop("dnetwork is neither a matrix nor a list of matrices")
+      stop("dnetwork is neither a matrix nor a list of matrices.")
     }
   }
   
@@ -47,7 +47,7 @@ norm.network <- function(W) {
       W    <- list(W)
       trsf <- TRUE
     } else {
-      stop("W is neither a matrix nor a list of matrices")
+      stop("W is neither a matrix nor a list of matrices.")
     }
   }
   stopifnot(inherits(W, "list"))
@@ -61,34 +61,36 @@ norm.network <- function(W) {
 }
 
 
-#' @title Creating objects for network models
-#' @description  `vec.to.mat` creates a list of square matrices from a given vector.
-#' The elements of the generated matrices are taken from the vector and placed column-wise (ie. the first column is filled up before filling the second column) and from the first matrix of the list to the last matrix of the list. 
-#' The diagonal of the generated matrices are zeros.
-#' `mat.to.vec` creates a vector from a given list of square matrices .
-#' The elements of the generated vector are taken from column-wise and from the first matrix of the list to the last matrix of the list, while dropping the diagonal entry.
-#' `norm.network` row-normalizes matrices in a given list.
-#' @param u numeric vector to convert.
-#' @param W matrix or list of matrices to convert. 
-#' @param N vector of sub-network sizes  such that `length(u) == sum(N*(N - 1))`.
-#' @param normalise Boolean takes `TRUE` if the returned matrices should be row-normalized and `FALSE` otherwise.
-#' @param ceiled Boolean takes `TRUE` if the given matrices should be ceiled before conversion and `FALSE` otherwise.
-#' @param byrow Boolean takes `TRUE` is entries in the matrices should be taken by row and `FALSE` if they should be taken by column.
-#' @return a vector of size `sum(N*(N - 1))` or list of `length(N)` square matrices. The sizes of the matrices are `N[1], N[2], ...`
+#' @title Creating Objects for Network Models
+#' @description 
+#' The `vec.to.mat` function creates a list of square matrices from a given vector. 
+#' Elements of the generated matrices are taken from the vector and placed column-wise or row-wise, progressing from the first matrix in the list to the last. 
+#' The diagonals of the generated matrices are set to zeros.\cr
+#' The `mat.to.vec` function creates a vector from a given list of square matrices. 
+#' Elements of the generated vector are taken column-wise or row-wise, starting from the first matrix in the list to the last, excluding diagonal entries.\cr
+#' The `norm.network` function row-normalizes matrices in a given list.
+#'
+#' @param u A numeric vector to convert.
+#' @param W A matrix or list of matrices to convert.
+#' @param N A vector of sub-network sizes such that `length(u) == sum(N * (N - 1))`.
+#' @param normalise A boolean indicating whether the returned matrices should be row-normalized (`TRUE`) or not (`FALSE`).
+#' @param ceiled A boolean indicating whether the given matrices should be ceiled before conversion (`TRUE`) or not (`FALSE`).
+#' @param byrow A boolean indicating whether entries in the matrices should be taken by row (`TRUE`) or by column (`FALSE`).
+#' @return A vector of size `sum(N * (N - 1))` or a list of `length(N)` square matrices, with matrix sizes determined by `N[1], N[2], ...`.
 #' @examples 
 #' # Generate a list of adjacency matrices
-#' ## sub-network size
+#' ## Sub-network sizes
 #' N <- c(250, 370, 120)  
-#' ## rate of friendship
-#' p <- c(.2, .15, .18)   
-#' ## network data
-#' u <- unlist(lapply(1: 3, function(x) rbinom(N[x]*(N[x] - 1), 1, p[x])))
+#' ## Rate of friendship
+#' p <- c(0.2, 0.15, 0.18)   
+#' ## Network data
+#' u <- unlist(lapply(1:3, function(x) rbinom(N[x] * (N[x] - 1), 1, p[x])))
 #' W <- vec.to.mat(u, N)
 #' 
-#' # Convert G into a list of row-normalized matrices
+#' # Convert W into a list of row-normalized matrices
 #' G <- norm.network(W)
 #' 
-#' # recover u
+#' # Recover u
 #' v <- mat.to.vec(G, ceiled = TRUE)
 #' all.equal(u, v)
 #' @seealso 
@@ -119,7 +121,7 @@ mat.to.vec <- function(W, ceiled = FALSE, byrow = FALSE) {
     if (is.matrix(W)) {
       W    <- list(W)
     } else {
-      stop("W is neither a matrix nor a list")
+      stop("W is neither a matrix nor a list.")
     }
   }
   
@@ -140,36 +142,37 @@ mat.to.vec <- function(W, ceiled = FALSE, byrow = FALSE) {
 }
 
 
-#' @title Computing peer averages
-#' @description `peer.avg` computes peer average value using network data (as a list) and observable characteristics.
-#' @param Glist the adjacency matrix or list sub-adjacency matrix.
-#' @param V vector or matrix of observable characteristics.
-#' @param export.as.list (optional) boolean to indicate if the output should be a list of matrices or a single matrix.
-#' @return the matrix product `diag(Glist[[1]], Glist[[2]], ...) %*% V`, where `diag()` is the block diagonal operator.
+#' @title Computing Peer Averages
+#' @description 
+#' The `peer.avg` function computes peer average values using network data (provided as a list of adjacency matrices) and observable characteristics.
+#' @param Glist An adjacency matrix or a list of sub-adjacency matrices representing the network structure.
+#' @param V A vector or matrix of observable characteristics.
+#' @param export.as.list (optional) A boolean indicating whether the output should be a list of matrices (`TRUE`) or a single matrix (`FALSE`).
+#' @return The matrix product `diag(Glist[[1]], Glist[[2]], ...) %*% V`, where `diag()` represents the block diagonal operator.
 #' @examples 
 #' # Generate a list of adjacency matrices
-#' ## sub-network size
-#' N  <- c(250, 370, 120)  
-#' ## rate of friendship
-#' p  <- c(.2, .15, .18)   
-#' ## network data
-#' u  <- unlist(lapply(1: 3, function(x) rbinom(N[x]*(N[x] - 1), 1, p[x])))
-#' G  <- vec.to.mat(u, N, normalise = TRUE)
+#' ## Sub-network sizes
+#' N <- c(250, 370, 120)  
+#' ## Rate of friendship
+#' p <- c(0.2, 0.15, 0.18)   
+#' ## Network data
+#' u <- unlist(lapply(1:3, function(x) rbinom(N[x] * (N[x] - 1), 1, p[x])))
+#' G <- vec.to.mat(u, N, normalise = TRUE)
 #' 
 #' # Generate a vector y
-#' y  <- rnorm(sum(N))
+#' y <- rnorm(sum(N))
 #' 
-#' # Compute G%*%y
+#' # Compute G %*% y
 #' Gy <- peer.avg(Glist = G, V = y)
 #' @seealso 
-#' \code{\link{simnetwork}}
+#' \code{\link{simnetwork}}, \code{\link{vec.to.mat}}
 #' @export
 peer.avg    <- function(Glist, V, export.as.list = FALSE) {
   if (!is.list(Glist)) {
     if (is.matrix(Glist)) {
       Glist <- list(Glist)
     } else {
-      stop("Glist is neither a matrix nor a list")
+      stop("W is neither a matrix nor a list.")
     }
   }
   
@@ -185,7 +188,7 @@ peer.avg    <- function(Glist, V, export.as.list = FALSE) {
   N         <- unlist(lapply(Glist, ncol))
   
   if (sum(N) != nrow(V)) {
-    stop("Glist and V do not match")
+    stop("The dimensions of Glist and V do not match.")
   }
   Ncum      <- c(0, cumsum(N))
   
@@ -200,35 +203,41 @@ peer.avg    <- function(Glist, V, export.as.list = FALSE) {
 
 peer.avg.single <- function(m, Glist, V, Ncum, cnames, v.is.mat) {
   if (!is.matrix(Glist[[m]])) {
-    stop("All components in Glist are not matrices")
+    stop("All components in Glist must be matrices.")
   }
   out <- Glist[[m]]%*%V[(Ncum[m] + 1):Ncum[m + 1],,drop = FALSE]
 }
 
 
-#' @title Removing IDs with NA from Adjacency Matrices Optimally
+#' @title Removing Identifiers with NA from Adjacency Matrices Optimally
 #' @description
-#' `remove.ids` optimally removes identifiers with NA from adjacency matrices. Many combinations of rows and columns can be deleted
-# before getting rid of NA. This function removes the smallest number of rows and columns.   
-#' removing many rows and column
-#' @param network is a list of adjacency matrices
-#' @param ncores is the number of cores to be used to run the program in parallel
-#' @return List of adjacency matrices without missing values and a list of vectors of retained indeces
+#' The `remove.ids` function removes identifiers with missing values (NA) from adjacency matrices in an optimal way. 
+#' Multiple combinations of rows and columns can be deleted to eliminate NAs, but this function ensures that the smallest 
+#' number of rows and columns are removed to retain as much data as possible.
+#' @param network A list of adjacency matrices to process.
+#' @param ncores The number of cores to use for parallel computation.
+#' @return A list containing:
+#' \describe{
+#'   \item{network}{A list of adjacency matrices without missing values.}
+#'   \item{id}{A list of vectors indicating the indices of retained rows and columns for each matrix.}
+#'}
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom doParallel registerDoParallel
-#' @importFrom foreach foreach "%dopar%" 
+#' @importFrom foreach foreach "%dopar%"
 #' @importFrom doRNG "%dorng%"
 #' @examples 
+#' # Example 1: Small adjacency matrix
 #' A <- matrix(1:25, 5)
 #' A[1, 1] <- NA
 #' A[4, 2] <- NA
 #' remove.ids(A)
 #' 
+#' # Example 2: Larger adjacency matrix with multiple NAs
 #' B <- matrix(1:100, 10)
 #' B[1, 1] <- NA
 #' B[4, 2] <- NA
 #' B[2, 4] <- NA
-#' B[,8]   <-NA
+#' B[, 8] <- NA
 #' remove.ids(B)
 #' @export
 remove.ids <- function(network, ncores = 1L){
@@ -344,7 +353,7 @@ formula.to.data <- function(formula,
   
   if (contextual) {
     if (!is.null(X)) {
-      stop("contextual cannot be TRUE while contextual variable are declared after the pipe.")
+      stop("The 'contextual' parameter cannot be TRUE if contextual variables are declared after the pipe.")
     }
     X              <- Xone
     tmpx           <- as.character.default(formula(formula, lhs = 1, rhs = 1))
@@ -417,11 +426,11 @@ formula.to.data <- function(formula,
   }
   if(type != "network") {
     if(rankMatrix(Xone)[1] != ncol(Xone))  {
-      stop("X or [X, GX] is not a full rank matrix. May be there is an intercept in X and in GX.")
+      stop("X or [X, GX] is not a full-rank matrix.")
     }
   } else {
     if(rankMatrix(Xone)[1] != ncol(Xone))  {
-      stop("X is not a full rank matrix. May be there is an intercept in X and you add intercept in the formula or fixed effects.")
+      stop("X is not a full-rank matrix.")
     }
   }
   

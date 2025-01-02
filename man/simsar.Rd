@@ -2,40 +2,47 @@
 % Please edit documentation in R/sar.R
 \name{simsar}
 \alias{simsar}
-\title{Simulating data from linear-in-mean models with social interactions}
+\title{Simulating Data from Linear-in-Mean Models with Social Interactions}
 \usage{
 simsar(formula, Glist, theta, cinfo = TRUE, data)
 }
 \arguments{
-\item{formula}{a class object \link[stats]{formula}: a symbolic description of the model. \code{formula} must be as, for example, \code{y ~ x1 + x2 + gx1 + gx2}
-where \code{y} is the endogenous vector and \code{x1}, \code{x2}, \code{gx1} and \code{gx2} are control variables, which can include contextual variables, i.e. averages among the peers.
+\item{formula}{A symbolic description of the model, passed as a class object of type \link[stats]{formula}.
+The formula must specify the endogenous variable and control variables, for example:
+\code{y ~ x1 + x2 + gx1 + gx2}, where \code{y} is the endogenous vector,
+and \code{x1}, \code{x2}, \code{gx1}, and \code{gx2} are the control variables, which may include contextual variables (peer averages).
 Peer averages can be computed using the function \code{\link{peer.avg}}.}
 
-\item{Glist}{The network matrix. For networks consisting of multiple subnets, \code{Glist} can be a list of subnets with the \code{m}-th element being an \code{ns*ns} adjacency matrix, where \code{ns} is the number of nodes in the \code{m}-th subnet.}
+\item{Glist}{A list of network adjacency matrices representing multiple subnets. The \code{m}-th element in the list should be an
+\code{ns * ns} matrix, where \code{ns} is the number of nodes in the \code{m}-th subnet.}
 
-\item{theta}{a vector defining the true value of \eqn{\theta = (\lambda, \Gamma, \sigma)} (see the model specification in details).}
+\item{theta}{A numeric vector defining the true values of the model parameters \eqn{\theta = (\lambda, \Gamma, \sigma)}.
+These parameters are used to define the model specification in the details section.}
 
-\item{cinfo}{a Boolean indicating whether information is complete (\code{cinfo = TRUE}) or incomplete (\code{cinfo = FALSE}). In the case of incomplete information, the model is defined under rational expectations.}
+\item{cinfo}{A Boolean flag indicating whether the information is complete (\code{cinfo = TRUE}) or incomplete (\code{cinfo = FALSE}).
+If information is incomplete, the model operates under rational expectations.}
 
-\item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{simsar} is called.}
+\item{data}{An optional data frame, list, or environment (or an object coercible by \link[base]{as.data.frame} to a data frame)
+containing the variables in the model. If not provided, the variables are taken from the environment of the function call.}
 }
 \value{
-A list consisting of:
+A list containing the following elements:
 \item{y}{the observed count data.}
 \item{Gy}{the average of y among friends.}
 }
 \description{
-\code{simsar} simulates continuous variables with social interactions (see Lee, 2004 and Lee et al., 2010).
+\code{simsar} simulates continuous variables under linear-in-mean models with social interactions, following the specifications described
+in Lee (2004) and Lee et al. (2010). The model incorporates peer interactions, where the value of an individual’s outcome depends
+not only on their own characteristics but also on the average characteristics of their peers in the network.
 }
 \details{
-For a complete information model, the outcome \eqn{y_i} is defined as:
+In the complete information model, the outcome \eqn{y_i} for individual \eqn{i} is defined as:
 \deqn{y_i = \lambda \bar{y}_i + \mathbf{z}_i'\Gamma + \epsilon_i,}
-where \eqn{\bar{y}_i} is the average of \eqn{y} among peers,
-\eqn{\mathbf{z}_i} is a vector of control variables,
-and \eqn{\epsilon_i \sim N(0, \sigma^2)}.
-In the case of incomplete information models with rational expectations, \eqn{y_i} is defined as:
-\deqn{y_i = \lambda E(\bar{y}_i) + \mathbf{z}_i'\Gamma + \epsilon_i.}
+where \eqn{\bar{y}_i} represents the average outcome \eqn{y} among individual \eqn{i}'s peers,
+\eqn{\mathbf{z}_i} is a vector of control variables, and \eqn{\epsilon_i \sim N(0, \sigma^2)} is the error term.
+In the case of incomplete information models with rational expectations, the outcome \eqn{y_i} is defined as:
+\deqn{y_i = \lambda E(\bar{y}_i) + \mathbf{z}_i'\Gamma + \epsilon_i,}
+where \eqn{E(\bar{y}_i)} is the expected average outcome of \eqn{i}'s peers, as perceived by individual \eqn{i}.
 }
 \examples{
 \donttest{

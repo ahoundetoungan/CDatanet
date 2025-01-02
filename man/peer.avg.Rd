@@ -2,39 +2,39 @@
 % Please edit documentation in R/auxfunc.R
 \name{peer.avg}
 \alias{peer.avg}
-\title{Computing peer averages}
+\title{Computing Peer Averages}
 \usage{
 peer.avg(Glist, V, export.as.list = FALSE)
 }
 \arguments{
-\item{Glist}{the adjacency matrix or list sub-adjacency matrix.}
+\item{Glist}{An adjacency matrix or a list of sub-adjacency matrices representing the network structure.}
 
-\item{V}{vector or matrix of observable characteristics.}
+\item{V}{A vector or matrix of observable characteristics.}
 
-\item{export.as.list}{(optional) boolean to indicate if the output should be a list of matrices or a single matrix.}
+\item{export.as.list}{(optional) A boolean indicating whether the output should be a list of matrices (\code{TRUE}) or a single matrix (\code{FALSE}).}
 }
 \value{
-the matrix product \code{diag(Glist[[1]], Glist[[2]], ...) \%*\% V}, where \code{diag()} is the block diagonal operator.
+The matrix product \code{diag(Glist[[1]], Glist[[2]], ...) \%*\% V}, where \code{diag()} represents the block diagonal operator.
 }
 \description{
-\code{peer.avg} computes peer average value using network data (as a list) and observable characteristics.
+The \code{peer.avg} function computes peer average values using network data (provided as a list of adjacency matrices) and observable characteristics.
 }
 \examples{
 # Generate a list of adjacency matrices
-## sub-network size
-N  <- c(250, 370, 120)  
-## rate of friendship
-p  <- c(.2, .15, .18)   
-## network data
-u  <- unlist(lapply(1: 3, function(x) rbinom(N[x]*(N[x] - 1), 1, p[x])))
-G  <- vec.to.mat(u, N, normalise = TRUE)
+## Sub-network sizes
+N <- c(250, 370, 120)  
+## Rate of friendship
+p <- c(0.2, 0.15, 0.18)   
+## Network data
+u <- unlist(lapply(1:3, function(x) rbinom(N[x] * (N[x] - 1), 1, p[x])))
+G <- vec.to.mat(u, N, normalise = TRUE)
 
 # Generate a vector y
-y  <- rnorm(sum(N))
+y <- rnorm(sum(N))
 
-# Compute G\%*\%y
+# Compute G \%*\% y
 Gy <- peer.avg(Glist = G, V = y)
 }
 \seealso{
-\code{\link{simnetwork}}
+\code{\link{simnetwork}}, \code{\link{vec.to.mat}}
 }

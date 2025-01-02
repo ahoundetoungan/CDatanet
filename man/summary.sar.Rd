@@ -4,7 +4,7 @@
 \alias{summary.sar}
 \alias{print.summary.sar}
 \alias{print.sar}
-\title{Summary for the estimation of linear-in-mean models with social interactions}
+\title{Summary for the Estimation of Linear-in-mean Models with Social Interactions}
 \usage{
 \method{summary}{sar}(object, ...)
 
@@ -24,5 +24,5 @@ class \code{sar}, output of the function \code{\link{sar}}.}
 A list of the same objects in \code{object}.
 }
 \description{
-Summary and print methods for the class \code{sar} as returned by the function \link{sar}.
+Summary and print methods for the class \code{sar} as returned by the function \code{\link{sar}}.
 }

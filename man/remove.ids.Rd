@@ -2,32 +2,39 @@
 % Please edit documentation in R/auxfunc.R
 \name{remove.ids}
 \alias{remove.ids}
-\title{Removing IDs with NA from Adjacency Matrices Optimally}
+\title{Removing Identifiers with NA from Adjacency Matrices Optimally}
 \usage{
 remove.ids(network, ncores = 1L)
 }
 \arguments{
-\item{network}{is a list of adjacency matrices}
+\item{network}{A list of adjacency matrices to process.}
 
-\item{ncores}{is the number of cores to be used to run the program in parallel}
+\item{ncores}{The number of cores to use for parallel computation.}
 }
 \value{
-List of adjacency matrices without missing values and a list of vectors of retained indeces
+A list containing:
+\describe{
+\item{network}{A list of adjacency matrices without missing values.}
+\item{id}{A list of vectors indicating the indices of retained rows and columns for each matrix.}
+}
 }
 \description{
-\code{remove.ids} optimally removes identifiers with NA from adjacency matrices. Many combinations of rows and columns can be deleted
-removing many rows and column
+The \code{remove.ids} function removes identifiers with missing values (NA) from adjacency matrices in an optimal way.
+Multiple combinations of rows and columns can be deleted to eliminate NAs, but this function ensures that the smallest
+number of rows and columns are removed to retain as much data as possible.
 }
 \examples{
+# Example 1: Small adjacency matrix
 A <- matrix(1:25, 5)
 A[1, 1] <- NA
 A[4, 2] <- NA
 remove.ids(A)
 
+# Example 2: Larger adjacency matrix with multiple NAs
 B <- matrix(1:100, 10)
 B[1, 1] <- NA
 B[4, 2] <- NA
 B[2, 4] <- NA
-B[,8]   <-NA
+B[, 8] <- NA
 remove.ids(B)
 }

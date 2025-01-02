@@ -2,7 +2,7 @@
 % Please edit documentation in R/homophily.re.R
 \name{homophily.re}
 \alias{homophily.re}
-\title{Estimating network formation models with degree heterogeneity: the Bayesian random effect approach}
+\title{Estimating Network Formation Models with Degree Heterogeneity: the Bayesian Random Effect Approach}
 \usage{
 homophily.re(
   network,
@@ -20,21 +20,20 @@ homophily.re(
 \item{network}{matrix or list of sub-matrix of social interactions containing 0 and 1, where links are represented by 1.}
 
 \item{formula}{an object of class \link[stats]{formula}: a symbolic description of the model. The \code{formula} should be as for example \code{~ x1 + x2}
-where \code{x1}, \code{x2} are explanatory variable of links formation.}
+where \code{x1}, \code{x2} are explanatory variables for links formation.}
 
-\item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
+\item{data}{an optional data frame, list, or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{homophily} is called.}
 
 \item{symmetry}{indicates whether the network model is symmetric (see details).}
 
 \item{group.fe}{indicates whether the model includes group fixed effects.}
 
-\item{re.way}{indicates whether it is a one-way or two-way fixed effect model. The expected value is 1 or 2 (see details).}
+\item{re.way}{indicates whether it is a one-way or two-way random effect model. The expected value is 1 or 2 (see details).}
 
-\item{init}{(optional) list of starting values containing \code{beta}, an K-dimensional vector of the explanatory variables parameter,
-\code{mu} an n-dimensional vector, and \code{nu} an n-dimensional vector, \code{smu2} the variance of \code{mu},
-and \code{snu2} the variance of \code{nu},
-where K is the number of explanatory variables and n is the number of individuals.}
+\item{init}{(optional) list of starting values containing \code{beta}, a K-dimensional vector of the explanatory variables parameter,
+\code{mu}, an n-dimensional vector, and \code{nu}, an n-dimensional vector, \code{smu2} the variance of \code{mu},
+and \code{snu2} the variance of \code{nu}, where K is the number of explanatory variables and n is the number of individuals.}
 
 \item{iteration}{the number of iterations to be performed.}
 
@@ -53,7 +52,7 @@ number of observations, etc.}
 \details{
 Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.
 This probability is specified for two-way effect models (\code{re.way = 2}) as
-\deqn{p_{ij} = F(\mathbf{x}_{ij}'\beta + \mu_j + \nu_j)}{Pij = F(Xij'*\beta + \mu_i + \nu_j),}
+\deqn{p_{ij} = F(\mathbf{x}_{ij}'\beta + \mu_j + \nu_j),}
 where \eqn{F} is the cumulative of the standard normal distribution. Unobserved degree heterogeneity is captured by
 \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as random effects (see \code{\link{homophily.fe}} for fixed effect models).\cr
 For one-way random effect models (\code{re.way = 1}), \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the

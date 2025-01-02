@@ -2,7 +2,7 @@
 % Please edit documentation in R/sart.R
 \name{sart}
 \alias{sart}
-\title{Estimating Tobit models with social interactions}
+\title{Estimating Tobit Models with Social Interactions}
 \usage{
 sart(
   formula,
@@ -18,54 +18,77 @@ sart(
 )
 }
 \arguments{
-\item{formula}{a class object \link[stats]{formula}: a symbolic description of the model. \code{formula} must be as, for example, \code{y ~ x1 + x2 + gx1 + gx2}
-where \code{y} is the endogenous vector and \code{x1}, \code{x2}, \code{gx1} and \code{gx2} are control variables, which can include contextual variables, i.e. averages among the peers.
-Peer averages can be computed using the function \code{\link{peer.avg}}.}
+\item{formula}{An object of class \link[stats]{formula}: a symbolic description of the model. The formula must follow the structure,
+e.g., \code{y ~ x1 + x2 + gx1 + gx2}, where \code{y} is the endogenous variable, and \code{x1}, \code{x2}, \code{gx1}, and \code{gx2} are control variables.
+Control variables may include contextual variables, such as peer averages, which can be computed using \code{\link{peer.avg}}.}
 
-\item{Glist}{The network matrix. For networks consisting of multiple subnets, \code{Glist} can be a list of subnets with the \code{m}-th element being an \code{ns*ns} adjacency matrix, where \code{ns} is the number of nodes in the \code{m}-th subnet.}
+\item{Glist}{The network matrix. For networks consisting of multiple subnets, \code{Glist} can be a list, where the \code{m}-th element is
+an \code{ns*ns} adjacency matrix representing the \code{m}-th subnet, with \code{ns} being the number of nodes in that subnet.}
 
-\item{starting}{(optional) a starting value for \eqn{\theta = (\lambda, \Gamma, \sigma)} (see the model specification in details).}
+\item{starting}{(Optional) A vector of starting values for \eqn{\theta = (\lambda, \Gamma, \sigma)}, where:
+\itemize{
+\item \eqn{\lambda} is the peer effect coefficient,
+\item \eqn{\Gamma} is the vector of control variable coefficients,
+\item \eqn{\sigma} is the standard deviation of the error term.
+}}
 
-\item{Ey0}{(optional) a starting value for \eqn{E(y)}.}
+\item{Ey0}{(Optional) A starting value for \eqn{E(y)}.}
 
-\item{optimizer}{is either \code{fastlbfgs} (L-BFGS optimization method of the package \pkg{RcppNumerical}), \code{nlm} (referring to the function \link[stats]{nlm}), or \code{optim} (referring to the function \link[stats]{optim}).
-Arguments for these functions such as, \code{control} and \code{method} can be set via the argument \code{opt.ctr}.}
+\item{optimizer}{The optimization method to be used. Choices are:
+\itemize{
+\item \code{"fastlbfgs"}: L-BFGS optimization method from the \pkg{RcppNumerical} package,
+\item \code{"nlm"}: Refers to the \link[stats]{nlm} function,
+\item \code{"optim"}: Refers to the \link[stats]{optim} function.
+}
+Additional arguments for these functions, such as \code{control} and \code{method}, can be specified through the \code{opt.ctr} argument.}
 
-\item{npl.ctr}{a list of controls for the NPL method (see details of the function \code{\link{cdnet}}).}
+\item{npl.ctr}{A list of controls for the NPL (Nested Pseudo-Likelihood) method (refer to the details in \code{\link{cdnet}}).}
 
-\item{opt.ctr}{a list of arguments to be passed in \code{optim_lbfgs} of the package \pkg{RcppNumerical}, \link[stats]{nlm} or \link[stats]{optim} (the solver set in \code{optimizer}), such as \code{maxit}, \code{eps_f}, \code{eps_g}, \code{control}, \code{method}, etc.}
+\item{opt.ctr}{A list of arguments to be passed to the chosen solver (\code{fastlbfgs}, \link[stats]{nlm}, or \link[stats]{optim}),
+such as \code{maxit}, \code{eps_f}, \code{eps_g}, \code{control}, \code{method}, etc.}
 
-\item{cov}{a Boolean indicating if the covariance must be computed.}
+\item{cov}{A Boolean indicating whether to compute the covariance matrix (\code{TRUE} or \code{FALSE}).}
 
-\item{cinfo}{a Boolean indicating whether information is complete (\code{cinfo = TRUE}) or incomplete (\code{cinfo = FALSE}). In the case of incomplete information, the model is defined under rational expectations.}
+\item{cinfo}{A Boolean indicating whether the information structure is complete (\code{TRUE}) or incomplete (\code{FALSE}).
+Under incomplete information, the model is defined with rational expectations.}
 
-\item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{sart} is called.}
+\item{data}{An optional data frame, list, or environment (or object coercible by \link[base]{as.data.frame}) containing the variables
+in the model. If not found in \code{data}, the variables are taken from \code{environment(formula)}, typically the environment from which \code{sart} is called.}
 }
 \value{
-A list consisting of:
-\item{info}{a list of general information on the model.}
-\item{estimate}{the Maximum Likelihood (ML) estimator.}
-\item{Ey}{\eqn{E(y)}, the expectation of y.}
-\item{GEy}{the average of \eqn{E(y)} friends.}
-\item{cov}{a list including (if \code{cov == TRUE}) covariance matrices.}
-\item{details}{outputs as returned by the optimizer.}
+A list containing:
+\describe{
+\item{\code{info}}{General information about the model.}
+\item{\code{estimate}}{The Maximum Likelihood (ML) estimates of the parameters.}
+\item{\code{Ey}}{\eqn{E(y)}, the expected values of the endogenous variable.}
+\item{\code{GEy}}{The average of \eqn{E(y)} among peers.}
+\item{\code{cov}}{A list including covariance matrices (if \code{cov = TRUE}).}
+\item{\code{details}}{Additional outputs returned by the optimizer.}
+}
 }
 \description{
-\code{sart} estimates Tobit models with social interactions (Xu and Lee, 2015).
+\code{sart} estimates Tobit models with social interactions based on the framework of Xu and Lee (2015).
+The method allows for modeling both complete and incomplete information scenarios in networks, incorporating rational expectations in the latter case.
 }
 \details{
 For a complete information model, the outcome \eqn{y_i} is defined as:
-\deqn{\begin{cases}y_i^{\ast} = \lambda \bar{y}_i + \mathbf{z}_i'\Gamma + \epsilon_i, \\ y_i = \max(0, y_i^{\ast}),\end{cases}}
+\deqn{\begin{cases}
+y_i^{\ast} = \lambda \bar{y}_i + \mathbf{z}_i'\Gamma + \epsilon_i, \\ 
+y_i = \max(0, y_i^{\ast}),
+\end{cases}}
 where \eqn{\bar{y}_i} is the average of \eqn{y} among peers,
 \eqn{\mathbf{z}_i} is a vector of control variables,
-and \eqn{\epsilon_i \sim N(0, \sigma^2)}.
-In the case of incomplete information modelswith rational expectations, \eqn{y_i} is defined as:
-\deqn{\begin{cases}y_i^{\ast} = \lambda E(\bar{y}_i) + \mathbf{z}_i'\Gamma + \epsilon_i, \\ y_i = \max(0, y_i^{\ast}).\end{cases}}
+and \eqn{\epsilon_i \sim N(0, \sigma^2)}. \cr
+
+In the case of incomplete information models with rational expectations, \eqn{y_i} is defined as:
+\deqn{\begin{cases}
+y_i^{\ast} = \lambda E(\bar{y}_i) + \mathbf{z}_i'\Gamma + \epsilon_i, \\ 
+y_i = \max(0, y_i^{\ast}).
+\end{cases}}
 }
 \examples{
 \donttest{
-# Groups' size
+# Group sizes
 set.seed(123)
 M      <- 5 # Number of sub-groups
 nvec   <- round(runif(M, 100, 200))
@@ -77,10 +100,10 @@ Gamma  <- c(2, -1.9, 0.8, 1.5, -1.2)
 sigma  <- 1.5
 theta  <- c(lambda, Gamma, sigma)
 
-# X
+# Covariates (X)
 X      <- cbind(rnorm(n, 1, 1), rexp(n, 0.4))
 
-# Network
+# Network creation
 G      <- list()
 
 for (m in 1:M) {
@@ -92,12 +115,12 @@ for (m in 1:M) {
     Gm[i, tmp] <- 1
   }
   rs           <- rowSums(Gm); rs[rs == 0] <- 1
-  Gm           <- Gm/rs
+  Gm           <- Gm / rs
   G[[m]]       <- Gm
 }
 
-# Data
-data   <- data.frame(X, peer.avg(G, cbind(x1 = X[,1], x2 =  X[,2])))
+# Data creation
+data   <- data.frame(X, peer.avg(G, cbind(x1 = X[, 1], x2 = X[, 2])))
 colnames(data) <- c("x1", "x2", "gx1", "gx2")
 
 ## Complete information game

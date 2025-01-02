@@ -1,82 +1,99 @@
-#' @title Simulating data from Tobit models with social interactions
-#' @param formula a class object \link[stats]{formula}: a symbolic description of the model. `formula` must be as, for example, \code{y ~ x1 + x2 + gx1 + gx2}
-#' where `y` is the endogenous vector and `x1`, `x2`, `gx1` and `gx2` are control variables, which can include contextual variables, i.e. averages among the peers.
-#' Peer averages can be computed using the function \code{\link{peer.avg}}.
-#' @param Glist The network matrix. For networks consisting of multiple subnets, `Glist` can be a list of subnets with the `m`-th element being an `ns*ns` adjacency matrix, where `ns` is the number of nodes in the `m`-th subnet.
-#' @param theta a vector defining the true value of \eqn{\theta = (\lambda, \Gamma, \sigma)} (see the model specification in details). 
-#' @param tol the tolerance value used in the fixed point iteration method to compute `y`. The process stops if the \eqn{\ell_1}-distance 
-#' between two consecutive values of `y` is less than `tol`.
-#' @param maxit the maximal number of iterations in the fixed point iteration method.
-#' @param cinfo a Boolean indicating whether information is complete (`cinfo = TRUE`) or incomplete (`cinfo = FALSE`). In the case of incomplete information, the model is defined under rational expectations. 
-#' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `simsart` is called.
-#' @description
-#' `simsart` simulates censored data with social interactions (see Xu and Lee, 2015). 
+#' @title Simulating Data from Tobit Models with Social Interactions
+#' @description `simsart` simulates censored data with social interactions (see Xu and Lee, 2015).
+#' @param formula a class object \code{\link[stats]{formula}}: a symbolic description of the model. 
+#' `formula` must be, for example, \code{y ~ x1 + x2 + gx1 + gx2}, where `y` is the endogenous vector, 
+#' and `x1`, `x2`, `gx1`, and `gx2` are control variables. These can include contextual variables, 
+#' i.e., averages among the peers. Peer averages can be computed using the function \code{\link{peer.avg}}.
+#' @param Glist The network matrix. For networks consisting of multiple subnets, `Glist` can be a list 
+#' of subnets with the `m`-th element being an `ns*ns` adjacency matrix, where `ns` is the number of nodes 
+#' in the `m`-th subnet.
+#' @param theta a vector defining the true value of \eqn{\theta = (\lambda, \Gamma, \sigma)} (see the model specification in the details).
+#' @param tol the tolerance value used in the fixed-point iteration method to compute `y`. The process stops 
+#' if the \eqn{\ell_1}-distance between two consecutive values of `y` is less than `tol`.
+#' @param maxit the maximum number of iterations in the fixed-point iteration method.
+#' @param cinfo a Boolean indicating whether information is complete (`cinfo = TRUE`) or incomplete (`cinfo = FALSE`). 
+#' In the case of incomplete information, the model is defined under rational expectations.
+#' @param data an optional data frame, list, or environment (or object coercible by \code{\link[base]{as.data.frame}} 
+#' to a data frame) containing the variables in the model. If not found in `data`, the variables are taken 
+#' from \code{environment(formula)}, typically the environment from which `simsart` is called.
 #' @details 
 #' For a complete information model, the outcome \eqn{y_i} is defined as:
-#' \deqn{\begin{cases}y_i^{\ast} = \lambda \bar{y}_i + \mathbf{z}_i'\Gamma + \epsilon_i, \\ y_i = \max(0, y_i^{\ast}),\end{cases}}
+#' \deqn{\begin{cases}
+#' y_i^{\ast} = \lambda \bar{y}_i + \mathbf{z}_i'\Gamma + \epsilon_i, \\ 
+#' y_i = \max(0, y_i^{\ast}),
+#' \end{cases}}
 #' where \eqn{\bar{y}_i} is the average of \eqn{y} among peers, 
 #' \eqn{\mathbf{z}_i} is a vector of control variables, 
-#' and \eqn{\epsilon_i \sim N(0, \sigma^2)}. 
-#' In the case of incomplete information modelswith rational expectations, \eqn{y_i} is defined as:
-#' \deqn{\begin{cases}y_i^{\ast} = \lambda E(\bar{y}_i) + \mathbf{z}_i'\Gamma + \epsilon_i, \\ y_i = \max(0, y_i^{\ast}).\end{cases}}
-#' @seealso \code{\link{sart}}, \code{\link{simsar}}, \code{\link{simcdnet}}.
+#' and \eqn{\epsilon_i \sim N(0, \sigma^2)}. \cr
+#' 
+#' In the case of incomplete information models with rational expectations, \eqn{y_i} is defined as:
+#' \deqn{\begin{cases}
+#' y_i^{\ast} = \lambda E(\bar{y}_i) + \mathbf{z}_i'\Gamma + \epsilon_i, \\ 
+#' y_i = \max(0, y_i^{\ast}).
+#' \end{cases}}
+#' 
 #' @return A list consisting of:
-#'     \item{yst}{\eqn{y^{\ast}}, the latent variable.}
-#'     \item{y}{the observed censored variable.}
-#'     \item{Ey}{\eqn{E(y)}, the expectation of y.}
-#'     \item{Gy}{the average of y among friends.}
-#'     \item{GEy}{the average of \eqn{E(y)} friends.}
-#'     \item{meff}{a list includinh average and individual marginal effects.}
-#'     \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
+#' \describe{
+#'   \item{yst}{\eqn{y^{\ast}}, the latent variable.}
+#'   \item{y}{The observed censored variable.}
+#'   \item{Ey}{\eqn{E(y)}, the expected value of \eqn{y}.}
+#'   \item{Gy}{The average of \eqn{y} among peers.}
+#'   \item{GEy}{The average of \eqn{E(y)} among peers.}
+#'   \item{meff}{A list including average and individual marginal effects.}
+#'   \item{iteration}{The number of iterations performed per sub-network in the fixed-point iteration method.}
+#' }
 #' @references 
 #' Xu, X., & Lee, L. F. (2015). Maximum likelihood estimation of a spatial autoregressive Tobit model. \emph{Journal of Econometrics}, 188(1), 264-280, \doi{10.1016/j.jeconom.2015.05.004}.
+#' @seealso \code{\link{sart}}, \code{\link{simsar}}, \code{\link{simcdnet}}.
 #' @examples 
 #' \donttest{
-#' # Groups' size
+#' # Define group sizes
 #' set.seed(123)
 #' M      <- 5 # Number of sub-groups
-#' nvec   <- round(runif(M, 100, 200))
-#' n      <- sum(nvec)
+#' nvec   <- round(runif(M, 100, 200)) # Number of nodes per sub-group
+#' n      <- sum(nvec) # Total number of nodes
 #' 
-#' # Parameters
+#' # Define parameters
 #' lambda <- 0.4
 #' Gamma  <- c(2, -1.9, 0.8, 1.5, -1.2)
 #' sigma  <- 1.5
 #' theta  <- c(lambda, Gamma, sigma)
 #' 
-#' # X
+#' # Generate covariates (X)
 #' X      <- cbind(rnorm(n, 1, 1), rexp(n, 0.4))
 #' 
-#' # Network
+#' # Construct network adjacency matrices
 #' G      <- list()
-#' 
 #' for (m in 1:M) {
-#'   nm           <- nvec[m]
-#'   Gm           <- matrix(0, nm, nm)
-#'   max_d        <- 30
+#'   nm           <- nvec[m] # Nodes in sub-group m
+#'   Gm           <- matrix(0, nm, nm) # Initialize adjacency matrix
+#'   max_d        <- 30 # Maximum degree
 #'   for (i in 1:nm) {
-#'     tmp        <- sample((1:nm)[-i], sample(0:max_d, 1))
+#'     tmp        <- sample((1:nm)[-i], sample(0:max_d, 1)) # Random connections
 #'     Gm[i, tmp] <- 1
 #'   }
-#'   rs           <- rowSums(Gm); rs[rs == 0] <- 1
-#'   Gm           <- Gm/rs
+#'   rs           <- rowSums(Gm) # Normalize rows
+#'   rs[rs == 0]  <- 1
+#'   Gm           <- Gm / rs
 #'   G[[m]]       <- Gm
 #' }
 #' 
-#' # Data
-#' data   <- data.frame(X, peer.avg(G, cbind(x1 = X[,1], x2 =  X[,2])))
-#' colnames(data) <- c("x1", "x2", "gx1", "gx2")
+#' # Prepare data
+#' data   <- data.frame(X, peer.avg(G, cbind(x1 = X[, 1], x2 = X[, 2])))
+#' colnames(data) <- c("x1", "x2", "gx1", "gx2") # Add column names
 #' 
-#' ## Complete information game
-#' ytmp    <- simsart(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, theta = theta, 
+#' # Complete information game simulation
+#' ytmp    <- simsart(formula = ~ x1 + x2 + gx1 + gx2, 
+#'                    Glist = G, theta = theta, 
 #'                    data = data, cinfo = TRUE)
-#' data$yc <- ytmp$y
+#' data$yc <- ytmp$y # Add simulated outcome to the dataset
 #' 
-#' ## Incomplete information game
-#' ytmp    <- simsart(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, theta = theta, 
+#' # Incomplete information game simulation
+#' ytmp    <- simsart(formula = ~ x1 + x2 + gx1 + gx2, 
+#'                    Glist = G, theta = theta, 
 #'                    data = data, cinfo = FALSE)
-#' data$yi <- ytmp$y}
+#' data$yi <- ytmp$y # Add simulated outcome to the dataset
+#' }
 #' @importFrom Rcpp sourceCpp
 #' @export
 simsart   <- function(formula,
@@ -152,44 +169,69 @@ simsart   <- function(formula,
 }
 
 
-#' @title Estimating Tobit models with social interactions
-#' @param formula a class object \link[stats]{formula}: a symbolic description of the model. `formula` must be as, for example, \code{y ~ x1 + x2 + gx1 + gx2}
-#' where `y` is the endogenous vector and `x1`, `x2`, `gx1` and `gx2` are control variables, which can include contextual variables, i.e. averages among the peers.
-#' Peer averages can be computed using the function \code{\link{peer.avg}}.
-#' @param Glist The network matrix. For networks consisting of multiple subnets, `Glist` can be a list of subnets with the `m`-th element being an `ns*ns` adjacency matrix, where `ns` is the number of nodes in the `m`-th subnet.
-#' @param starting (optional) a starting value for \eqn{\theta = (\lambda, \Gamma, \sigma)} (see the model specification in details). 
-#' @param Ey0 (optional) a starting value for \eqn{E(y)}.
-#' @param optimizer is either `fastlbfgs` (L-BFGS optimization method of the package \pkg{RcppNumerical}), `nlm` (referring to the function \link[stats]{nlm}), or `optim` (referring to the function \link[stats]{optim}). 
-#' Arguments for these functions such as, `control` and `method` can be set via the argument `opt.ctr`.
-#' @param npl.ctr a list of controls for the NPL method (see details of the function \code{\link{cdnet}}).
-#' @param opt.ctr a list of arguments to be passed in `optim_lbfgs` of the package \pkg{RcppNumerical}, \link[stats]{nlm} or \link[stats]{optim} (the solver set in `optimizer`), such as `maxit`, `eps_f`, `eps_g`, `control`, `method`, etc.
-#' @param cov a Boolean indicating if the covariance must be computed.
-#' @param cinfo a Boolean indicating whether information is complete (`cinfo = TRUE`) or incomplete (`cinfo = FALSE`). In the case of incomplete information, the model is defined under rational expectations. 
-#' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `sart` is called.
+#' @title Estimating Tobit Models with Social Interactions
 #' @description
-#' `sart` estimates Tobit models with social interactions (Xu and Lee, 2015). 
-#' @return A list consisting of:
-#'     \item{info}{a list of general information on the model.}
-#'     \item{estimate}{the Maximum Likelihood (ML) estimator.}
-#'     \item{Ey}{\eqn{E(y)}, the expectation of y.}
-#'     \item{GEy}{the average of \eqn{E(y)} friends.}
-#'     \item{cov}{a list including (if `cov == TRUE`) covariance matrices.}
-#'     \item{details}{outputs as returned by the optimizer.}
+#' `sart` estimates Tobit models with social interactions based on the framework of Xu and Lee (2015). 
+#' The method allows for modeling both complete and incomplete information scenarios in networks, incorporating rational expectations in the latter case.
+#' 
+#' @param formula An object of class \link[stats]{formula}: a symbolic description of the model. The formula must follow the structure, 
+#'   e.g., \code{y ~ x1 + x2 + gx1 + gx2}, where `y` is the endogenous variable, and `x1`, `x2`, `gx1`, and `gx2` are control variables. 
+#'   Control variables may include contextual variables, such as peer averages, which can be computed using \code{\link{peer.avg}}.
+#' @param Glist The network matrix. For networks consisting of multiple subnets, `Glist` can be a list, where the `m`-th element is 
+#'   an `ns*ns` adjacency matrix representing the `m`-th subnet, with `ns` being the number of nodes in that subnet.
+#' @param starting (Optional) A vector of starting values for \eqn{\theta = (\lambda, \Gamma, \sigma)}, where:
+#'   \itemize{
+#'     \item \eqn{\lambda} is the peer effect coefficient,
+#'     \item \eqn{\Gamma} is the vector of control variable coefficients,
+#'     \item \eqn{\sigma} is the standard deviation of the error term.
+#'   }
+#' @param Ey0 (Optional) A starting value for \eqn{E(y)}.
+#' @param optimizer The optimization method to be used. Choices are:
+#'   \itemize{
+#'     \item `"fastlbfgs"`: L-BFGS optimization method from the \pkg{RcppNumerical} package,
+#'     \item `"nlm"`: Refers to the \link[stats]{nlm} function,
+#'     \item `"optim"`: Refers to the \link[stats]{optim} function.
+#'   }
+#'   Additional arguments for these functions, such as `control` and `method`, can be specified through the `opt.ctr` argument.
+#' @param npl.ctr A list of controls for the NPL (Nested Pseudo-Likelihood) method (refer to the details in \code{\link{cdnet}}).
+#' @param opt.ctr A list of arguments to be passed to the chosen solver (`fastlbfgs`, \link[stats]{nlm}, or \link[stats]{optim}), 
+#'   such as `maxit`, `eps_f`, `eps_g`, `control`, `method`, etc.
+#' @param cov A Boolean indicating whether to compute the covariance matrix (\code{TRUE} or \code{FALSE}).
+#' @param cinfo A Boolean indicating whether the information structure is complete (\code{TRUE}) or incomplete (\code{FALSE}). 
+#'   Under incomplete information, the model is defined with rational expectations.
+#' @param data An optional data frame, list, or environment (or object coercible by \link[base]{as.data.frame}) containing the variables
+#'   in the model. If not found in `data`, the variables are taken from \code{environment(formula)}, typically the environment from which `sart` is called.
+#' 
+#' @return A list containing:
+#' \describe{
+#'   \item{\code{info}}{General information about the model.}
+#'   \item{\code{estimate}}{The Maximum Likelihood (ML) estimates of the parameters.}
+#'   \item{\code{Ey}}{\eqn{E(y)}, the expected values of the endogenous variable.}
+#'   \item{\code{GEy}}{The average of \eqn{E(y)} among peers.}
+#'   \item{\code{cov}}{A list including covariance matrices (if \code{cov = TRUE}).}
+#'   \item{\code{details}}{Additional outputs returned by the optimizer.}
+#' }
 #' @details 
 #' For a complete information model, the outcome \eqn{y_i} is defined as:
-#' \deqn{\begin{cases}y_i^{\ast} = \lambda \bar{y}_i + \mathbf{z}_i'\Gamma + \epsilon_i, \\ y_i = \max(0, y_i^{\ast}),\end{cases}}
+#' \deqn{\begin{cases}
+#' y_i^{\ast} = \lambda \bar{y}_i + \mathbf{z}_i'\Gamma + \epsilon_i, \\ 
+#' y_i = \max(0, y_i^{\ast}),
+#' \end{cases}}
 #' where \eqn{\bar{y}_i} is the average of \eqn{y} among peers, 
 #' \eqn{\mathbf{z}_i} is a vector of control variables, 
-#' and \eqn{\epsilon_i \sim N(0, \sigma^2)}. 
-#' In the case of incomplete information modelswith rational expectations, \eqn{y_i} is defined as:
-#' \deqn{\begin{cases}y_i^{\ast} = \lambda E(\bar{y}_i) + \mathbf{z}_i'\Gamma + \epsilon_i, \\ y_i = \max(0, y_i^{\ast}).\end{cases}}
+#' and \eqn{\epsilon_i \sim N(0, \sigma^2)}. \cr
+#' 
+#' In the case of incomplete information models with rational expectations, \eqn{y_i} is defined as:
+#' \deqn{\begin{cases}
+#' y_i^{\ast} = \lambda E(\bar{y}_i) + \mathbf{z}_i'\Gamma + \epsilon_i, \\ 
+#' y_i = \max(0, y_i^{\ast}).
+#' \end{cases}}
 #' @seealso \code{\link{sar}}, \code{\link{cdnet}}, \code{\link{simsart}}.
 #' @references 
 #' Xu, X., & Lee, L. F. (2015). Maximum likelihood estimation of a spatial autoregressive Tobit model. \emph{Journal of Econometrics}, 188(1), 264-280, \doi{10.1016/j.jeconom.2015.05.004}.
 #' @examples 
 #' \donttest{
-#' # Groups' size
+#' # Group sizes
 #' set.seed(123)
 #' M      <- 5 # Number of sub-groups
 #' nvec   <- round(runif(M, 100, 200))
@@ -201,10 +243,10 @@ simsart   <- function(formula,
 #' sigma  <- 1.5
 #' theta  <- c(lambda, Gamma, sigma)
 #' 
-#' # X
+#' # Covariates (X)
 #' X      <- cbind(rnorm(n, 1, 1), rexp(n, 0.4))
 #' 
-#' # Network
+#' # Network creation
 #' G      <- list()
 #' 
 #' for (m in 1:M) {
@@ -216,12 +258,12 @@ simsart   <- function(formula,
 #'     Gm[i, tmp] <- 1
 #'   }
 #'   rs           <- rowSums(Gm); rs[rs == 0] <- 1
-#'   Gm           <- Gm/rs
+#'   Gm           <- Gm / rs
 #'   G[[m]]       <- Gm
 #' }
 #' 
-#' # Data
-#' data   <- data.frame(X, peer.avg(G, cbind(x1 = X[,1], x2 =  X[,2])))
+#' # Data creation
+#' data   <- data.frame(X, peer.avg(G, cbind(x1 = X[, 1], x2 = X[, 2])))
 #' colnames(data) <- c("x1", "x2", "gx1", "gx2")
 #' 
 #' ## Complete information game
@@ -500,7 +542,7 @@ sart <- function(formula,
 }
 
 
-#' @title Summary for the estimation of Tobit models with social interactions
+#' @title Summary for the Estimation of Tobit Models with Social Interactions
 #' @description Summary and print methods for the class `sart` as returned by the function \link{sart}.
 #' @param object an object of class `sart`, output of the function \code{\link{sart}}.
 #' @param x an object of class `summary.sart`, output of the function \code{\link{summary.sart}} 

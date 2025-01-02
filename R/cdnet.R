@@ -1,54 +1,47 @@
-#' @title Simulating count data models with social interactions under rational expectations
-#' @param formula a class object \link[stats]{formula}: a symbolic description of the model. `formula` must be as, for example, \code{y ~ x1 + x2 + gx1 + gx2}
-#' where `y` is the endogenous vector and `x1`, `x2`, `gx1` and `gx2` are control variables, which can include contextual variables, i.e. averages among the peers.
-#' Peer averages can be computed using the function \code{\link{peer.avg}}.
-#' @param Glist adjacency matrix. For networks consisting of multiple subnets (e.g., schools), `Glist` can be a list of subnets with the `m`-th element being an \eqn{n_m\times n_m}-adjacency matrix, where \eqn{n_m} is the number of nodes in the `m`-th subnet.
-#' For heterogeneous peer effects (`length(unique(group)) = h > 1`), the `m`-th element must be a list of \eqn{h^2} \eqn{n_m\times n_m}-adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
-#' For heterogeneous peer effects in the case of a single large network, `Glist` must be a one-item list. This item must be a list of \eqn{h^2} network specifications. 
-#' The order in which the networks in are specified are important and must match `sort(unique(group))` (see examples).
-#' @param group the vector indicating the individual groups. The default assumes a common group. For 2 groups; that is, `length(unique(group)) = 2`, (e.g., `A` and `B`), 
-#' four types of peer effects are defined: peer effects of `A` on `A`, of `A` on `B`, of `B` on `A`, and of `B` on `B`.
-#' @param parms a vector defining the true value of \eqn{\theta = (\lambda', \Gamma', \delta')'} (see the model specification in details). 
-#' Each parameter \eqn{\lambda}, \eqn{\Gamma}, or \eqn{\delta} can also be given separately to the arguments `lambda`, `Gamma`, or `delta`.
-#' @param lambda the true value of the vector \eqn{\lambda}.
-#' @param Gamma the true value of the vector \eqn{\Gamma}.
-#' @param delta the true value of the vector \eqn{\delta}.
-#' @param Rmax an integer indicating the theoretical upper bound of `y`. (see the model specification in details).
-#' @param Rbar an \eqn{L}-vector, where  \eqn{L} is the number of groups. For large `Rmax` the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}). 
-#' The `l`-th element of `Rbar` indicates \eqn{\bar{R}} for the `l`-th value of `sort(unique(group))` (see the model specification in details).
-#' @param tol the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of `y`. The process stops if the \eqn{\ell_1}-distance 
-#' between two consecutive \eqn{E(y)} is less than `tol`.
-#' @param maxit the maximal number of iterations in the Fixed Point Iteration Method.
-#' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `simcdnet` is called.
+#' @title Simulating Count Data Models with Social Interactions Under Rational Expectations
+#' @param formula A class object of class \link[stats]{formula}: a symbolic description of the model. `formula` should be specified, for example, as \code{y ~ x1 + x2 + gx1 + gx2}, where `y` is the endogenous vector and `x1`, `x2`, `gx1`, and `gx2` are control variables. These control variables can include contextual variables, such as averages among the peers. Peer averages can be computed using the function \code{\link{peer.avg}}.
+#' @param Glist An adjacency matrix or list of adjacency matrices. For networks consisting of multiple subnets (e.g., schools), `Glist` can be a list of subnet matrices, where the \eqn{m}-th element is an \eqn{n_m \times n_m} adjacency matrix, with \eqn{n_m} representing the number of nodes in the \eqn{m}-th subnet. 
+#' For heterogeneous peer effects (\eqn{length(unique(group)) = h > 1}), the \eqn{m}-th element should be a list of \eqn{h^2} \eqn{n_m \times n_m} adjacency matrices corresponding to different network specifications (see Houndetoungan, 2024). 
+#' For heterogeneous peer effects in a single large network, `Glist` should be a one-item list, where the item is a list of \eqn{h^2} network specifications. The order of these networks is important and must match `sort(unique(group))` (see examples).
+#' @param group A vector indicating the individual groups. By default, this assumes a common group. If there are 2 groups (i.e., \eqn{length(unique(group)) = 2}, such as `A` and `B`), four types of peer effects are defined: 
+#' peer effects of `A` on `A`, `A` on `B`, `B` on `A`, and `B` on `B`.
+#' @param parms A vector defining the true values of \eqn{\theta = (\lambda', \Gamma', \delta')'} (see model specification in detail). Each parameter \eqn{\lambda}, \eqn{\Gamma}, or \eqn{\delta} can also be provided separately to the arguments `lambda`, `Gamma`, or `delta`.
+#' @param lambda The true value of the vector \eqn{\lambda}.
+#' @param Gamma The true value of the vector \eqn{\Gamma}.
+#' @param delta The true value of the vector \eqn{\delta}.
+#' @param Rmax An integer indicating the theoretical upper bound of `y` (see model specification in detail).
+#' @param Rbar An \eqn{L}-vector, where \eqn{L} is the number of groups. For large `Rmax`, the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}). The \eqn{l}-th element of `Rbar` indicates \eqn{\bar{R}} for the \eqn{l}-th value of `sort(unique(group))` (see model specification in detail).
+#' @param tol The tolerance value used in the Fixed Point Iteration Method to compute the expectancy of `y`. The process stops if the \eqn{\ell_1}-distance between two consecutive \eqn{E(y)} is less than `tol`.
+#' @param maxit The maximum number of iterations in the Fixed Point Iteration Method.
+#' @param data An optional data frame, list, or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables in the model. If not found in `data`, the variables are taken from \code{environment(formula)}, typically the environment from which `simcdnet` is called.
 #' @description
-#' `simcdnet` simulate the count data model with social interactions under rational expectations developed by Houndetoungan (2024).
+#' `simcdnet` simulates the count data model with social interactions under rational expectations developed by Houndetoungan (2024).
 #' @details 
-#' The count variable \eqn{y_i}{yi} take the value \eqn{r} with probability. 
+#' The count variable \eqn{y_i} takes the value \eqn{r} with probability.
 #' \deqn{P_{ir} = F(\sum_{s = 1}^S \lambda_s \bar{y}_i^{e,s}  + \mathbf{z}_i'\Gamma - a_{h(i),r}) - F(\sum_{s = 1}^S \lambda_s \bar{y}_i^{e,s}  + \mathbf{z}_i'\Gamma - a_{h(i),r + 1}).}
 #' In this equation, \eqn{\mathbf{z}_i} is a vector of control variables; \eqn{F} is the distribution function of the standard normal distribution;
 #' \eqn{\bar{y}_i^{e,s}} is the average of \eqn{E(y)} among peers using the `s`-th network definition;
 #' \eqn{a_{h(i),r}} is the `r`-th cut-point in the cost group \eqn{h(i)}. \cr\cr
 #' The following identification conditions have been introduced: \eqn{\sum_{s = 1}^S \lambda_s > 0}, \eqn{a_{h(i),0} = -\infty}, \eqn{a_{h(i),1} = 0}, and 
 #' \eqn{a_{h(i),r} = \infty} for any \eqn{r \geq R_{\text{max}} + 1}. The last condition implies that \eqn{P_{ir} = 0} for any \eqn{r \geq R_{\text{max}} + 1}.
-#' For any \eqn{r \geq 1}, the distance between two cut-points is \eqn{a_{h(i),r+1} - a_{h(i),r} =  \delta_{h(i),r} + \sum_{s = 1}^S \lambda_s}
-#' As the number of cut-point can be large, a quadratic cost function is considered for \eqn{r \geq \bar{R}_{h(i)}}, where \eqn{\bar{R} = (\bar{R}_{1}, ..., \bar{R}_{L})}.
-#' With the semi-parametric cost-function,
-#' \eqn{a_{h(i),r + 1} - a_{h(i),r}= \bar{\delta}_{h(i)} + \sum_{s = 1}^S \lambda_s}.  \cr\cr
+#' For any \eqn{r \geq 1}, the distance between two cut-points is \eqn{a_{h(i),r+1} - a_{h(i),r} =  \delta_{h(i),r} + \sum_{s = 1}^S \lambda_s}.
+#' As the number of cut-points can be large, a quadratic cost function is considered for \eqn{r \geq \bar{R}_{h(i)}}, where \eqn{\bar{R} = (\bar{R}_{1}, ..., \bar{R}_{L})}.
+#' With the semi-parametric cost function,
+#' \eqn{a_{h(i),r + 1} - a_{h(i),r} = \bar{\delta}_{h(i)} + \sum_{s = 1}^S \lambda_s}.  \cr\cr
 #' The model parameters are: \eqn{\lambda = (\lambda_1, ..., \lambda_S)'}, \eqn{\Gamma}, and \eqn{\delta = (\delta_1', ..., \delta_L')'}, 
 #' where \eqn{\delta_l = (\delta_{l,2}, ..., \delta_{l,\bar{R}_l}, \bar{\delta}_l)'} for \eqn{l = 1, ..., L}. 
-#' The number of single parameters in \eqn{\delta_l} depends on  \eqn{R_{\text{max}}} and \eqn{\bar{R}_{l}}. The components \eqn{\delta_{l,2}, ..., \delta_{l,\bar{R}_l}} or/and 
+#' The number of single parameters in \eqn{\delta_l} depends on  \eqn{R_{\text{max}}} and \eqn{\bar{R}_l}. The components \eqn{\delta_{l,2}, ..., \delta_{l,\bar{R}_l}} or/and 
 #' \eqn{\bar{\delta}_l} must be removed in certain cases.\cr
-#' If \eqn{R_{\text{max}} = \bar{R}_{l} \geq 2}, then \eqn{\delta_l = (\delta_{l,2}, ..., \delta_{l,\bar{R}_l})'}.\cr
-#' If \eqn{R_{\text{max}} = \bar{R}_{l} = 1} (binary models), then \eqn{\delta_l} must be empty.\cr
-#' If \eqn{R_{\text{max}} > \bar{R}_{l} = 1}, then \eqn{\delta_l = \bar{\delta}_l}.
+#' If \eqn{R_{\text{max}} = \bar{R}_l \geq 2}, then \eqn{\delta_l = (\delta_{l,2}, ..., \delta_{l,\bar{R}_l})'}.\cr
+#' If \eqn{R_{\text{max}} = \bar{R}_l = 1} (binary models), then \eqn{\delta_l} must be empty.\cr
+#' If \eqn{R_{\text{max}} > \bar{R}_l = 1}, then \eqn{\delta_l = \bar{\delta}_l}.
 #' @seealso \code{\link{cdnet}}, \code{\link{simsart}}, \code{\link{simsar}}.
 #' @return A list consisting of:
 #'     \item{yst}{\eqn{y^{\ast}}, the latent variable.}
 #'     \item{y}{the observed count variable.}
 #'     \item{Ey}{\eqn{E(y)}, the expectation of y.}
-#'     \item{GEy}{the average of \eqn{E(y)} friends.}
-#'     \item{meff}{a list includinh average and individual marginal effects.}
+#'     \item{GEy}{the average of \eqn{E(y)} among peers.}
+#'     \item{meff}{a list including average and individual marginal effects.}
 #'     \item{Rmax}{infinite sums in the marginal effects are approximated by sums up to Rmax.}
 #'     \item{iteration}{number of iterations performed by sub-network in the Fixed Point Iteration Method.}
 #' @references 
@@ -57,60 +50,68 @@
 #' \donttest{
 #' set.seed(123)
 #' M      <- 5 # Number of sub-groups
-#' nvec   <- round(runif(M, 100, 200))
-#' n      <- sum(nvec)
+#' nvec   <- round(runif(M, 100, 200)) # Random group sizes
+#' n      <- sum(nvec) # Total number of individuals
 #' 
-#' # Adjacency matrix
+#' # Adjacency matrix for each group
 #' A      <- list()
 #' for (m in 1:M) {
-#'   nm           <- nvec[m]
-#'   Am           <- matrix(0, nm, nm)
-#'   max_d        <- 30 #maximum number of friends
+#'   nm           <- nvec[m] # Size of group m
+#'   Am           <- matrix(0, nm, nm) # Empty adjacency matrix
+#'   max_d        <- 30 # Maximum number of friends
 #'   for (i in 1:nm) {
-#'     tmp        <- sample((1:nm)[-i], sample(0:max_d, 1))
-#'     Am[i, tmp] <- 1
+#'     tmp        <- sample((1:nm)[-i], sample(0:max_d, 1)) # Sample friends
+#'     Am[i, tmp] <- 1 # Set friendship links
 #'   }
-#'   A[[m]]       <- Am
+#'   A[[m]]       <- Am # Add to the list
 #' }
-#' Anorm  <- norm.network(A) #Row-normalization
+#' Anorm  <- norm.network(A) # Row-normalization of the adjacency matrices
 #' 
-#' # X
-#' X      <- cbind(rnorm(n, 1, 3), rexp(n, 0.4))
+#' # Covariates (X)
+#' X      <- cbind(rnorm(n, 1, 3), rexp(n, 0.4)) # Random covariates
 #' 
-#' # Two group:
-#' group  <- 1*(X[,1] > 0.95)
+#' # Two groups based on first covariate
+#' group  <- 1 * (X[,1] > 0.95) # Assign to groups based on x1
 #' 
-#' # Networks
-#' # length(group) = 2 and unique(sort(group)) = c(0, 1)
-#' # The networks must be defined as to capture:
-#' # peer effects of `0` on `0`, peer effects of `1` on `0`
-#' # peer effects of `0` on `1`, and peer effects of `1` on `1`
+#' # Networks: Define peer effects based on group membership
+#' # The networks should capture:
+#' # - Peer effects of `0` on `0`
+#' # - Peer effects of `1` on `0`
+#' # - Peer effects of `0` on `1`
+#' # - Peer effects of `1` on `1`
 #' G        <- list()
-#' cums     <- c(0, cumsum(nvec))
+#' cums     <- c(0, cumsum(nvec)) # Cumulative indices for groups
 #' for (m in 1:M) {
-#'   tp     <- group[(cums[m] + 1):(cums[m + 1])]
-#'   Am     <- A[[m]]
+#'   tp     <- group[(cums[m] + 1):(cums[m + 1])] # Group membership for group m
+#'   Am     <- A[[m]] # Adjacency matrix for group m
+#'   # Define networks based on peer effects
 #'   G[[m]] <- norm.network(list(Am * ((1 - tp) %*% t(1 - tp)),
 #'                               Am * ((1 - tp) %*% t(tp)),
 #'                               Am * (tp %*% t(1 - tp)),
 #'                               Am * (tp %*% t(tp))))
 #' }
 #' 
-#' # Parameters
+#' # Parameters for the model
 #' lambda <- c(0.2, 0.3, -0.15, 0.25) 
 #' Gamma  <- c(4.5, 2.2, -0.9, 1.5, -1.2)
-#' delta  <- rep(c(2.6, 1.47, 0.85, 0.7, 0.5), 2) 
+#' delta  <- rep(c(2.6, 1.47, 0.85, 0.7, 0.5), 2) # Repeated values for delta
 #' 
-#' # Data
-#' data   <- data.frame(X, peer.avg(Anorm, cbind(x1 = X[,1], x2 =  X[,2])))
-#' colnames(data) = c("x1", "x2", "gx1", "gx2")
+#' # Prepare data for the model
+#' data   <- data.frame(X, peer.avg(Anorm, cbind(x1 = X[,1], x2 = X[,2]))) 
+#' colnames(data) = c("x1", "x2", "gx1", "gx2") # Set column names
 #' 
+#' # Simulate outcomes using the `simcdnet` function
 #' ytmp   <- simcdnet(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, Rbar = rep(5, 2),
 #'                    lambda = lambda, Gamma = Gamma, delta = delta, group = group,
 #'                    data = data)
 #' y      <- ytmp$y
+#' 
+#' # Plot histogram of the simulated outcomes
 #' hist(y, breaks = max(y) + 1)
-#' table(y)}
+#' 
+#' # Display frequency table of the simulated outcomes
+#' table(y)
+#' }
 #' @importFrom Rcpp sourceCpp
 #' @importFrom stats rnorm
 #' @export
@@ -169,9 +170,10 @@ simcdnet   <- function(formula,
   }
   if((nCa^2) != nCl) stop("The number of network specifications does not match the number of groups.")
   
+  
   # Parameters
   if(!missing(parms)){
-    if(missing(lambda) & missing(Gamma) & missing(delta)) warnings("parms is defined: lambda, Gamma, or delta is ignored.")
+    if(missing(lambda) & missing(Gamma) & missing(delta)) warning("parms is defined: lambda, Gamma, or delta is ignored.")
     lambda  <- parms[1:nCl]
     delta   <- tail(parms, sum(ifelse(Rbar == Rmax, Rbar - 1, Rbar)))
     Gamma   <- parms[(nCl + 1):(length(parms) - sum(ifelse(Rbar == Rmax, Rbar - 1, Rbar)))]
@@ -255,70 +257,44 @@ simcdnet   <- function(formula,
 }
 
 
-#' @title Estimating count data models with social interactions under rational expectations using the NPL method
-#' @param formula a class object \link[stats]{formula}: a symbolic description of the model. `formula` must be as, for example, \code{y ~ x1 + x2 + gx1 + gx2}
-#' where `y` is the endogenous vector and `x1`, `x2`, `gx1` and `gx2` are control variables, which can include contextual variables, i.e. averages among the peers.
-#' Peer averages can be computed using the function \code{\link{peer.avg}}.
-#' @param Glist adjacency matrix. For networks consisting of multiple subnets (e.g., schools), `Glist` can be a list of subnets with the `m`-th element being an \eqn{n_m\times n_m}-adjacency matrix, where \eqn{n_m} is the number of nodes in the `m`-th subnet.
-#' For heterogeneous peer effects (i.e., when `length(unique(group)) = h > 1`), the `m`-th element must be a list of \eqn{h^2} \eqn{n_m\times n_m}-adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024, Section 2.1).
-#' For heterogeneous peer effects in the case of a single large network (a single school), `Glist` must be a one-item list (because there is one school). This item must be a list of \eqn{h^2} network specifications. 
-#' The order in which the networks in are specified are important and must match the order of the groups in `sort(unique(group))` (see argument `group` and examples).
-#' @param group the vector indicating the individual groups. The default assumes a common group. For 2 groups; that is, `length(unique(group)) = 2`, (e.g., `A` and `B`), 
-#' four types of peer effects are defined: peer effects of `A` on `A`, of `A` on `B`, of `B` on `A`, and of `B` on `B`. 
-#' In this case, in the argument `Glist`, the networks must be defined in this order: `AA`, `AB`, `BA`, `BB`.
-#' @param Rmax an integer indicating the theoretical upper bound of `y`. (see the model specification in details).
-#' @param Rbar an \eqn{L}-vector, where  \eqn{L} is the number of groups. For large `Rmax` the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}). 
-#' @param starting (optional) a starting value for \eqn{\theta = (\lambda, \Gamma', \delta')'}, where \eqn{\lambda}, \eqn{\Gamma}, and \eqn{\delta} are the parameters to be estimated (see details).
+#' @title Estimating Count Data Models with Social Interactions under Rational Expectations Using the NPL Method
+#' @param formula a class object \link[stats]{formula}: a symbolic description of the model. The `formula` must be, for example, \code{y ~ x1 + x2 + gx1 + gx2}, where `y` is the endogenous vector, and `x1`, `x2`, `gx1`, and `gx2` are control variables, which may include contextual variables (i.e., averages among the peers). Peer averages can be computed using the function \code{\link{peer.avg}}.
+#' @param Glist adjacency matrix. For networks consisting of multiple subnets (e.g., schools), `Glist` can be a list of subnets, with the `m`-th element being an \eqn{n_m \times n_m} adjacency matrix, where \eqn{n_m} is the number of nodes in the `m`-th subnet. For heterogeneous peer effects (i.e., when `length(unique(group)) = h > 1`), the `m`-th element must be a list of \eqn{h^2} \eqn{n_m \times n_m} adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024, Section 2.1). For heterogeneous peer effects in the case of a single large network (a single school), `Glist` must be a one-item list (since there is one school). This item must be a list of \eqn{h^2} network specifications. The order in which the networks are specified is important and must match the order of the groups in `sort(unique(group))` (see argument `group` and examples).
+#' @param group a vector indicating the individual groups. The default assumes a common group. For two groups, i.e., `length(unique(group)) = 2` (e.g., `A` and `B`), four types of peer effects are defined: peer effects of `A` on `A`, of `A` on `B`, of `B` on `A`, and of `B` on `B`. In this case, in the argument `Glist`, the networks must be defined in this order: `AA`, `AB`, `BA`, `BB`.
+#' @param Rmax an integer indicating the theoretical upper bound of `y` (see model specification in detail).
+#' @param Rbar an \eqn{L}-vector, where \eqn{L} is the number of groups. For large `Rmax`, the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}).
+#' @param starting (optional) a starting value for \eqn{\theta = (\lambda, \Gamma', \delta')}, where \eqn{\lambda}, \eqn{\Gamma}, and \eqn{\delta} are the parameters to be estimated (see details).
 #' @param Ey0 (optional) a starting value for \eqn{E(y)}.
-#' @param optimizer is either `fastlbfgs` (L-BFGS optimization method of the package \pkg{RcppNumerical}), `nlm` (referring to the function \link[stats]{nlm}), or `optim` (referring to the function \link[stats]{optim}). 
-#' Arguments for these functions such as, `control` and `method` can be set via the argument `opt.ctr`.
+#' @param optimizer specifies the optimization method, which can be one of: `fastlbfgs` (L-BFGS optimization method from the \pkg{RcppNumerical} package), `nlm` (from the function \link[stats]{nlm}), or `optim` (from the function \link[stats]{optim}). Arguments for these functions, such as `control` and `method`, can be set via the argument `opt.ctr`.
 #' @param npl.ctr a list of controls for the NPL method (see details).
-#' @param opt.ctr a list of arguments to be passed in `optim_lbfgs` of the package \pkg{RcppNumerical}, \link[stats]{nlm} or \link[stats]{optim} (the solver set in `optimizer`), such as `maxit`, `eps_f`, `eps_g`, `control`, `method`, etc.
-#' @param cov a Boolean indicating if the covariance should be computed.
+#' @param opt.ctr a list of arguments to be passed to `optim_lbfgs` from the \pkg{RcppNumerical} package, or to \link[stats]{nlm} or \link[stats]{optim} (the solver specified in `optimizer`), such as `maxit`, `eps_f`, `eps_g`, `control`, `method`, etc.
+#' @param cov a Boolean indicating whether the covariance should be computed.
 #' @param ubslambda a positive value indicating the upper bound of \eqn{\sum_{s = 1}^S \lambda_s > 0}.
-#' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `cdnet` is called.
+#' @param data an optional data frame, list, or environment (or an object coercible by \link[base]{as.data.frame} to a data frame) containing the variables in the model. If not found in `data`, the variables are taken from \code{environment(formula)}, typically the environment from which `cdnet` is called.
 #' @return A list consisting of:
-#'     \item{info}{a list of general information about the model.}
+#'     \item{info}{a list containing general information about the model.}
 #'     \item{estimate}{the NPL estimator.}
-#'     \item{Ey}{\eqn{E(y)}, the expectation of y.}
-#'     \item{GEy}{the average of \eqn{E(y)} friends.}
-#'     \item{cov}{a list including (if `cov == TRUE`) `parms` the covariance matrix and another list `var.comp`, which includes `Sigma`, as \eqn{\Sigma}, and `Omega`, as \eqn{\Omega}, matrices used for
-#'     compute the covariance matrix.}
-#'     \item{details}{step-by-step output as returned by the optimizer.}
+#'     \item{Ey}{\eqn{E(y)}, the expectation of \eqn{y}.}
+#'     \item{GEy}{the average of \eqn{E(y)} across peers.}
+#'     \item{cov}{a list that includes (if `cov == TRUE`): `parms`, the covariance matrix, and another list, `var.comp`, which contains `Sigma` (\eqn{\Sigma}) and `Omega` (\eqn{\Omega}), the matrices used to compute the covariance matrix.}
+#'     \item{details}{step-by-step output returned by the optimizer.}
 #' @description
-#' `cdnet` estimates count data models with social interactions under rational expectations using the NPL algorithm (see Houndetoungan, 2024). 
+#' `cdnet` estimates count data models with social interactions under rational expectations using the NPL algorithm (see Houndetoungan, 2024).
 #' @details 
 #' ## Model
-#' The count variable \eqn{y_i}{yi} take the value \eqn{r} with probability. 
-#' \deqn{P_{ir} = F(\sum_{s = 1}^S \lambda_s \bar{y}_i^{e,s}  + \mathbf{z}_i'\Gamma - a_{h(i),r}) - F(\sum_{s = 1}^S \lambda_s \bar{y}_i^{e,s}  + \mathbf{z}_i'\Gamma - a_{h(i),r + 1}).}
-#' In this equation, \eqn{\mathbf{z}_i} is a vector of control variables; \eqn{F} is the distribution function of the standard normal distribution;
-#' \eqn{\bar{y}_i^{e,s}} is the average of \eqn{E(y)} among peers using the `s`-th network definition;
-#' \eqn{a_{h(i),r}} is the `r`-th cut-point in the cost group \eqn{h(i)}. \cr\cr
-#' The following identification conditions have been introduced: \eqn{\sum_{s = 1}^S \lambda_s > 0}, \eqn{a_{h(i),0} = -\infty}, \eqn{a_{h(i),1} = 0}, and 
-#' \eqn{a_{h(i),r} = \infty} for any \eqn{r \geq R_{\text{max}} + 1}. The last condition implies that \eqn{P_{ir} = 0} for any \eqn{r \geq R_{\text{max}} + 1}.
-#' For any \eqn{r \geq 1}, the distance between two cut-points is \eqn{a_{h(i),r+1} - a_{h(i),r} =  \delta_{h(i),r} + \sum_{s = 1}^S \lambda_s}
-#' As the number of cut-point can be large, a quadratic cost function is considered for \eqn{r \geq \bar{R}_{h(i)}}, where \eqn{\bar{R} = (\bar{R}_{1}, ..., \bar{R}_{L})}.
-#' With the semi-parametric cost-function,
-#' \eqn{a_{h(i),r + 1} - a_{h(i),r}= \bar{\delta}_{h(i)} + \sum_{s = 1}^S \lambda_s}.  \cr\cr
-#' The model parameters are: \eqn{\lambda = (\lambda_1, ..., \lambda_S)'}, \eqn{\Gamma}, and \eqn{\delta = (\delta_1', ..., \delta_L')'}, 
-#' where \eqn{\delta_l = (\delta_{l,2}, ..., \delta_{l,\bar{R}_l}, \bar{\delta}_l)'} for \eqn{l = 1, ..., L}. 
-#' The number of single parameters in \eqn{\delta_l} depends on  \eqn{R_{\text{max}}} and \eqn{\bar{R}_{l}}. The components \eqn{\delta_{l,2}, ..., \delta_{l,\bar{R}_l}} or/and 
-#' \eqn{\bar{\delta}_l} must be removed in certain cases.\cr
-#' If \eqn{R_{\text{max}} = \bar{R}_{l} \geq 2}, then \eqn{\delta_l = (\delta_{l,2}, ..., \delta_{l,\bar{R}_l})'}.\cr
-#' If \eqn{R_{\text{max}} = \bar{R}_{l} = 1} (binary models), then \eqn{\delta_l} must be empty.\cr
-#' If \eqn{R_{\text{max}} > \bar{R}_{l} = 1}, then \eqn{\delta_l = \bar{\delta}_l}.
+#' See the details section of \code{\link{simcdnet}}.
 #' ## \code{npl.ctr}
 #' The model parameters are estimated using the Nested Partial Likelihood (NPL) method. This approach 
-#' starts with a guess of \eqn{\theta} and \eqn{E(y)} and constructs iteratively a sequence
-#' of \eqn{\theta} and \eqn{E(y)}. The solution converges when the \eqn{\ell_1}-distance
-#' between two consecutive \eqn{\theta} and \eqn{E(y)} is less than a tolerance. \cr
-#' The argument \code{npl.ctr} must include
+#' begins with an initial guess for \eqn{\theta} and \eqn{E(y)} and iteratively refines them. 
+#' The solution converges when the \eqn{\ell_1}-distance between two consecutive estimates of 
+#' \eqn{\theta} and \eqn{E(y)} is smaller than a specified tolerance.
+#' 
+#' The argument \code{npl.ctr} must include the following parameters:
 #' \describe{
-#' \item{tol}{the tolerance of the NPL algorithm (default 1e-4),}
-#' \item{maxit}{the maximal number of iterations allowed (default 500),}
-#' \item{print}{a boolean indicating if the estimate should be printed at each step.}
-#' \item{S}{the number of simulations performed use to compute integral in the covariance by important sampling.} 
+#' \item{tol}{the tolerance level for the NPL algorithm (default is 1e-4).}
+#' \item{maxit}{the maximum number of iterations allowed (default is 500).}
+#' \item{print}{a boolean value indicating whether the estimates should be printed at each step.}
+#' \item{S}{the number of simulations performed to compute the integral in the covariance using importance sampling.}
 #' }
 #' @references 
 #' Houndetoungan, A. (2024). Count Data Models with Heterogeneous Peer Effects. Available at SSRN 3721250, \doi{10.2139/ssrn.3721250}.
@@ -471,9 +447,9 @@ cdnet    <- function(formula,
   na       <- sapply(lCa, length)
   if(!missing(Rbar)){
     if(length(Rbar) == 1) Rbar = rep(Rbar, nCa)
-    if(nCa != length(Rbar)) stop("length(Rbar) is not equal to the number of groups.")
+    if(nCa != length(Rbar)) stop("The length of Rbar must equal the number of groups.")
   }
-  if((nCa^2) != nCl) stop("The number of network specifications does not match the number of groups.")
+  if((nCa^2) != nCl) stop("The number of network specifications must match the number of groups.")
   
   # starting values
   thetat   <- NULL
@@ -492,11 +468,11 @@ cdnet    <- function(formula,
     }
   }
   if(!is.null(Deltat)){
-    if(length(Deltat) != sum(ifelse(Rbar == Rmax, Rbar - 1, Rbar))) stop("`length(delta)` does not match Rbar and Rmax.")
+    if(length(Deltat) != sum(ifelse(Rbar == Rmax, Rbar - 1, Rbar))) stop("The length of `delta` must match `Rbar` and `Rmax`.")
   }
   tmp      <- c(is.null(thetat), is.null(Deltat))
   if((all(tmp) != any(tmp))){
-    stop("Starting parameters are defined, but not all of them.")
+    stop("Starting parameters are defined, but not all required parameters are provided.")
   }
   
   # data
@@ -506,14 +482,14 @@ cdnet    <- function(formula,
   X        <- f.t.data$X
   
   if(!is.null(thetat)){
-    if((ncol(X) + nCl) != length(thetat)) stop("ncol(X) == length(Gamma) is not true.")
+    if((ncol(X) + nCl) != length(thetat)) stop("ncol(X) != length(Gamma).")
   }
   coln     <- c("lambda", colnames(X))
   if(nCl > 1) {
     coln   <- c(paste0(coln[1], ":", 1:nCl), coln[-1])
   }
   maxy     <- sapply(lCa, function(x_) max(y[x_ + 1]))
-  if(any(maxy > Rmax)) stop("`Rmax` is lower than y.")
+  if(any(maxy > Rmax)) stop("`Rmax` is lower than the maximum value of y.")
   K        <- ncol(X)
   
   # Ey 
@@ -533,7 +509,7 @@ cdnet    <- function(formula,
   stopifnot(all(Rbar >= 1))
   stopifnot(all(Rbar <= Rmax))
   if(any(sapply(1:nCa, function(x_) Rbar[x_] > max(y[lCa[[x_]]])))) {
-    stop("Rbar > max(y) in at least one cost group.")
+    stop("`Rbar` is greater than the maximum value of y in at least one cost group.")
   }
   
   # check starting and computed them if not defined
@@ -541,7 +517,7 @@ cdnet    <- function(formula,
   ndelta      <- ifelse(Rbar == Rmax, Rbar - 1, Rbar)
   if (!is.null(thetat)) {
     if(length(thetat) != (K + nCl)) {
-      stop("theta length is inappropriate.")
+      stop("The length of `theta` is inappropriate.")
     }
     t0il      <- c(0, cumsum(rep(nCa, nCa)))
     if(any(sapply(1:nCa, function(x_) sum(thetat[(t0il[x_] + 1):t0il[x_ + 1]])) < 0)) stop("Negative peer effects are not supported in this version.")
@@ -753,20 +729,18 @@ cdnet    <- function(formula,
 }
 
 
-#' @title Summary for the estimation of count data models with social interactions under rational expectations
+#' @title Summary for the Estimation of Count Data Models with Social Interactions under Rational Expectations
 #' @description Summary and print methods for the class `cdnet` as returned by the function \link{cdnet}.
 #' @param object an object of class `cdnet`, output of the function \code{\link{cdnet}}.
-#' @param x an object of class `summary.cdnet`, output of the function \code{\link{summary.cdnet}}
-#' or class `cdnet`, output of the function \code{\link{cdnet}}.
+#' @param x an object of class `summary.cdnet`, output of the function \code{\link{summary.cdnet}} or class `cdnet`, output of the function \code{\link{cdnet}}.
 #' @param Glist adjacency matrix. For networks consisting of multiple subnets, `Glist` can be a list of subnets with the `m`-th element being an `ns*ns` adjacency matrix, where `ns` is the number of nodes in the `m`-th subnet.
-#' For heterogenous peer effects (e.g., boy-boy, boy-girl friendship effects), the `m`-th element can be a list of many `ns*ns` adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
+#' For heterogeneous peer effects (e.g., boy-boy, boy-girl friendship effects), the `m`-th element can be a list of many `ns*ns` adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
 #' For heterogeneous peer effects in the case of a single large network, `Glist` must be a one-item list. This item must be a list of many specifications of large networks.
-#' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `summary.cdnet` is called.
+#' @param data an optional data frame, list, or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `summary.cdnet` is called.
 #' @param S number of simulations to be used to compute integral in the covariance by important sampling.
 #' @param ... further arguments passed to or from other methods.
 #' @return A list of the same objects in `object`.
-#' @export 
+#' @export
 "summary.cdnet" <- function(object,
                             Glist,
                             data,
@@ -949,17 +923,14 @@ cdnet    <- function(formula,
   print(summary(x, ...))
 }
 
-#' @title Counterfactual analyses with count data models and social interactions 
-#' @param object an object of class `summary.cdnet`, output of the function \code{\link{summary.cdnet}}
-#' or class `cdnet`, output of the function \code{\link{cdnet}}.
+#' @title Counterfactual Analyses with Count Data Models and Social Interactions
+#' @param object an object of class `summary.cdnet`, output of the function \code{\link{summary.cdnet}} or class `cdnet`, output of the function \code{\link{cdnet}}.
 #' @param Glist adjacency matrix. For networks consisting of multiple subnets, `Glist` can be a list of subnets with the `m`-th element being an `ns*ns` adjacency matrix, where `ns` is the number of nodes in the `m`-th subnet.
-#' For heterogenous peer effects (e.g., boy-boy, boy-girl friendship effects), the `m`-th element can be a list of many `ns*ns` adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
+#' For heterogeneous peer effects (e.g., boy-boy, boy-girl friendship effects), the `m`-th element can be a list of many `ns*ns` adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
 #' For heterogeneous peer effects in the case of a single large network, `Glist` must be a one-item list. This item must be a list of many specifications of large networks.
-#' @param data an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-#' in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `summary.cdnet` is called.
+#' @param data an optional data frame, list, or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which `summary.cdnet` is called.
 #' @param S number of simulations to be used to compute integral in the covariance by important sampling.
-#' @param tol the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of `y`. The process stops if the \eqn{\ell_1}-distance 
-#' between two consecutive \eqn{E(y)} is less than `tol`.
+#' @param tol the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of `y`. The process stops if the \eqn{\ell_1}-distance between two consecutive \eqn{E(y)} is less than `tol`.
 #' @param maxit the maximal number of iterations in the Fixed Point Iteration Method.
 #' @param group the vector indicating the individual groups (see function \code{\link{cdnet}}). If missing, the former group saved in `object` will be used.
 #' @description
@@ -971,7 +942,7 @@ cdnet    <- function(formula,
 #'     \item{GEy}{the average of \eqn{E(y)} friends.}
 #'     \item{aEy}{the sampling mean of \eqn{E(y)}.}
 #'     \item{se.aEy}{the standard error of the sampling mean of \eqn{E(y)}.}
-#' @export 
+#' @export
 simcdEy <- function(object,
                     Glist,
                     data,
@@ -1071,14 +1042,13 @@ simcdEy <- function(object,
   out
 }
 
-#' @title Printing the average expected outcomes for count data models with social interactions
+#' @title Printing the Average Expected Outcomes for Count Data Models with Social Interactions
 #' @description Summary and print methods for the class `simcdEy` as returned by the function \link{simcdEy}.
 #' @param object an object of class `simcdEy`, output of the function \code{\link{simcdEy}}.
-#' @param x an object of class `summary.simcdEy`, output of the function \code{\link{summary.simcdEy}}
-#' or class `simcdEy`, output of the function \code{\link{simcdEy}}.
+#' @param x an object of class `summary.simcdEy`, output of the function \code{\link{summary.simcdEy}} or class `simcdEy`, output of the function \code{\link{simcdEy}}.
 #' @param ... further arguments passed to or from other methods.
 #' @return A list of the same objects in `object`.
-#' @export 
+#' @export
 print.simcdEy <- function(x, ...){
   stopifnot(class(x) == "simcdEy")
   cat("Average expected outcome\n\n")

@@ -2,7 +2,7 @@
 % Please edit documentation in R/cdnet.R
 \name{cdnet}
 \alias{cdnet}
-\title{Estimating count data models with social interactions under rational expectations using the NPL method}
+\title{Estimating Count Data Models with Social Interactions under Rational Expectations Using the NPL Method}
 \usage{
 cdnet(
   formula,
@@ -21,50 +21,40 @@ cdnet(
 )
 }
 \arguments{
-\item{formula}{a class object \link[stats]{formula}: a symbolic description of the model. \code{formula} must be as, for example, \code{y ~ x1 + x2 + gx1 + gx2}
-where \code{y} is the endogenous vector and \code{x1}, \code{x2}, \code{gx1} and \code{gx2} are control variables, which can include contextual variables, i.e. averages among the peers.
-Peer averages can be computed using the function \code{\link{peer.avg}}.}
+\item{formula}{a class object \link[stats]{formula}: a symbolic description of the model. The \code{formula} must be, for example, \code{y ~ x1 + x2 + gx1 + gx2}, where \code{y} is the endogenous vector, and \code{x1}, \code{x2}, \code{gx1}, and \code{gx2} are control variables, which may include contextual variables (i.e., averages among the peers). Peer averages can be computed using the function \code{\link{peer.avg}}.}
 
-\item{Glist}{adjacency matrix. For networks consisting of multiple subnets (e.g., schools), \code{Glist} can be a list of subnets with the \code{m}-th element being an \eqn{n_m\times n_m}-adjacency matrix, where \eqn{n_m} is the number of nodes in the \code{m}-th subnet.
-For heterogeneous peer effects (i.e., when \code{length(unique(group)) = h > 1}), the \code{m}-th element must be a list of \eqn{h^2} \eqn{n_m\times n_m}-adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024, Section 2.1).
-For heterogeneous peer effects in the case of a single large network (a single school), \code{Glist} must be a one-item list (because there is one school). This item must be a list of \eqn{h^2} network specifications.
-The order in which the networks in are specified are important and must match the order of the groups in \code{sort(unique(group))} (see argument \code{group} and examples).}
+\item{Glist}{adjacency matrix. For networks consisting of multiple subnets (e.g., schools), \code{Glist} can be a list of subnets, with the \code{m}-th element being an \eqn{n_m \times n_m} adjacency matrix, where \eqn{n_m} is the number of nodes in the \code{m}-th subnet. For heterogeneous peer effects (i.e., when \code{length(unique(group)) = h > 1}), the \code{m}-th element must be a list of \eqn{h^2} \eqn{n_m \times n_m} adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024, Section 2.1). For heterogeneous peer effects in the case of a single large network (a single school), \code{Glist} must be a one-item list (since there is one school). This item must be a list of \eqn{h^2} network specifications. The order in which the networks are specified is important and must match the order of the groups in \code{sort(unique(group))} (see argument \code{group} and examples).}
 
-\item{group}{the vector indicating the individual groups. The default assumes a common group. For 2 groups; that is, \code{length(unique(group)) = 2}, (e.g., \code{A} and \code{B}),
-four types of peer effects are defined: peer effects of \code{A} on \code{A}, of \code{A} on \code{B}, of \code{B} on \code{A}, and of \code{B} on \code{B}.
-In this case, in the argument \code{Glist}, the networks must be defined in this order: \code{AA}, \code{AB}, \code{BA}, \code{BB}.}
+\item{group}{a vector indicating the individual groups. The default assumes a common group. For two groups, i.e., \code{length(unique(group)) = 2} (e.g., \code{A} and \code{B}), four types of peer effects are defined: peer effects of \code{A} on \code{A}, of \code{A} on \code{B}, of \code{B} on \code{A}, and of \code{B} on \code{B}. In this case, in the argument \code{Glist}, the networks must be defined in this order: \code{AA}, \code{AB}, \code{BA}, \code{BB}.}
 
-\item{Rmax}{an integer indicating the theoretical upper bound of \code{y}. (see the model specification in details).}
+\item{Rmax}{an integer indicating the theoretical upper bound of \code{y} (see model specification in detail).}
 
-\item{Rbar}{an \eqn{L}-vector, where  \eqn{L} is the number of groups. For large \code{Rmax} the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}).}
+\item{Rbar}{an \eqn{L}-vector, where \eqn{L} is the number of groups. For large \code{Rmax}, the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}).}
 
-\item{starting}{(optional) a starting value for \eqn{\theta = (\lambda, \Gamma', \delta')'}, where \eqn{\lambda}, \eqn{\Gamma}, and \eqn{\delta} are the parameters to be estimated (see details).}
+\item{starting}{(optional) a starting value for \eqn{\theta = (\lambda, \Gamma', \delta')}, where \eqn{\lambda}, \eqn{\Gamma}, and \eqn{\delta} are the parameters to be estimated (see details).}
 
 \item{Ey0}{(optional) a starting value for \eqn{E(y)}.}
 
 \item{ubslambda}{a positive value indicating the upper bound of \eqn{\sum_{s = 1}^S \lambda_s > 0}.}
 
-\item{optimizer}{is either \code{fastlbfgs} (L-BFGS optimization method of the package \pkg{RcppNumerical}), \code{nlm} (referring to the function \link[stats]{nlm}), or \code{optim} (referring to the function \link[stats]{optim}).
-Arguments for these functions such as, \code{control} and \code{method} can be set via the argument \code{opt.ctr}.}
+\item{optimizer}{specifies the optimization method, which can be one of: \code{fastlbfgs} (L-BFGS optimization method from the \pkg{RcppNumerical} package), \code{nlm} (from the function \link[stats]{nlm}), or \code{optim} (from the function \link[stats]{optim}). Arguments for these functions, such as \code{control} and \code{method}, can be set via the argument \code{opt.ctr}.}
 
 \item{npl.ctr}{a list of controls for the NPL method (see details).}
 
-\item{opt.ctr}{a list of arguments to be passed in \code{optim_lbfgs} of the package \pkg{RcppNumerical}, \link[stats]{nlm} or \link[stats]{optim} (the solver set in \code{optimizer}), such as \code{maxit}, \code{eps_f}, \code{eps_g}, \code{control}, \code{method}, etc.}
+\item{opt.ctr}{a list of arguments to be passed to \code{optim_lbfgs} from the \pkg{RcppNumerical} package, or to \link[stats]{nlm} or \link[stats]{optim} (the solver specified in \code{optimizer}), such as \code{maxit}, \code{eps_f}, \code{eps_g}, \code{control}, \code{method}, etc.}
 
-\item{cov}{a Boolean indicating if the covariance should be computed.}
+\item{cov}{a Boolean indicating whether the covariance should be computed.}
 
-\item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{cdnet} is called.}
+\item{data}{an optional data frame, list, or environment (or an object coercible by \link[base]{as.data.frame} to a data frame) containing the variables in the model. If not found in \code{data}, the variables are taken from \code{environment(formula)}, typically the environment from which \code{cdnet} is called.}
 }
 \value{
 A list consisting of:
-\item{info}{a list of general information about the model.}
+\item{info}{a list containing general information about the model.}
 \item{estimate}{the NPL estimator.}
-\item{Ey}{\eqn{E(y)}, the expectation of y.}
-\item{GEy}{the average of \eqn{E(y)} friends.}
-\item{cov}{a list including (if \code{cov == TRUE}) \code{parms} the covariance matrix and another list \code{var.comp}, which includes \code{Sigma}, as \eqn{\Sigma}, and \code{Omega}, as \eqn{\Omega}, matrices used for
-compute the covariance matrix.}
-\item{details}{step-by-step output as returned by the optimizer.}
+\item{Ey}{\eqn{E(y)}, the expectation of \eqn{y}.}
+\item{GEy}{the average of \eqn{E(y)} across peers.}
+\item{cov}{a list that includes (if \code{cov == TRUE}): \code{parms}, the covariance matrix, and another list, \code{var.comp}, which contains \code{Sigma} (\eqn{\Sigma}) and \code{Omega} (\eqn{\Omega}), the matrices used to compute the covariance matrix.}
+\item{details}{step-by-step output returned by the optimizer.}
 }
 \description{
 \code{cdnet} estimates count data models with social interactions under rational expectations using the NPL algorithm (see Houndetoungan, 2024).
@@ -72,38 +62,22 @@ compute the covariance matrix.}
 \details{
 \subsection{Model}{
 
-The count variable \eqn{y_i}{yi} take the value \eqn{r} with probability.
-\deqn{P_{ir} = F(\sum_{s = 1}^S \lambda_s \bar{y}_i^{e,s}  + \mathbf{z}_i'\Gamma - a_{h(i),r}) - F(\sum_{s = 1}^S \lambda_s \bar{y}_i^{e,s}  + \mathbf{z}_i'\Gamma - a_{h(i),r + 1}).}
-In this equation, \eqn{\mathbf{z}_i} is a vector of control variables; \eqn{F} is the distribution function of the standard normal distribution;
-\eqn{\bar{y}_i^{e,s}} is the average of \eqn{E(y)} among peers using the \code{s}-th network definition;
-\eqn{a_{h(i),r}} is the \code{r}-th cut-point in the cost group \eqn{h(i)}. \cr\cr
-The following identification conditions have been introduced: \eqn{\sum_{s = 1}^S \lambda_s > 0}, \eqn{a_{h(i),0} = -\infty}, \eqn{a_{h(i),1} = 0}, and
-\eqn{a_{h(i),r} = \infty} for any \eqn{r \geq R_{\text{max}} + 1}. The last condition implies that \eqn{P_{ir} = 0} for any \eqn{r \geq R_{\text{max}} + 1}.
-For any \eqn{r \geq 1}, the distance between two cut-points is \eqn{a_{h(i),r+1} - a_{h(i),r} =  \delta_{h(i),r} + \sum_{s = 1}^S \lambda_s}
-As the number of cut-point can be large, a quadratic cost function is considered for \eqn{r \geq \bar{R}_{h(i)}}, where \eqn{\bar{R} = (\bar{R}_{1}, ..., \bar{R}_{L})}.
-With the semi-parametric cost-function,
-\eqn{a_{h(i),r + 1} - a_{h(i),r}= \bar{\delta}_{h(i)} + \sum_{s = 1}^S \lambda_s}.  \cr\cr
-The model parameters are: \eqn{\lambda = (\lambda_1, ..., \lambda_S)'}, \eqn{\Gamma}, and \eqn{\delta = (\delta_1', ..., \delta_L')'},
-where \eqn{\delta_l = (\delta_{l,2}, ..., \delta_{l,\bar{R}_l}, \bar{\delta}_l)'} for \eqn{l = 1, ..., L}.
-The number of single parameters in \eqn{\delta_l} depends on  \eqn{R_{\text{max}}} and \eqn{\bar{R}_{l}}. The components \eqn{\delta_{l,2}, ..., \delta_{l,\bar{R}_l}} or/and
-\eqn{\bar{\delta}_l} must be removed in certain cases.\cr
-If \eqn{R_{\text{max}} = \bar{R}_{l} \geq 2}, then \eqn{\delta_l = (\delta_{l,2}, ..., \delta_{l,\bar{R}_l})'}.\cr
-If \eqn{R_{\text{max}} = \bar{R}_{l} = 1} (binary models), then \eqn{\delta_l} must be empty.\cr
-If \eqn{R_{\text{max}} > \bar{R}_{l} = 1}, then \eqn{\delta_l = \bar{\delta}_l}.
+See the details section of \code{\link{simcdnet}}.
 }
 
 \subsection{\code{npl.ctr}}{
 
 The model parameters are estimated using the Nested Partial Likelihood (NPL) method. This approach
-starts with a guess of \eqn{\theta} and \eqn{E(y)} and constructs iteratively a sequence
-of \eqn{\theta} and \eqn{E(y)}. The solution converges when the \eqn{\ell_1}-distance
-between two consecutive \eqn{\theta} and \eqn{E(y)} is less than a tolerance. \cr
-The argument \code{npl.ctr} must include
+begins with an initial guess for \eqn{\theta} and \eqn{E(y)} and iteratively refines them.
+The solution converges when the \eqn{\ell_1}-distance between two consecutive estimates of
+\eqn{\theta} and \eqn{E(y)} is smaller than a specified tolerance.
+
+The argument \code{npl.ctr} must include the following parameters:
 \describe{
-\item{tol}{the tolerance of the NPL algorithm (default 1e-4),}
-\item{maxit}{the maximal number of iterations allowed (default 500),}
-\item{print}{a boolean indicating if the estimate should be printed at each step.}
-\item{S}{the number of simulations performed use to compute integral in the covariance by important sampling.}
+\item{tol}{the tolerance level for the NPL algorithm (default is 1e-4).}
+\item{maxit}{the maximum number of iterations allowed (default is 500).}
+\item{print}{a boolean value indicating whether the estimates should be printed at each step.}
+\item{S}{the number of simulations performed to compute the integral in the covariance using importance sampling.}
 }
 }
 }

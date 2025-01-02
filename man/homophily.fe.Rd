@@ -2,7 +2,7 @@
 % Please edit documentation in R/homophily.fe.R
 \name{homophily.fe}
 \alias{homophily.fe}
-\title{Estimating network formation models with degree heterogeneity: the fixed effect approach}
+\title{Estimating Network Formation Models with Degree Heterogeneity: the Fixed Effect Approach}
 \usage{
 homophily.fe(
   network,
@@ -17,53 +17,55 @@ homophily.fe(
 )
 }
 \arguments{
-\item{network}{matrix or list of sub-matrix of social interactions containing 0 and 1, where links are represented by 1}
+\item{network}{A matrix or list of sub-matrices of social interactions containing 0 and 1, where links are represented by 1.}
 
-\item{formula}{an object of class \link[stats]{formula}: a symbolic description of the model. The \code{formula} should be as for example \code{~ x1 + x2}
-where \code{x1}, \code{x2} are explanatory variable of links formation. If missing, the model is estimated with fixed effects only.}
+\item{formula}{An object of class \link[stats]{formula}: a symbolic description of the model. The \code{formula} should be, for example, \code{~ x1 + x2},
+where \code{x1} and \code{x2} are explanatory variables for link formation. If missing, the model is estimated with fixed effects only.}
 
-\item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
+\item{data}{An optional data frame, list, or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
 in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{homophily} is called.}
 
-\item{symmetry}{indicates whether the network model is symmetric (see details).}
+\item{symmetry}{Indicates whether the network model is symmetric (see details).}
 
-\item{fe.way}{indicates whether it is a one-way or two-way fixed effect model. The expected value is 1 or 2 (see details).}
+\item{fe.way}{Indicates whether it is a one-way or two-way fixed effect model. The expected value is 1 or 2 (see details).}
 
-\item{init}{(optional) either a list of starting values containing \code{beta}, an K-dimensional vector of the explanatory variables parameter,
-\code{mu} an n-dimensional vector, and \code{nu} an n-dimensional vector,
-where K is the number of explanatory variables and n is the number of individuals; or a vector of starting value for \code{c(beta, mu, nu)}.}
+\item{init}{(optional) Either a list of starting values containing \code{beta}, a K-dimensional vector of the explanatory variables' parameters,
+\code{mu}, an n-dimensional vector, and \code{nu}, an n-dimensional vector, where K is the number of explanatory variables and n is the number of individuals;
+or a vector of starting values for \code{c(beta, mu, nu)}.}
 
-\item{method}{A character string specifying the optimization method. Expected values are \code{"L-BFGS"}, \code{"Block-NRaphson"}, or \code{"Mix"}. \code{"Block-NRaphson"} refers to the \code{Newton-Raphson} method applied to each subnetwork, and \code{"Mix"} combines the \code{Newton-Raphson} method for \code{beta} with the \code{L-BFGS} method for the fixed effects.}
+\item{method}{A character string specifying the optimization method. Expected values are \code{"L-BFGS"}, \code{"Block-NRaphson"}, or \code{"Mix"}.
+\code{"Block-NRaphson"} refers to the \code{Newton-Raphson} method applied to each subnetwork, and \code{"Mix"} combines the \code{Newton-Raphson} method for \code{beta} with the \code{L-BFGS} method for the fixed effects.}
 
-\item{ctr}{(optional) A list containing control parameters for the solver. For the \code{optim_lbfgs} method from the \pkg{RcppNumerical} package, the list should include \code{maxit.opt} (corresponding to \code{maxit} for the \code{L-BFGS} method), \code{eps_f}, and \code{eps_g}. For the \code{Block-NRaphson} method, the list should include \code{maxit.nr} (corresponding to \code{maxit} for the \code{Newton-Raphson} method) and \code{tol}.}
+\item{ctr}{(optional) A list containing control parameters for the solver. For the \code{optim_lbfgs} method from the \pkg{RcppNumerical} package,
+the list should include \code{maxit.opt} (corresponding to \code{maxit} for the \code{L-BFGS} method), \code{eps_f}, and \code{eps_g}. For the \code{Block-NRaphson} method,
+the list should include \code{maxit.nr} (corresponding to \code{maxit} for the \code{Newton-Raphson} method) and \code{tol}.}
 
-\item{print}{Boolean indicating if the estimation progression should be printed.}
+\item{print}{A boolean indicating if the estimation progression should be printed.}
 }
 \value{
 A list consisting of:
-\item{model.info}{list of model information, such as the type of fixed effects, whether the model is symmetric,
-number of observations, etc.}
-\item{estimate}{maximizer of the log-likelihood.}
-\item{loglike}{maximized log-likelihood.}
-\item{optim}{returned value of the optimization solver, which contains details of the optimization. The solver used is \code{optim_lbfgs} of the
-package \pkg{RcppNumerical}.}
-\item{init}{returned list of starting value.}
-\item{loglike.init}{log-likelihood at the starting value.}
+\item{model.info}{A list of model information, such as the type of fixed effects, whether the model is symmetric,
+the number of observations, etc.}
+\item{estimate}{The maximizer of the log-likelihood.}
+\item{loglike}{The maximized log-likelihood.}
+\item{optim}{The returned value from the optimization solver, which contains details of the optimization. The solver used is \code{optim_lbfgs} from the
+\pkg{RcppNumerical} package.}
+\item{init}{The returned list of starting values.}
+\item{loglike.init}{The log-likelihood at the starting values.}
 }
 \description{
-\code{homophily.fe} implements a Logit estimator for network formation model with homophily. The model includes degree heterogeneity using fixed effects (see details).
+\code{homophily.fe} implements a Logit estimator for a network formation model with homophily. The model includes degree heterogeneity using fixed effects (see details).
 }
 \details{
-Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.
+Let \eqn{p_{ij}} be the probability for a link to go from individual \eqn{i} to individual \eqn{j}.
 This probability is specified for two-way effect models (\code{fe.way = 2}) as
-\deqn{p_{ij} = F(\mathbf{x}_{ij}'\beta + \mu_j + \nu_j)}{Pij = F(Xij'*\beta + \mu_i + \nu_j),}
-where \eqn{F} is the cumulative of the standard logistic distribution. Unobserved degree heterogeneity is captured by
-\eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as fixed effects (see \code{\link{homophily.re}} for random effect models).
-As shown by Yan et al. (2019), the estimator of
-the parameter \eqn{\beta} is biased. A bias correction is then necessary and is not implemented in this version. However
-the estimator of \eqn{\mu_i} and \eqn{\nu_j} are consistent.\cr
-For one-way fixed effect models (\code{fe.way = 1}), \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the
-fixed effects need to be one way.
+\deqn{p_{ij} = F(\mathbf{x}_{ij}'\beta + \mu_i + \nu_j),}
+where \eqn{F} is the cumulative distribution function of the standard logistic distribution. Unobserved degree heterogeneity is captured by
+\eqn{\mu_i} and \eqn{\nu_j}. These are treated as fixed effects (see \code{\link{homophily.re}} for random effect models).
+As shown by Yan et al. (2019), the estimator of the parameter \eqn{\beta} is biased. A bias correction is necessary but not implemented in this version. However,
+the estimators of \eqn{\mu_i} and \eqn{\nu_j} are consistent.\cr
+
+For one-way fixed effect models (\code{fe.way = 1}), \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed, and the fixed effects need to be one-way.
 }
 \examples{
 \donttest{
@@ -75,7 +77,7 @@ Glist        <- list()
 dX           <- matrix(0, 0, 2)
 mu           <- list()
 nu           <- list()
-Emunu        <- runif(M, -1.5, 0) #expectation of mu + nu
+Emunu        <- runif(M, -1.5, 0) # Expectation of mu + nu
 smu2         <- 0.2
 snu2         <- 0.2
 for (m in 1:M) {

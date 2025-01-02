@@ -2,25 +2,22 @@
 % Please edit documentation in R/cdnet.R
 \name{simcdEy}
 \alias{simcdEy}
-\title{Counterfactual analyses with count data models and social interactions}
+\title{Counterfactual Analyses with Count Data Models and Social Interactions}
 \usage{
 simcdEy(object, Glist, data, group, tol = 1e-10, maxit = 500, S = 1000)
 }
 \arguments{
-\item{object}{an object of class \code{summary.cdnet}, output of the function \code{\link{summary.cdnet}}
-or class \code{cdnet}, output of the function \code{\link{cdnet}}.}
+\item{object}{an object of class \code{summary.cdnet}, output of the function \code{\link{summary.cdnet}} or class \code{cdnet}, output of the function \code{\link{cdnet}}.}
 
 \item{Glist}{adjacency matrix. For networks consisting of multiple subnets, \code{Glist} can be a list of subnets with the \code{m}-th element being an \code{ns*ns} adjacency matrix, where \code{ns} is the number of nodes in the \code{m}-th subnet.
-For heterogenous peer effects (e.g., boy-boy, boy-girl friendship effects), the \code{m}-th element can be a list of many \code{ns*ns} adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
+For heterogeneous peer effects (e.g., boy-boy, boy-girl friendship effects), the \code{m}-th element can be a list of many \code{ns*ns} adjacency matrices corresponding to the different network specifications (see Houndetoungan, 2024).
 For heterogeneous peer effects in the case of a single large network, \code{Glist} must be a one-item list. This item must be a list of many specifications of large networks.}
 
-\item{data}{an optional data frame, list or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables
-in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{summary.cdnet} is called.}
+\item{data}{an optional data frame, list, or environment (or object coercible by \link[base]{as.data.frame} to a data frame) containing the variables in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which \code{summary.cdnet} is called.}
 
 \item{group}{the vector indicating the individual groups (see function \code{\link{cdnet}}). If missing, the former group saved in \code{object} will be used.}
 
-\item{tol}{the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of \code{y}. The process stops if the \eqn{\ell_1}-distance
-between two consecutive \eqn{E(y)} is less than \code{tol}.}
+\item{tol}{the tolerance value used in the Fixed Point Iteration Method to compute the expectancy of \code{y}. The process stops if the \eqn{\ell_1}-distance between two consecutive \eqn{E(y)} is less than \code{tol}.}
 
 \item{maxit}{the maximal number of iterations in the Fixed Point Iteration Method.}
 
