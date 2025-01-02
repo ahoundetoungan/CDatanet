@@ -62,7 +62,24 @@ A list consisting of:
 \details{
 \subsection{Model}{
 
-See the details section of \code{\link{simcdnet}}.
+The count variable \eqn{y_i} takes the value \eqn{r} with probability.
+\deqn{P_{ir} = F(\sum_{s = 1}^S \lambda_s \bar{y}_i^{e,s}  + \mathbf{z}_i'\Gamma - a_{h(i),r}) - F(\sum_{s = 1}^S \lambda_s \bar{y}_i^{e,s}  + \mathbf{z}_i'\Gamma - a_{h(i),r + 1}).}
+In this equation, \eqn{\mathbf{z}_i} is a vector of control variables; \eqn{F} is the distribution function of the standard normal distribution;
+\eqn{\bar{y}_i^{e,s}} is the average of \eqn{E(y)} among peers using the \code{s}-th network definition;
+\eqn{a_{h(i),r}} is the \code{r}-th cut-point in the cost group \eqn{h(i)}. \cr\cr
+The following identification conditions have been introduced: \eqn{\sum_{s = 1}^S \lambda_s > 0}, \eqn{a_{h(i),0} = -\infty}, \eqn{a_{h(i),1} = 0}, and
+\eqn{a_{h(i),r} = \infty} for any \eqn{r \geq R_{\text{max}} + 1}. The last condition implies that \eqn{P_{ir} = 0} for any \eqn{r \geq R_{\text{max}} + 1}.
+For any \eqn{r \geq 1}, the distance between two cut-points is \eqn{a_{h(i),r+1} - a_{h(i),r} =  \delta_{h(i),r} + \sum_{s = 1}^S \lambda_s}.
+As the number of cut-points can be large, a quadratic cost function is considered for \eqn{r \geq \bar{R}_{h(i)}}, where \eqn{\bar{R} = (\bar{R}_{1}, ..., \bar{R}_{L})}.
+With the semi-parametric cost function,
+\eqn{a_{h(i),r + 1} - a_{h(i),r} = \bar{\delta}_{h(i)} + \sum_{s = 1}^S \lambda_s}.  \cr\cr
+The model parameters are: \eqn{\lambda = (\lambda_1, ..., \lambda_S)'}, \eqn{\Gamma}, and \eqn{\delta = (\delta_1', ..., \delta_L')'},
+where \eqn{\delta_l = (\delta_{l,2}, ..., \delta_{l,\bar{R}_l}, \bar{\delta}_l)'} for \eqn{l = 1, ..., L}.
+The number of single parameters in \eqn{\delta_l} depends on  \eqn{R_{\text{max}}} and \eqn{\bar{R}_l}. The components \eqn{\delta_{l,2}, ..., \delta_{l,\bar{R}_l}} or/and
+\eqn{\bar{\delta}_l} must be removed in certain cases.\cr
+If \eqn{R_{\text{max}} = \bar{R}_l \geq 2}, then \eqn{\delta_l = (\delta_{l,2}, ..., \delta_{l,\bar{R}_l})'}.\cr
+If \eqn{R_{\text{max}} = \bar{R}_l = 1} (binary models), then \eqn{\delta_l} must be empty.\cr
+If \eqn{R_{\text{max}} > \bar{R}_l = 1}, then \eqn{\delta_l = \bar{\delta}_l}.
 }
 
 \subsection{\code{npl.ctr}}{

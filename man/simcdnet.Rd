@@ -22,14 +22,14 @@ simcdnet(
 \arguments{
 \item{formula}{A class object of class \link[stats]{formula}: a symbolic description of the model. \code{formula} should be specified, for example, as \code{y ~ x1 + x2 + gx1 + gx2}, where \code{y} is the endogenous vector and \code{x1}, \code{x2}, \code{gx1}, and \code{gx2} are control variables. These control variables can include contextual variables, such as averages among the peers. Peer averages can be computed using the function \code{\link{peer.avg}}.}
 
-\item{group}{A vector indicating the individual groups. By default, this assumes a common group. If there are 2 groups (i.e., \eqn{length(unique(group)) = 2}, such as \code{A} and \code{B}), four types of peer effects are defined:
+\item{group}{A vector indicating the individual groups. By default, this assumes a common group. If there are 2 groups (i.e., \code{length(unique(group)) = 2}, such as \code{A} and \code{B}), four types of peer effects are defined:
 peer effects of \code{A} on \code{A}, \code{A} on \code{B}, \code{B} on \code{A}, and \code{B} on \code{B}.}
 
 \item{Glist}{An adjacency matrix or list of adjacency matrices. For networks consisting of multiple subnets (e.g., schools), \code{Glist} can be a list of subnet matrices, where the \eqn{m}-th element is an \eqn{n_m \times n_m} adjacency matrix, with \eqn{n_m} representing the number of nodes in the \eqn{m}-th subnet.
-For heterogeneous peer effects (\eqn{length(unique(group)) = h > 1}), the \eqn{m}-th element should be a list of \eqn{h^2} \eqn{n_m \times n_m} adjacency matrices corresponding to different network specifications (see Houndetoungan, 2024).
+For heterogeneous peer effects (\code{length(unique(group)) = h > 1}), the \eqn{m}-th element should be a list of \eqn{h^2} \eqn{n_m \times n_m} adjacency matrices corresponding to different network specifications (see Houndetoungan, 2024).
 For heterogeneous peer effects in a single large network, \code{Glist} should be a one-item list, where the item is a list of \eqn{h^2} network specifications. The order of these networks is important and must match \code{sort(unique(group))} (see examples).}
 
-\item{parms}{A vector defining the true values of \eqn{\theta = (\lambda', \Gamma', \delta')'} (see model specification in detail). Each parameter \eqn{\lambda}, \eqn{\Gamma}, or \eqn{\delta} can also be provided separately to the arguments \code{lambda}, \code{Gamma}, or \code{delta}.}
+\item{parms}{A vector defining the true values of \eqn{\theta = (\lambda', \Gamma', \delta')'} (see model specification in the details section). Each parameter \eqn{\lambda}, \eqn{\Gamma}, or \eqn{\delta} can also be provided separately to the arguments \code{lambda}, \code{Gamma}, or \code{delta}.}
 
 \item{lambda}{The true value of the vector \eqn{\lambda}.}
 

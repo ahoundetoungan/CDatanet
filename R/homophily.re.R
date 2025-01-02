@@ -24,7 +24,7 @@
 #' @details
 #' Let \eqn{p_{ij}}{Pij} be a probability for a link to go from the individual \eqn{i} to the individual \eqn{j}.
 #' This probability is specified for two-way effect models (`re.way = 2`) as
-#' \deqn{p_{ij} = F(\mathbf{x}_{ij}'\beta + \mu_j + \nu_j),}
+#' \deqn{p_{ij} = F(\mathbf{x}_{ij}'\beta + \mu_i + \nu_j),}
 #' where \eqn{F} is the cumulative of the standard normal distribution. Unobserved degree heterogeneity is captured by
 #' \eqn{\mu_i} and \eqn{\nu_j}. The latter are treated as random effects (see \code{\link{homophily.fe}} for fixed effect models).\cr
 #' For one-way random effect models (`re.way = 1`), \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the 
