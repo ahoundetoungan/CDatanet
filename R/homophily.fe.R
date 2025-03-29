@@ -340,20 +340,41 @@ homophily.LogitFE <- function(network, fe.way, M, nvec, n, N, Nvec, index, index
   
   # export degree
   theta           <- c(estim$estimate)
-  names(theta)    <- names(init)
+  # names(theta)    <- names(init)
   beta            <- head(theta, K)
   if(hasX){
     names(beta)   <- coln
   }
+  
+  tpname          <- NULL
+  if (M == 1) {
+    tpname        <- list(1:n)
+  } else {
+    tpname        <- lapply(1:M, function(m) lapply(1:nvec[m], function(s) paste0(m, "_", s)))
+  }
   mu              <- theta[(K + 1):(K + n)]
+  names(mu)       <- paste0("mu_", unlist(tpname))
   nu              <- NULL
   if(fe.way == 2){
     nu            <- tail(theta, n - M)
     nu            <- unlist(lapply(1:M, function(x) c(nu[(indexgr[x, 1] + 2 - x):(indexgr[x, 2] + 1 - x)], 0))) 
+    names(nu)       <- paste0("nu_", unlist(tpname))
   }
   
   estim$estimate  <- c(estim$estimate)
   estim$gradient  <- c(estim$gradient)
+  if (fe.way == 2) {
+    names(estim$estimate) <- c(names(beta), paste0("mu_", unlist(tpname)),
+                                                        paste0("nu_", unlist(lapply(1:M, function(m) head(tpname[[m]], nvec[m] - 1)))))
+  } else {
+    names(estim$estimate) <- c(names(beta), paste0("mu_", unlist(tpname)))
+    
+  }
+  if (!is.null(estim$gradient)) {
+    names(estim$gradient) <- names(estim$estimate)
+  }
+  
+
   out             <- list("model.info"     = list("model"       = "logit", 
                                                   "sym.network" = FALSE,
                                                   "fe.way"      = fe.way, 
@@ -472,15 +493,27 @@ homophily.LogitFESym <- function(network, M, nvec, n, N, Nvec, index, indexgr, f
   
   # export degree
   theta           <- c(estim$estimate)
-  names(theta)    <- names(init)
+  # names(theta)    <- names(init)
   beta            <- head(theta, K)
   if(hasX){
     names(beta)   <- coln
   }
+  
+  tpname          <- NULL
+  if (M == 1) {
+    tpname        <- 1:n
+  } else {
+    tpname        <- lapply(1:M, function(m) lapply(1:nvec[m], function(s) paste0(m, "_", s)))
+  }
   mu              <- tail(theta, n)
+  names(mu)       <- paste0("mu_", unlist(tpname))
   
   estim$estimate  <- c(estim$estimate)
   estim$gradient  <- c(estim$gradient)
+  names(estim$estimate)   <- c(names(beta), paste0("mu_", tpname))
+  if (!is.null(estim$gradient)) {
+    names(estim$gradient) <- names(estim$estimate)
+  }
   
   out             <- list("model.info"     = list("model"           = "logit", 
                                                   "sym.network"     = TRUE,
