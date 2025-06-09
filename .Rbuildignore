@@ -3,6 +3,8 @@
 ^doc$
 ^Meta$
 ^test$
+^archives$
+^.github$
 ^\.travis\.yml$
 ^\.gitignore$
 ^\.Rbuildignore$
