@@ -16,3 +16,6 @@
 ^scr/*\.so$
 ^scr/*\.o$
 ^README\.md$
+^QuantilePeer\.Rproj, README\.md$
+^\.tar\.gz$
+^vignettes/\.pdf$
