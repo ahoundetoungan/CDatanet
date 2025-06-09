@@ -4,6 +4,7 @@
 ^Meta$
 ^test$
 ^archives$
+^Results$
 ^.github$
 ^\.travis\.yml$
 ^\.gitignore$
