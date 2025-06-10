@@ -7,7 +7,7 @@
 
   [![R-universe](https://ahoundetoungan.r-universe.dev/badges/CDatanet)](https://ahoundetoungan.r-universe.dev/CDatanet)
   [![CRAN](https://www.r-pkg.org/badges/version/CDatanet)](https://CRAN.R-project.org/package=CDatanet)
-  [![CRAN Downloads](htt[![CRAN Downloads](https://img.shields.io/endpoint?url=https://ahoundetoungan.github.io/CDatanet/badges/cran_downloads.json)](https://cran.r-project.org/package=CDatanet)
+  [![CRAN Downloads](https://img.shields.io/endpoint?url=https://ahoundetoungan.github.io/CDatanet/badges/cran_downloads.json)](https://cran.r-project.org/package=CDatanet)
 
 <!-- badges: end -->
 
