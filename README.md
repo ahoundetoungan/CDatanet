@@ -1,4 +1,4 @@
-## An R package for econometrics of network data
+## An R Package for the Econometrics of Network Data
 
 <!-- badges: start -->
   [![Lifecycle: stable](https://img.shields.io/badge/Lifecycle-Stable-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
