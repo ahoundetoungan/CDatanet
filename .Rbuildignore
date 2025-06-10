@@ -6,6 +6,7 @@
 ^archives$
 ^Results$
 ^.github$
+^scripts$
 ^\.travis\.yml$
 ^\.gitignore$
 ^\.Rbuildignore$
