@@ -3,6 +3,7 @@ rm(list = ls())
 library(CDatanet)
 library(ggplot2)
 library(dplyr)
+setwd("/home/aristide/Dropbox/Academy/1.Papers/CountDNtw/Code/Application")
 
 # Data
 load("MydataCount.rda")
@@ -14,7 +15,24 @@ opt.ctr1     <- list(control = list(abstol = 1e-13, reltol = 1e-13, maxit = 5e3)
                      method  = "Nelder-Mead")
 npl.ctr      <- list(maxit   = 1e4, tol = 5e-4, print = TRUE)
 
+# list of continuous variables to compute marginal effects
+cont.var     <- c("age", "yearinschl", "gage", "gmale", "ghispanic", "graceblack", 
+                  "graceasian", "graceother", "gyearinschl", "gwithbothpar", "gmelhigh", "gmemhigh",
+                  "gmemiss", "gmjprof", "gmjother", "gmjmiss") 
+
+# list of binary variables to compute marginal effects
+bin.var      <- c("male", "hispanic", "raceblack", "raceasian", "raceother",  "withbothpar",  
+                  "melhigh", "memhigh", "memiss", "mjprof", "mjother", "mjmiss") 
+
+# Variable type
+type.var     <- list(c("age", "gage"), c("male", "gmale"), c("hispanic", "ghispanic"),
+                     c("raceblack", "graceblack"), c("raceasian", "graceasian"), c("raceother", "graceother"),
+                     c("yearinschl", "gyearinschl"), c("withbothpar", "gwithbothpar"),
+                     c("melhigh", "gmelhigh"), c("memhigh", "gmemhigh"), c("memiss", "gmemiss"),
+                     c("mjprof", "gmjprof"), c("mjother", "gmjother"), c("mjmiss", "gmjmiss"))
+
 # Constructing network matrices
+Gnetnorm     <- norm.network(Gnet)
 group        <- mydata$female
 GHet         <- vector("list", n.school)
 n            <- sapply(Gnet, nrow)
@@ -49,11 +67,18 @@ while (cont) {
 }
 
 # summary with Rbar = 0 and optimal Rbar
-(SCD0_hnf      <- summary(CDtmp[[1]], Glist = GHet, data = mydata))
-(SCD1_hnf      <- summary(CDtmp[[Rbh - 1]], Glist = GHet, data = mydata))
-(SCD2_hnf      <- summary(CDtmp[[Rbh]], Glist = GHet, data = mydata))
+(SCD0_hnf      <- meffects(CDtmp[[1]], Glist = GHet, data = mydata, cont.var = cont.var, 
+                           bin.var = bin.var, type.var = type.var, boot = 100, progress = TRUE,
+                           Glist.contextual = Gnetnorm))
+(SCD1_hnf      <- meffects(CDtmp[[Rbh - 1]], Glist = GHet, data = mydata, cont.var = cont.var, 
+                           bin.var = bin.var, type.var = type.var, boot = 100, progress = TRUE,
+                           Glist.contextual = Gnetnorm))
+(SCD2_hnf      <- meffects(CDtmp[[Rbh]], Glist = GHet, data = mydata, cont.var = cont.var, 
+                           bin.var = bin.var, type.var = type.var, boot = 100, progress = TRUE,
+                           Glist.contextual = Gnetnorm))
 
-save(CDtmp, SCD0_hnf, SCD1_hnf, SCD2_hnf, file = "_output/AH_hete.rda")
+
+save(CDtmp, SCD0_hnf, SCD1_hnf, SCD2_hnf, Rbh, file = "_output/AH_hete.rda")
 
 ################ With fixed effects (Model 7)
 load("_output/AH_hete.rda")
@@ -65,6 +90,7 @@ opt.ctr1     <- list(control = list(abstol = 1e-13, reltol = 1e-13, maxit = 5e3)
 npl.ctr      <- list(maxit   = 1e4, tol = 5e-4, print = TRUE)
 
 # Constructing network matrices
+Gnetnorm     <- norm.network(Gnet)
 group        <- mydata$female
 GHet         <- vector("list", n.school)
 n            <- sapply(Gnet, nrow)
@@ -87,6 +113,10 @@ SCD_hf   <- cdnet(formula = form.fix, Glist =  GHet, Rbar = rep(Rbh, 2), data = 
 SCD_hf   <- cdnet(formula = form.fix, Glist =  GHet, Rbar = rep(Rbh, 2), data = mydata, 
                   npl.ctr = npl.ctr, opt.ctr = opt.ctr1, cov = TRUE, group = group,
                   optimizer = "optim", starting = SCD_hf$estimate, Ey0 = SCD_hf$Ey)
+
+(SCD_hf  <- meffects(SCD_hf, Glist = GHet, data = mydata, cont.var = cont.var, 
+                     bin.var = bin.var, type.var = type.var, boot = 100, progress = TRUE,
+                     Glist.contextual = Gnetnorm))
 
 save(CDtmp, SCD0_hnf, SCD1_hnf, SCD2_hnf, SCD_hf, file = "_output/AH_hete.rda")
 

@@ -2227,7 +2227,7 @@ void fGHmusym(arma::vec& grad,
   grad = arma::zeros<arma::vec>(nm);
   Hess = arma::zeros<arma::mat>(nm, nm);
   arma::uvec idj;
-  double gi, Hii;
+  double gi(0), Hii(0);
   
   for (int i(0); i < nm; ++ i) {
     arma::vec Hi(Hess.col(i));

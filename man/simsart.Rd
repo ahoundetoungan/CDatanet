@@ -4,7 +4,17 @@
 \alias{simsart}
 \title{Simulating Data from Tobit Models with Social Interactions}
 \usage{
-simsart(formula, Glist, theta, tol = 1e-15, maxit = 500, cinfo = TRUE, data)
+simsart(
+  formula,
+  Glist,
+  theta,
+  cont.var,
+  bin.var,
+  tol = 1e-15,
+  maxit = 500,
+  cinfo = TRUE,
+  data
+)
 }
 \arguments{
 \item{formula}{a class object \code{\link[stats]{formula}}: a symbolic description of the model.
@@ -17,6 +27,10 @@ of subnets with the \code{m}-th element being an \code{ns*ns} adjacency matrix, 
 in the \code{m}-th subnet.}
 
 \item{theta}{a vector defining the true value of \eqn{\theta = (\lambda, \Gamma, \sigma)} (see the model specification in the details).}
+
+\item{cont.var}{A character vector of continuous variable names for which the marginal effects should be computed.}
+
+\item{bin.var}{A character vector of binary variable names for which the marginal effects should be computed.}
 
 \item{tol}{the tolerance value used in the fixed-point iteration method to compute \code{y}. The process stops
 if the \eqn{\ell_1}-distance between two consecutive values of \code{y} is less than \code{tol}.}

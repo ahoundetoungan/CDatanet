@@ -3,10 +3,11 @@ rm(list = ls())
 library(CDatanet)
 library(dplyr)
 library(splines)
+setwd("/home/aristide/Dropbox/Academy/1.Papers/CountDNtw/Code/Application")
 
 # Data
 type  <- "FE" # use RE for fixed effects
-load("~MydataCount.rda")
+load("MydataCount.rda")
 load("_output/AH_hete.rda")
 load(paste0("_output/munu.", type, ".rda"))  # use munu.FE for fixed effects
 
@@ -27,7 +28,24 @@ opt.ctr1 <- list(control = list(abstol = 1e-16, reltol = 1e-16, maxit = 5e3),
                      method  = "Nelder-Mead")
 npl.ctr  <- list(maxit   = 1e4, tol = 5e-4, print = TRUE)
 
+# list of continuous variables to compute marginal effects
+cont.var     <- c("age", "yearinschl", "gage", "gmale", "ghispanic", "graceblack", 
+                  "graceasian", "graceother", "gyearinschl", "gwithbothpar", "gmelhigh", "gmemhigh",
+                  "gmemiss", "gmjprof", "gmjother", "gmjmiss") 
+
+# list of binary variables to compute marginal effects
+bin.var      <- c("male", "hispanic", "raceblack", "raceasian", "raceother",  "withbothpar",  
+                  "melhigh", "memhigh", "memiss", "mjprof", "mjother", "mjmiss") 
+
+# Variable type
+type.var     <- list(c("age", "gage"), c("male", "gmale"), c("hispanic", "ghispanic"),
+                     c("raceblack", "graceblack"), c("raceasian", "graceasian"), c("raceother", "graceother"),
+                     c("yearinschl", "gyearinschl"), c("withbothpar", "gwithbothpar"),
+                     c("melhigh", "gmelhigh"), c("memhigh", "gmemhigh"), c("memiss", "gmemiss"),
+                     c("mjprof", "gmjprof"), c("mjother", "gmjother"), c("mjmiss", "gmjmiss"))
+
 # Constructing network matrices
+Gnetnorm     <- norm.network(Gnet)
 group        <- mydata$female
 GHet         <- vector("list", n.school)
 n            <- sapply(Gnet, nrow)
@@ -40,6 +58,7 @@ for(m in 1:n.school){
                                   Gnet[[m]] * ((grp == 1) %*% t(grp == 1))))
 }
 
+
 Rbh      <- 10
 starting <- SCD_hf$estimate; starting$Gamma <- c(starting$Gamma, rep(0, KZmu + KZnu))
 Ey0      <- SCD_hf$Ey
@@ -50,6 +69,10 @@ SCD_en   <- cdnet(formula = form.en, Glist =  GHet, Rbar = rep(Rbh, 2), data = m
 SCD_en   <- cdnet(formula = form.en, Glist =  GHet, Rbar = rep(Rbh, 2), data = mydata, 
                   npl.ctr = npl.ctr, opt.ctr = opt.ctr1, cov = TRUE, group = group,
                   optimizer = "optim", starting = SCD_en$estimate, Ey0 = SCD_en$Ey)
+
+(SCD_en  <- meffects(SCD_en, Glist = GHet, data = mydata, cont.var = cont.var, 
+                     bin.var = bin.var, type.var = type.var, boot = 100, progress = TRUE,
+                     Glist.contextual = Gnetnorm))
 
 saveRDS(SCD_en, file = paste0("_output/AH_Endo.", type, ".RDS"))
 

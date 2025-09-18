@@ -14,6 +14,8 @@ simcdnet(
   delta,
   Rmax,
   Rbar,
+  cont.var,
+  bin.var,
   tol = 1e-10,
   maxit = 500,
   data
@@ -40,6 +42,10 @@ For heterogeneous peer effects in a single large network, \code{Glist} should be
 \item{Rmax}{An integer indicating the theoretical upper bound of \code{y} (see model specification in detail).}
 
 \item{Rbar}{An \eqn{L}-vector, where \eqn{L} is the number of groups. For large \code{Rmax}, the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}). The \eqn{l}-th element of \code{Rbar} indicates \eqn{\bar{R}} for the \eqn{l}-th value of \code{sort(unique(group))} (see model specification in detail).}
+
+\item{cont.var}{A character vector of continuous variable names for which the marginal effects should be computed.}
+
+\item{bin.var}{A character vector of binary variable names for which the marginal effects should be computed.}
 
 \item{tol}{The tolerance value used in the Fixed Point Iteration Method to compute the expectancy of \code{y}. The process stops if the \eqn{\ell_1}-distance between two consecutive \eqn{E(y)} is less than \code{tol}.}
 

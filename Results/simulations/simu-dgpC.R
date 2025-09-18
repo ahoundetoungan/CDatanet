@@ -2,7 +2,7 @@
 rm(list = ls())
 library(CDatanet)
 library(doParallel)
-pdir <- c("~/Dropbox/Papers - In progress/CountDNtw/Code/Monte Carlo/_output",
+pdir <- c("~/Dropbox/Academy/1.Papers/CountDNtw/Code/Monte Carlo/_output",
           "~/CountDNtw/Code/Monte Carlo/_output")
 setwd(pdir[sapply(pdir, dir.exists)])
 
@@ -49,7 +49,8 @@ f.estim  <- function(nvec){
   data    <- data.frame(X, peer.avg(norm.network(G), X)); colnames(data) <- c("x1", "x2", "gx1", "gx2")
   
   ytmp    <- simcdnet(formula = ~ x1 + x2 + gx1 + gx2, Glist = Gmu, group = grp, lambda = lambda, 
-                      Gamma = Gamma, delta = rep(delta, 2), Rbar = rep(Rbar, 2), data = data, Rmax = 100)
+                      Gamma = Gamma, delta = rep(delta, 2), Rbar = rep(Rbar, 2), data = data, Rmax = 100,
+                      cont.var = c("x1", "x2", "gx1", "gx2"))
   data$y  <- ytmp$y
   # hist(data$y, breaks = max(data$y) + 1)
   ameff   <- ytmp$meff$ameff; names(ameff) <- paste("ameff", names(ameff))
@@ -79,10 +80,16 @@ f.estim  <- function(nvec){
   
   ccd0          <- c(ecd[[1]]$estimate$lambda, ecd[[1]]$estimate$Gamma) 
   names(ccd0)   <- paste0("cd.coef.R0", names(ccd0))
-  mcd0          <- ecd[[1]]$meff$ameff; names(mcd0) <- paste0("cd.meff.R0.", names(mcd0))
   ccd           <- c(ecd[[Rbh]]$estimate$lambda, ecd[[Rbh]]$estimate$Gamma) 
   names(ccd)    <- paste0("cd.coef.Rh.", names(ccd))
-  mcd           <- ecd[[Rbh]]$meff$ameff; names(mcd) <- paste0("cd.meff.Rh.", names(mcd))
+  
+  # Marginal effects
+  mcd0          <- meffects(ecd[[1]], Glist = Gmu, cont.var = c("x1", "x2", "gx1", "gx2"), data = data, 
+                            boot = 0, progress = FALSE)$meffects$estimate$direct
+  names(mcd0)   <- paste0("cd.meff.R0.", names(mcd0))
+  mcd           <- meffects(ecd[[Rbh]], Glist = Gmu, cont.var = c("x1", "x2", "gx1", "gx2"), data = data, 
+                            boot = 0, progress = FALSE)$meffects$estimate$direct
+  names(mcd)    <- paste0("cd.meff.Rh.", names(mcd))
   
   c(lGamma, ameff, ccd0, mcd0, "Rh" = Rbh, ccd, mcd)
 }

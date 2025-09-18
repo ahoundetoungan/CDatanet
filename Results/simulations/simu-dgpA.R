@@ -2,7 +2,7 @@
 rm(list = ls())
 library(CDatanet)
 library(doParallel)
-pdir <- c("~/Dropbox/Papers - In progress/CountDNtw/Code/Monte Carlo/_output",
+pdir <- c("~/Dropbox/Academy/1.Papers/CountDNtw/Code/Monte Carlo/_output",
           "~/CountDNtw/Code/Monte Carlo/_output")
 setwd(pdir[sapply(pdir, dir.exists)])
 
@@ -42,7 +42,8 @@ f.estim  <- function(nvec){
   data    <- data.frame(X, peer.avg(G, X)); colnames(data) <- c("x1", "x2", "gx1", "gx2")
   
   ytmp    <- simcdnet(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, 
-                      parms = parms, Rbar = 1, data = data, Rmax = 100)
+                      parms = parms, Rbar = 1, data = data, Rmax = 100,
+                      cont.var = c("x1", "x2", "gx1", "gx2"))
   data$y  <- ytmp$y
   # hist(data$y, breaks = max(data$y) + 1)
   ameff   <- ytmp$meff$ameff; names(ameff) <- paste("ameff", names(ameff))
@@ -72,10 +73,16 @@ f.estim  <- function(nvec){
   
   ccd0          <- c(ecd[[1]]$estimate$lambda, ecd[[1]]$estimate$Gamma) 
   names(ccd0)   <- paste0("cd.coef.R0", names(ccd0))
-  mcd0          <- ecd[[1]]$meff$ameff; names(mcd0) <- paste0("cd.meff.R0.", names(mcd0))
   ccd           <- c(ecd[[Rbh]]$estimate$lambda, ecd[[Rbh]]$estimate$Gamma) 
   names(ccd)    <- paste0("cd.coef.Rh.", names(ccd))
-  mcd           <- ecd[[Rbh]]$meff$ameff; names(mcd) <- paste0("cd.meff.Rh.", names(mcd))
+  
+  # Marginal effects
+  mcd0          <- meffects(ecd[[1]], Glist = G, cont.var = c("x1", "x2", "gx1", "gx2"), data = data, 
+                            boot = 0, progress = FALSE)$meffects$estimate$direct
+  names(mcd0)   <- paste0("cd.meff.R0.", names(mcd0))
+  mcd           <- meffects(ecd[[Rbh]], Glist = G, cont.var = c("x1", "x2", "gx1", "gx2"), data = data, 
+                            boot = 0, progress = FALSE)$meffects$estimate$direct
+  names(mcd)    <- paste0("cd.meff.Rh.", names(mcd))
   
   tp            <- sart(y ~ x1 + x2 + gx1 + gx2, Glist = G, npl.ctr = npl.ctr, opt.ctr = opt.ctr0, 
                         cinfo = FALSE, data = data, cov = FALSE)
@@ -92,7 +99,10 @@ f.estim  <- function(nvec){
                         starting = starting, Ey0 = Ey0)
   
   cTo           <- esart$estimate; cTo <- cTo[-c(2, length(cTo))]; names(cTo) <- paste0("To.coef.", names(cTo))
-  mTo           <- esart$meff$ameff; names(mTo) <- paste0("To.meff.", names(mTo))
+  mTo           <- meffects(esart, Glist = G, cont.var = c("x1", "x2", "gx1", "gx2"), data = data, 
+                            boot = 0, progress = FALSE)$meffects$estimate$direct
+  
+  names(mTo)    <- paste0("To.meff.", names(mTo))
   
   c(lGamma, ameff, ccd0, mcd0, "Rh" = Rbh, ccd, mcd, cTo, mTo)
 }

@@ -45,11 +45,14 @@ Fixed effect is allowed in the model SAR.
 - The function `homophili.data` is added to convert data between directed network models and symmetric network models.
 
 # Changes in version 2.2.0
-- Following the revision of the paper Count Data Model with Social Interaction under Rational Expectations, `cdnet` now allows heterogeneity in peer effects. For example peer effects can be estimated between Blacks and Whites, Girls and Boys etc.
-- `cdnet` allows heterogeneity in the cut-points. The cost function in the utility function is nonparametric and depends on some characteristics X such as gender, race, etc.
+- Following the revision of the paper *Count Data Model with Social Interaction under Rational Expectations*, `cdnet` now allows heterogeneity in peer effects. For example, peer effects can be estimated separately for groups such as Blacks and Whites, or Girls and Boys.  
+- `cdnet` now also allows heterogeneity in the cut-points. The cost function in the utility function is nonparametric and depends on characteristics `X` such as gender, race, etc.  
 
 # Changes in version 2.2.1
-- The Newton-Raphson method has been added for estimating the homophily model.
+- Added the Newton–Raphson method for estimating the homophily model.  
 
 # Changes in version 2.2.2
-- In `homophili.fe`, elements in the estimate and gradient vectors are labelled.
+- In `homophili.fe`, elements in the estimate and gradient vectors are now labelled.  
+- The summary method for `cdnet` and `sart` no longer displays marginal effects.  
+- The `meffects` method has been added and can be applied to the outputs of `cdnet` and `sart`.  
+  This method computes direct, indirect, and total marginal effects.  

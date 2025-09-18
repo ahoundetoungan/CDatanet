@@ -24,12 +24,17 @@
  *           may not be reached and the algorithm will stop after maxit iterations.
  * Ey      : is the vector of equilibrium outcome expectation.
  */
-// [[Rcpp::depends(RcppArmadillo, RcppEigen, RcppNumerical)]]
-
+// [[Rcpp::depends(RcppArmadillo, RcppProgress, RcppEigen, RcppNumerical)]]
+// [[Rcpp::plugins(openmp)]]
 #include <RcppArmadillo.h>
 //#define NDEBUG
 #include <RcppNumerical.h>
 #include <RcppEigen.h>
+#include <progress.hpp>
+#include <progress_bar.hpp>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 typedef Eigen::Map<Eigen::MatrixXd> MapMatr;
 typedef Eigen::Map<Eigen::VectorXd> MapVect;
@@ -40,12 +45,19 @@ using namespace arma;
 using namespace std;
 
 
-
 arma::vec fLTBT(const NumericVector& ZtLambda,
-                 const double sigma) {
+                const double sigma) {
   return ZtLambda*Rcpp::pnorm5(ZtLambda/sigma, 0, 1, true, false) + 
     sigma*Rcpp::dnorm4(ZtLambda/sigma, 0, 1, false);
 }
+
+Eigen::ArrayXd fLTBTEigen(const Eigen::ArrayXd& ZtLambda, const double& sigma) {
+  Eigen::ArrayXd scaled = ZtLambda / sigma;
+  Eigen::ArrayXd Phi = 0.5 * (1.0 + scaled.unaryExpr([](double v){ return std::erf(v / std::sqrt(2.0)); }));
+  Eigen::ArrayXd phi = (1.0 / std::sqrt(2.0 * M_PI)) * (-0.5 * scaled.square()).exp();
+  return ZtLambda * Phi + sigma * phi;
+}
+
 
 // fEy: Takes an initial value of Ey and finds the equilibrium
 // GEy is G*Ey
@@ -81,24 +93,105 @@ int fEytbit(arma::vec& Ey,
   return t; 
 }
 
+
+//[[Rcpp::export]]
+int fEytbitEigen(Eigen::ArrayXd& Ey,
+                 Eigen::ArrayXd& GEy,
+                 const std::vector<Eigen::MatrixXd>& G,
+                 const Eigen::ArrayXXi& igroup,
+                 const int& ngroup,
+                 const Eigen::ArrayXd& psi,
+                 const double& lambda,
+                 const double& sigma,
+                 const int& n, 
+                 const double& tol,
+                 const int& maxit) {
+  int n1, n2, nm, t = 0;
+  
+  computeL: ++t;
+  Eigen::ArrayXd ZtLambda(lambda*GEy + psi);
+  Eigen::ArrayXd Eyst(fLTBTEigen(ZtLambda, sigma));
+  double dist((((Eyst - Ey)/Ey).abs()).maxCoeff());
+  Ey = Eyst;
+  
+  for (int m(0); m < ngroup; ++ m) {
+    n1 = igroup(m,0);
+    n2 = igroup(m,1);
+    nm = n2 - n1 + 1;
+    GEy.segment(n1, nm) = G[m] * Ey.segment(n1, nm).matrix();
+  }
+  if (dist > tol && t < maxit) goto computeL;
+  return t; 
+}
+
+
+// fmeffect computes the marginal effects
+//[[Rcpp::export]]
+Eigen::ArrayXXd fSImeffects(const Eigen::VectorXd& Gye,
+                            const Eigen::MatrixXd& X,
+                            const double& lambda,
+                            const Eigen::VectorXd& beta,
+                            const double& sigma,
+                            const Eigen::ArrayXi& conti, //1 if it is continuous and 0 otherwise
+                            const Eigen::ArrayXd& dis0, // X0, same size as conti
+                            const Eigen::ArrayXd& dis1, // X1 same size as conti
+                            const Eigen::ArrayXi& indexmarg, // index in X for which marginal effect should be computed
+                            const int& sumn) { 
+  Eigen::ArrayXd ZtLambda(lambda * Gye + X*beta);
+  NumericVector ZtL(wrap(ZtLambda/sigma));
+  NumericVector PhiRcpp(Rcpp::pnorm(ZtL, 0, 1, true, false));
+  Eigen::ArrayXd Phi(as<Eigen::ArrayXd>(PhiRcpp));
+  
+  // for Gye 
+  Eigen::ArrayXXd meff1(Phi*lambda);
+  
+  // for Z
+  // direct
+  int Kindexmarg(indexmarg.size());
+  if (Kindexmarg == 0) {
+    return meff1;
+  }
+  
+  Eigen::ArrayXXd meff2dir(sumn, Kindexmarg);
+  for (int k(0); k < Kindexmarg; ++ k) { 
+    if (conti(k) > 0) { // Continuous variables
+      meff2dir.col(k) = Phi*beta(indexmarg(k));
+    } else { // Discrete variables
+      Eigen::MatrixXd Xk(X);
+      Xk.col(indexmarg(k)).array() = dis0(indexmarg(k));
+      Eigen::ArrayXd ZtL0(Gye * lambda + Xk * beta); // initial
+      Xk.col(indexmarg(k)).array() = dis1(indexmarg(k));
+      Eigen::ArrayXd ZtL1(Gye * lambda + Xk * beta); // final
+      
+      Eigen::ArrayXd ye0(fLTBTEigen(ZtL0, sigma));
+      Eigen::ArrayXd ye1(fLTBTEigen(ZtL1, sigma));
+      meff2dir.col(k) = ye1 - ye0;
+    }
+  }
+  
+  Eigen::ArrayXXd meffdir(sumn, 1 + Kindexmarg);
+  meffdir << meff1, meff2dir;
+  return meffdir;
+}
+
 // foptimREM: compute the likelihood given the patameters
 //[[Rcpp::export]]
 double foptimRE_TBT(arma::vec& Ey,
-                 arma::vec& GEy,
-                 const arma::vec& theta,
-                 const arma::vec& yidpos,
-                 const arma::mat& X,
-                 List& G,
-                 const arma::mat& igroup,
-                 const int& ngroup,
-                 const int& npos,
-                 const arma::uvec& idpos,
-                 const arma::uvec& idzero,
-                 const int& K,
-                 const int& n,
-                 const double& tol = 1e-13,
-                 const int& maxit  = 1e3) {
-
+                    arma::vec& GEy,
+                    const arma::vec& theta,
+                    const arma::vec& yidpos,
+                    const arma::mat& X,
+                    List& G,
+                    const arma::mat& igroup,
+                    const int& ngroup,
+                    const int& npos,
+                    const arma::uvec& idpos,
+                    const arma::uvec& idzero,
+                    const int& K,
+                    const int& n,
+                    const double& tol = 1e-13,
+                    const int& maxit  = 1e3) {
+  
   double lambda   = 1.0/(exp(-theta(0)) + 1);
   double sigma    = exp(theta(K + 1));
   arma::vec psi   = X * theta.subvec(1, K);
@@ -155,14 +248,14 @@ double foptimTBT_NPL(const arma::vec& yidpos,
 
 //[[Rcpp::export]]
 void fLTBT_NPL(arma::vec& Ey,
-            arma::vec& GEy,
-            List& G,
-            const arma::mat& X,
-            const arma::vec& theta,
-            const arma::mat& igroup,
-            const int& ngroup,
-            const int& n,
-            const int& K) {
+               arma::vec& GEy,
+               List& G,
+               const arma::mat& X,
+               const arma::vec& theta,
+               const arma::mat& igroup,
+               const int& ngroup,
+               const int& n,
+               const int& K) {
   int n1, n2;
   double lambda      = 1.0/(exp(-theta(0)) + 1);
   double sigma       = exp(theta(K + 1));
@@ -291,7 +384,7 @@ List sartLBFGS(Eigen::VectorXd par,
   sartreg f(yidpos, Z, Z0, Z1, npos, idpos, idzero, K, l2ps2, print);
   status = optim_lbfgs(f, par, fopt, maxit, eps_f, eps_g);
   grad  = f.Grad;
-
+  
   return Rcpp::List::create(
     Rcpp::Named("par")      = par,
     Rcpp::Named("value")    = fopt,
@@ -315,7 +408,7 @@ void fnewEyTBT(arma::vec& Ey,
   double lambda      = 1.0/(exp(-theta(0)) + 1);
   double sigma       = exp(theta(K + 1));
   arma::vec psi      = X*theta.subvec(1, K);
-
+  
   fEytbit(Ey, GEy, G, igroup, ngroup, psi, lambda, sigma, n, tol, maxit);
 }
 
@@ -323,15 +416,14 @@ void fnewEyTBT(arma::vec& Ey,
 
 // variance
 //[[Rcpp::export]]
-List fcovSTI(const int& n,
-             const arma::vec& GEy,
-             const arma::vec& theta,
-             const arma::mat& X,
-             const int& K,
-             List& G,
-             const arma::mat& igroup,
-             const int& ngroup,
-             const bool& ccov) {
+arma::mat fcovSTI(const int& n,
+                  const arma::vec& GEy,
+                  const arma::vec& theta,
+                  const arma::mat& X,
+                  const int& K,
+                  List& G,
+                  const arma::mat& igroup,
+                  const int& ngroup) {
   List out;
   double lambda          = 1.0/(exp(-theta(0)) + 1);
   double sigma           = exp(theta(K + 1));
@@ -339,48 +431,44 @@ List fcovSTI(const int& n,
   NumericVector ZtLst    = wrap(ZtL/sigma);
   NumericVector LHhiZtLst= Rcpp::pnorm(ZtLst, 0, 1, false, true);
   NumericVector PhiZtLst = 1 - exp(LHhiZtLst);
-  double avPhiZtLst      = sum(PhiZtLst)/n;
-  arma::vec lbeta        = arma::join_cols(arma::ones(1)*lambda, theta.subvec(1, K));
-  arma::mat meffects     = as<arma::vec>(PhiZtLst)*lbeta.t();
-
-  if(ccov){
-    arma::mat Z                = arma::join_rows(GEy, X);
-    NumericVector lphiZtLst    = Rcpp::dnorm4(ZtLst, 0, 1, true);
-    NumericVector phiZtLst     = exp(lphiZtLst); 
-    NumericVector Zst1phiZtLst = ZtLst*phiZtLst;
-    NumericVector Zst2phiZtLst = ZtLst*Zst1phiZtLst;
-    NumericVector Zst3phiZtLst = ZtLst*Zst2phiZtLst;
-    NumericVector RphiPhi      = exp(lphiZtLst - LHhiZtLst);
-    
-    // cout<<sum(RphiPhi)<<endl;
-    // compute GinvSW
-    arma::mat GinvSW(n, K + 2);
-    {// Compute b and d
-      arma::vec d = as<arma::vec>(PhiZtLst); 
-      arma::vec b = as<arma::vec>(phiZtLst); 
-      
-      // G*inv(S)*W
-      arma::mat W = arma::join_rows(Z.each_col() % d, b/sigma);
-      for (int m(0); m < ngroup; ++ m) {
-        int n1              = igroup(m,0);
-        int n2              = igroup(m,1);
-        int nm              = n2 - n1 + 1;
-        arma::mat Gm        = G[m];
-        arma::mat Sm        = Gm.each_col() % d.subvec(n1, n2);
-        Sm                  = arma::eye<arma::mat>(nm, nm) - lambda*Sm;
-        GinvSW.rows(n1, n2) = Gm*arma::solve(Sm, W.rows(n1, n2));
-      }
-    }
-    // cout<<arma::accu(GinvSW)<<endl;
   
-    // Compute Sigma0 and Omega0
-    arma::mat Sigma(K + 2, K + 2), Omega(K + 2, K + 2);
-    {
+  arma::mat Z                = arma::join_rows(GEy, X);
+  NumericVector lphiZtLst    = Rcpp::dnorm4(ZtLst, 0, 1, true);
+  NumericVector phiZtLst     = exp(lphiZtLst); 
+  NumericVector Zst1phiZtLst = ZtLst*phiZtLst;
+  NumericVector Zst2phiZtLst = ZtLst*Zst1phiZtLst;
+  NumericVector Zst3phiZtLst = ZtLst*Zst2phiZtLst;
+  NumericVector RphiPhi      = exp(lphiZtLst - LHhiZtLst);
+  
+  // cout<<sum(RphiPhi)<<endl;
+  // compute GinvSW
+  arma::mat GinvSW(n, K + 2);
+  {// Compute b and d
+    arma::vec d = as<arma::vec>(PhiZtLst); 
+    arma::vec b = as<arma::vec>(phiZtLst); 
+    
+    // G*inv(S)*W
+    arma::mat W = arma::join_rows(Z.each_col() % d, b/sigma);
+    for (int m(0); m < ngroup; ++ m) {
+      int n1              = igroup(m,0);
+      int n2              = igroup(m,1);
+      int nm              = n2 - n1 + 1;
+      arma::mat Gm        = G[m];
+      arma::mat Sm        = Gm.each_col() % d.subvec(n1, n2);
+      Sm                  = arma::eye<arma::mat>(nm, nm) - lambda*Sm;
+      GinvSW.rows(n1, n2) = Gm*arma::solve(Sm, W.rows(n1, n2));
+    }
+  }
+  // cout<<arma::accu(GinvSW)<<endl;
+  
+  // Compute Sigma0 and Omega0
+  arma::mat Sigma(K + 2, K + 2), Omega(K + 2, K + 2);
+  {
     NumericVector tmp1 = Zst1phiZtLst - phiZtLst*RphiPhi - PhiZtLst; 
     NumericVector tmp2 = -phiZtLst - Zst2phiZtLst + RphiPhi*Zst1phiZtLst; 
     arma::mat Ztmp1    = arma::trans(Z.each_col()%as<arma::vec>(tmp1))/sigma;
     arma::vec Ztmp2    = Z.t()*as<arma::vec>(tmp2)/sigma;
-
+    
     Sigma.submat(0, 0, K, K)         = Ztmp1*Z;
     Omega.rows(0, K)                 = Ztmp1*GinvSW;
     
@@ -389,27 +477,174 @@ List fcovSTI(const int& n,
     Omega.row(K + 1)                 = arma::trans(as<arma::vec>(tmp2))*GinvSW;
     
     Sigma(K + 1, K + 1)              = sum(Zst1phiZtLst + Zst3phiZtLst - Zst2phiZtLst*RphiPhi - 2*PhiZtLst);
-    }
-    
-    Omega          = Omega*lambda/sigma;//cout<<Omega<<endl;cout<<Sigma<<endl;
-    // covt
-    arma::mat covt = arma::inv(Sigma + Omega);
-    covt           = -covt*Sigma*covt.t();
-    // covm
-    arma::rowvec ZavphiZtLst = arma::mean(Z.each_col()%as<arma::vec>(phiZtLst), 0);
-    arma::mat tmp1 = arma::eye<arma::mat>(K + 1, K + 1)*avPhiZtLst + lbeta*ZavphiZtLst/sigma;
-    arma::vec tmp2 = -lbeta*mean(ZtLst*phiZtLst);
-    arma::mat tmp3 = arma::join_rows(tmp1, tmp2);
-    arma::mat covm = tmp3*covt*tmp3.t();
-    covt.row(K+1) /= sigma;
-    covt.col(K+1) /= sigma;
-
-    out            = List::create(Named("meff") = meffects,
-                                  Named("covt") = covt,
-                                  Named("covm") = covm);
-  } else{
-    out            = List::create(Named("meff") = meffects);
   }
   
-  return out;
+  Omega          = Omega*lambda/sigma;//cout<<Omega<<endl;cout<<Sigma<<endl;
+  // covt
+  arma::mat covt = arma::inv(Sigma + Omega);
+  covt           = -covt*Sigma*covt.t();
+  covt.row(K+1) /= sigma;
+  covt.col(K+1) /= sigma;
+  
+  return covt;
+}
+
+//[[Rcpp::export]]
+List SImeffects(const Eigen::VectorXd& THETAT,
+                const Eigen::VectorXd& Gye,
+                const Eigen::MatrixXd& X,
+                const Eigen::ArrayXi& conti, //1 if it is continuous and 0 otherwise
+                const Eigen::ArrayXd& dis0, // X0, same size as conti
+                const Eigen::ArrayXd& dis1, // X1 same size as conti
+                const Eigen::ArrayXi& indexmarg, // index in X for which marginal effect should be computed
+                const Eigen::ArrayXi& indexX, // Index for X variables
+                const Eigen::ArrayXi& hasCont, // indicate is indeX has a contextual variable
+                const Eigen::ArrayXi& indexGX, // Index index of the contextual variable
+                const Eigen::ArrayXi& indexinmarg, // index of each indexX in indexmarg
+                const std::vector<Eigen::MatrixXd>& G,
+                const std::vector<Eigen::MatrixXd>& Gcont, // G for contextual variables
+                const Eigen::ArrayXXi& igroup,
+                const int& ngroup,
+                const int& sumn,
+                const double& tol,
+                const int& maxit,
+                const Eigen::MatrixXd& covparm,
+                const Eigen::MatrixXd& simNorm,
+                const int& boot,
+                const bool& print, 
+                const unsigned int& nthreads = 1){
+  int K(X.cols()), Kindexmarg(indexmarg.size()), 
+  KindexX(indexX.size()), nparms(THETAT.size());
+  Eigen::ArrayXXd Lmeffdir(1 + Kindexmarg, boot + 1), 
+  Lmeff2tot(KindexX, boot + 1), Lmeff2idi(KindexX, boot + 1);
+  Progress prog(boot + 1, print);
+  
+  // variance thetat
+  Eigen::MatrixXd simthetat(nparms, boot + 1);
+  simthetat.col(0) = THETAT;
+  if (boot > 0){
+    Eigen::MatrixXd Rmat(Eigen::MatrixXd::Identity(nparms, nparms));
+    Rmat(0, 0) = exp(THETAT(0)) + exp(-THETAT(0)) + 2;
+    Rmat(K + 1, K + 1) = 1/exp(THETAT(K + 1));
+    Eigen::MatrixXd covparmt(Rmat * covparm * Rmat.transpose());
+    
+    // Sumulate thatat
+    Eigen::LLT<Eigen::MatrixXd> llt(covparmt);
+    // Eigen::MatrixXd L(llt.matrixL());
+    simthetat.block(0, 1, nparms, boot) = (llt.matrixL() * simNorm).array().colwise() + THETAT.array();
+  }
+  
+#ifdef _OPENMP
+  omp_set_num_threads(nthreads);
+#endif
+#pragma omp parallel for
+  for (int booti = 0; booti < (boot + 1); ++ booti) {
+    Eigen::VectorXd thetat(simthetat.col(booti));
+    
+    double lambda(1.0/(exp(-thetat(0)) + 1));
+    double sigma(exp(thetat(K + 1)));
+    Eigen::VectorXd beta(thetat.segment(1, K));
+    Eigen::ArrayXd ZtLambda(lambda * Gye + X*beta);
+    Eigen::ArrayXd Phi = 0.5 * (1.0 + (ZtLambda / sigma).unaryExpr([](double v) {
+      return std::erf(v / std::sqrt(2.0));
+    }));
+    
+    // Direct marginal effects
+    // for Gye 
+    Eigen::ArrayXd meff1(Phi*lambda);
+    
+    // for Z
+    // direct
+    if (Kindexmarg == 0) {
+      Lmeffdir.col(booti) = meff1.mean();
+      prog.increment();
+      continue;
+    }
+    
+    Eigen::ArrayXXd meff2dir(sumn, Kindexmarg);
+    for (int k(0); k < Kindexmarg; ++ k) { 
+      if (conti(k) > 0) { // Continuous variables
+        meff2dir.col(k) = Phi*beta(indexmarg(k));
+      } else { // Discrete variables
+        Eigen::MatrixXd Xk(X);
+        Xk.col(indexmarg(k)).array() = dis0(indexmarg(k));
+        Eigen::ArrayXd ZtL0(Gye * lambda + Xk * beta); // initial
+        Xk.col(indexmarg(k)).array() = dis1(indexmarg(k));
+        Eigen::ArrayXd ZtL1(Gye * lambda + Xk * beta); // final
+        
+        Eigen::ArrayXd ye0(fLTBTEigen(ZtL0, sigma));
+        Eigen::ArrayXd ye1(fLTBTEigen(ZtL1, sigma));
+        meff2dir.col(k) = ye1 - ye0;
+      }
+    }
+    
+    Eigen::ArrayXXd meffdir(sumn, 1 + Kindexmarg);
+    meffdir << meff1, meff2dir;
+    
+    // total
+    Eigen::ArrayXXd meff2tot(sumn, KindexX);
+    if (conti.sum() > 0) { // For continuous
+      for (int m(0); m < ngroup; ++ m) {
+        int n1(igroup(m, 0)), n2(igroup(m, 1)), nm(n2 - n1 + 1);
+        for (int k(0); k < KindexX; ++ k) {
+          if (conti(indexinmarg(k)) > 0) {
+            Eigen::MatrixXd A(Eigen::MatrixXd::Identity(nm, nm) - 
+              lambda * (G[m].array().colwise() * Phi.segment(n1, nm)).matrix());
+            Eigen::MatrixXd B(Eigen::MatrixXd::Zero(nm, nm));
+            if (hasCont(k) > 0) {
+              B = beta(indexGX(k)) * Gcont[m];
+            }
+            B.diagonal().array() += beta(indexX(k));
+            B = B.array().colwise() * Phi.segment(n1, nm);
+            meff2tot.block(n1, k, nm, 1) =  (A.colPivHouseholderQr().solve(B)).array().rowwise().sum();
+          }
+        }
+      }
+    }
+    
+    for (int k(0); k < KindexX; ++ k) { // For discrete
+      if (conti(indexinmarg(k)) == 0) {
+        Eigen::ArrayXd Xb0, Xb1;
+        {
+          Eigen::MatrixXd X0(X), X1(X);
+          X0.col(indexX(k)).array() = dis0(indexX(k));
+          X1.col(indexX(k)).array() = dis1(indexX(k));
+          if (hasCont(k) > 0) {
+            for (int m(0); m < ngroup; ++ m) {
+              int n1(igroup(m, 0)), n2(igroup(m, 1)), nm(n2 - n1 + 1);
+              Eigen::MatrixXd Gcontm = Gcont[m];
+              X0.block(n1, indexGX(k), nm, 1) = Gcontm * X0.block(n1, indexX(k), nm, 1);
+              X1.block(n1, indexGX(k), nm, 1) = Gcontm * X1.block(n1, indexX(k), nm, 1);
+            }
+          }
+          Xb0 = X0 * beta;
+          Xb1 = X1 * beta;
+        }
+        
+        Eigen::ArrayXd ye0(Eigen::ArrayXd::Zero(sumn)), 
+        ye1(Eigen::ArrayXd::Zero(sumn)),
+        Gyetp(Eigen::ArrayXd::Zero(sumn));
+        fEytbitEigen(ye0, Gyetp, G, igroup, ngroup, Xb0, lambda, sigma, sumn, tol, maxit);
+        Gyetp.setZero();
+        fEytbitEigen(ye1, Gyetp, G, igroup, ngroup, Xb1, lambda, sigma, sumn, tol, maxit);
+        
+        meff2tot.col(k) = ye1 - ye0;
+      }
+    }
+    
+    // indirect
+    Eigen::ArrayXXd meff2idi(meff2tot - meff2dir(Eigen::all, indexinmarg));
+    
+    Lmeffdir.col(booti)  = meffdir.colwise().mean().transpose();
+    Lmeff2idi.col(booti) = meff2idi.colwise().mean().transpose();
+    Lmeff2tot.col(booti) = meff2tot.colwise().mean().transpose();
+    prog.increment();
+  }
+  
+  if (Kindexmarg == 0) {
+    return  List::create(Named("direct") = Lmeffdir.transpose());
+  }
+  return List::create(Named("direct")   = Lmeffdir.transpose(), 
+                      Named("indirect") = Lmeff2idi.transpose(),
+                      Named("total")    = Lmeff2tot.transpose());
 }

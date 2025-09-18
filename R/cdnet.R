@@ -9,6 +9,8 @@
 #' @param lambda The true value of the vector \eqn{\lambda}.
 #' @param Gamma The true value of the vector \eqn{\Gamma}.
 #' @param delta The true value of the vector \eqn{\delta}.
+#' @param cont.var A character vector of continuous variable names for which the marginal effects should be computed.
+#' @param bin.var A character vector of binary variable names for which the marginal effects should be computed.
 #' @param Rmax An integer indicating the theoretical upper bound of `y` (see model specification in detail).
 #' @param Rbar An \eqn{L}-vector, where \eqn{L} is the number of groups. For large `Rmax`, the cost function is assumed to be semi-parametric (i.e., nonparametric from 0 to \eqn{\bar{R}} and quadratic beyond \eqn{\bar{R}}). The \eqn{l}-th element of `Rbar` indicates \eqn{\bar{R}} for the \eqn{l}-th value of `sort(unique(group))` (see model specification in detail).
 #' @param tol The tolerance value used in the Fixed Point Iteration Method to compute the expectancy of `y`. The process stops if the \eqn{\ell_1}-distance between two consecutive \eqn{E(y)} is less than `tol`.
@@ -114,6 +116,8 @@
 #' }
 #' @importFrom Rcpp sourceCpp
 #' @importFrom stats rnorm
+#' @importFrom stats rt
+#' @importFrom utils head
 #' @export
 simcdnet   <- function(formula,
                        group,
@@ -124,15 +128,30 @@ simcdnet   <- function(formula,
                        delta,
                        Rmax,
                        Rbar,
+                       cont.var,
+                       bin.var,
                        tol        = 1e-10,
                        maxit      = 500,
                        data) {
+  distfun                <- "normal" # Student is not allowed in this version
+  stopifnot(tolower(distfun) %in% c("normal", "t"))
   if(missing(Rmax)) Rmax <- Inf
   if(is.null(Rmax)) Rmax <- Inf
   stopifnot((Rmax >= 1) & (Rmax <= Inf))
   if(!missing(Rbar)){
     stopifnot(all(Rbar <= Rmax))
     stopifnot(all(Rbar >= 1))
+  }
+  
+  if (missing(cont.var)) {
+    cont.var <- NULL
+  }
+  if (missing(bin.var)) {
+    bin.var <- NULL
+  }
+  meff.var   <- c(cont.var, bin.var)
+  if (any(duplicated(meff.var))) {
+    stop("At least one variable is declared as both continuous and binary.")
   }
   # Network
   stopifnot(inherits(Glist, c("list", "matrix", "array")))
@@ -170,13 +189,38 @@ simcdnet   <- function(formula,
   }
   if((nCa^2) != nCl) stop("The number of network specifications does not match the number of groups.")
   
+  # data
+  f.t.data  <- formula.to.data(formula = formula, contextual = FALSE, Glist = Glist, M = M, igr = igr, 
+                               data = data, type = "sim", theta0  = 0)
+  X         <- f.t.data$X
+  K         <- ncol(X)
+  cnames    <- colnames(X)
+  coln      <- c("lambda", cnames)
+  if(nCl > 1) {
+    coln    <- c(paste0(coln[1], ":", 1:nCl), coln[-1])
+  }
+  if (!all(meff.var %in% cnames)) {
+    stop("Variables indicated for the marginal effects are not included in the model.")
+  }
   
   # Parameters
-  if(!missing(parms)){
-    if(missing(lambda) & missing(Gamma) & missing(delta)) warning("parms is defined: lambda, Gamma, or delta is ignored.")
+  ndelta  <- ifelse(Rbar == Rmax, Rbar - 1, Rbar)
+  tdist   <- ifelse(distfun == "student", 1, 0)
+  if (!missing(parms)) {
+    if (!(missing(lambda) & missing(Gamma) & missing(delta))) { #nu
+      stop("parms is defined: lambda, Gamma, or delta, or nu should be missing.")
+    }
+    if (length(parms) != (nCl + K + sum(ndelta))) {
+      stop("The length of parms does not suit the model specification.")
+    }
     lambda  <- parms[1:nCl]
-    delta   <- tail(parms, sum(ifelse(Rbar == Rmax, Rbar - 1, Rbar)))
-    Gamma   <- parms[(nCl + 1):(length(parms) - sum(ifelse(Rbar == Rmax, Rbar - 1, Rbar)))]
+    Gamma   <- parms[(nCl + 1):(nCl + K)]
+    delta   <- parms[(nCl + K + 1):(nCl + K + sum(ndelta))]
+    if (tdist) {
+      nu    <- parms[(nCl + K + sum(ndelta) + 1):(nCl + K + sum(ndelta))]
+    } else {
+      nu    <- 0
+    }
   } else{
     if(missing(lambda) | missing(Gamma)) stop("lambda or Gamma is missing.")
     if(missing(delta)){
@@ -188,35 +232,44 @@ simcdnet   <- function(formula,
     }
     if(nCa == 1){
       if(!missing(Rbar)){
-        if(ifelse(Rbar == Rmax, Rbar - 1, Rbar) != length(delta)) stop("length(delta) does not match Rbar and Rmax.")
+        if(ndelta != length(delta)) stop("length(delta) does not match Rbar and Rmax.")
       } else {
         Rbar <- length(delta)
       }
     }
-    if(length(delta) != sum(ifelse(Rbar == Rmax, Rbar - 1, Rbar))) stop("length(delta) does not match Rbar and Rmax.")
+    if(length(Gamma) != K) stop("ncol(X) = ", ncol(X), " is different from length(Gamma) = ", length(Gamma))
+    if(length(delta) != sum(ndelta)) stop("length(delta) does not match Rbar and Rmax.")
     if(nCl != length(lambda)) stop("length(lambda) is not equal to the number of network specifications.")
+    if (tdist) {
+      if (missing(nu)) {
+        stop("nu is missing for the t-distribution.")
+      }
+      if(length(nu) != nCa) stop("length(nu) does not match the number of groups.")  
+    } else {
+      nu      <- 0
+    }
   }
   
-  ndelta  <- ifelse(Rbar == Rmax, Rbar - 1, Rbar)
   stopifnot(all(Rbar <= Rmax))
   if(any(Rmax > 1)) stopifnot(all(delta > 0))
   idelta  <- matrix(c(0, cumsum(ndelta)[-length(ndelta)], cumsum(ndelta) - 1), ncol = 2); idelta[ndelta == 0,] <- NA
   delta   <- c(fdelta(deltat = delta, lambda = lambda, idelta = idelta, ndelta = ndelta, nCa = nCa))
   
-  # data
-  f.t.data  <- formula.to.data(formula = formula, contextual = FALSE, Glist = Glist, M = M, igr = igr, 
-                               data = data, type = "sim", theta0  = 0)
-  X         <- f.t.data$X
-  K         <- length(Gamma)
-  if(ncol(X) != K) stop("ncol(X) = ", ncol(X), " is different from length(Gamma) = ", length(Gamma))
-  coln      <- c("lambda", colnames(X))
-  if(nCl > 1) {
-    coln    <- c(paste0(coln[1], ":", 1:nCl), coln[-1])
-  }
-  
   # xb
   xb        <- c(X %*% Gamma)
-  eps       <- rnorm(sumn, 0, 1)
+  eps       <- NULL
+  if (tdist) {
+    if (any(nu <= 2)) {
+      stop("The degree of freedom of the t-distribution should be higher than 2.")
+    }
+    lnu     <- rep(NA, sumn)
+    for (s in 1:nCa) {
+      lnu[lCa[[s]] + 1] <- nu[s]
+    }
+    eps     <- rt(sumn, df = lnu)*sqrt((lnu - 2)/lnu)
+  } else {
+    eps     <- rnorm(sumn, 0, 1)
+  }
   
   # E(y) and G*E(y)
   Ey        <- rep(0, sumn)
@@ -235,23 +288,37 @@ simcdnet   <- function(formula,
   }
   
   # marginal effects
-  Gamma2   <- Gamma
-  colnme   <- coln
-  if("(Intercept)" %in% coln){
-    Gamma2 <- Gamma[tail(coln, K) != "(Intercept)"]
-    colnme <- colnme[coln != "(Intercept)"]
+  idmcon     <- numeric()
+  idmdis     <- numeric()
+  ncont      <- length(cont.var)
+  nbin       <- length(bin.var)
+  if (ncont > 0){
+    idmcon   <- sapply(cont.var, function(xx) which(xx == cnames)) - 1
   }
-  meff     <- fmeffects(ZtLambda = Ztlamda, lambda = lambda, Gamma2 = Gamma2, lCa = lCa, nCa = nCa,
-                        delta = delta, idelta = idelta, sumn = sumn, Rbar = Rbar, R = Rmax)
-  # Rmax     <- meff$Rmax
-  imeff    <- meff$imeff; colnames(imeff) <- colnme
+  if (nbin > 0){
+    idmdis   <- sapply(bin.var, function(xx) which(xx == cnames)) - 1
+  }
+  idmarg     <- c(idmcon, idmdis)
+  conti      <- c(rep(1, ncont), rep(0, nbin))
+  Order      <- order(idmarg)
+  idmarg     <- idmarg[Order]
+  conti      <- conti[Order]
   
+  dis0       <- rep(0, K)
+  dis1       <- rep(1, K)
+  
+  imeff      <- fmeffects(Gye = as.matrix(GEy), X = X, lambda = lambda, beta = Gamma,
+                          conti = conti, dis0 = dis0, dis1 = dis1, indexmarg = idmarg, 
+                          lCa = lCa, nCa = nCa, delta = delta, idelta = idelta, n = na, 
+                          sumn = sumn, Rbar = Rbar, R = Rmax)
+  colnames(imeff) <- c(head(coln, nCl), cnames[idmarg + 1])
+  ameff           <- apply(imeff, 2, mean)
   
   list("yst"       = yst,
        "y"         = y,
        "Ey"        = Ey,
        "GEy"       = GEy,
-       "meff"      = list(ameff = apply(imeff, 2, mean), imeff = imeff),
+       "meff"      = list(ameff = ameff, imeff = imeff),
        "Rmax"      = Rmax,
        "iteration" = c(t))
 }
@@ -502,7 +569,8 @@ cdnet    <- function(formula,
   if(!is.null(thetat)){
     if((ncol(X) + nCl) != length(thetat)) stop("ncol(X) != length(Gamma).")
   }
-  coln     <- c("lambda", colnames(X))
+  cnames   <- colnames(X)
+  coln     <- c("lambda", cnames)
   if(nCl > 1) {
     coln   <- c(paste0(coln[1], ":", 1:nCl), coln[-1])
   }
@@ -691,31 +759,16 @@ cdnet    <- function(formula,
   if (npl.maxit == t) {
     warning("NPL: The maximum number of iterations has been reached.")
   }
-  # covariance and ME
-  Gamma2   <- Gam
-  colnme   <- coln
-  ixWi     <- 0:(K - 1)
-  if("(Intercept)" %in% coln){
-    Gamma2 <- Gam[tail(coln, K) != "(Intercept)"]
-    colnme <- colnme[coln != "(Intercept)"]
-    ixWi   <- ixWi[tail(coln, K) != "(Intercept)"]
-  }
   
-  tmp      <- fcovCDI(theta = theta, Gamma2 = Gamma2, Gye = GEyt, X = X, ixWi = ixWi, G = Glist, lCa = lCa, nCa = nCa, 
-                      igroup = igr, ngroup = M, K = K, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta,
-                      Rbar = Rbar, R = Rmax, S = npl.S, ccov = cov)
-  # Marginal effects
-  imeff    <- tmp$imeff; colnames(imeff) <- colnme
-  meff     <- list(ameff = apply(imeff, 2, mean), imeff = imeff)
-  
-  # Covariances
-  covt     <- tmp$covt
-  covm     <- tmp$covm
-  if(cov){
-    colnames(covt)  <- namtheta
-    rownames(covt)  <- namtheta
-    colnames(covm)  <- colnme
-    rownames(covm)  <- colnme
+  # covariance 
+  covt     <- NULL
+  if (cov) {
+    covt   <- fcovCDI(theta = theta, Gye = GEyt, X = X, G = Glist, lCa = lCa, nCa = nCa, 
+                      igroup = igr, ngroup = M, K = K, n = na, sumn = sumn, idelta = idelta, 
+                      ndelta = ndelta, Rbar = Rbar, R = Rmax, S = npl.S)
+    
+    colnames(covt) <- namtheta
+    rownames(covt) <- namtheta
   }
   
   AIC                  <- 2*length(theta) - 2*llht
@@ -737,10 +790,9 @@ cdnet    <- function(formula,
   
   out                  <- list("info"       = INFO,
                                "estimate"   = list(parms = theta, lambda =  lbda, Gamma = Gam, delta = Del),
-                               "meff"       = meff,
                                "Ey"         = Eyt, 
                                "GEy"        = GEyt,
-                               "cov"        = list(parms = covt, ameff = covm),
+                               "cov"        = covt,
                                "details"    = steps)
   class(out)           <- "cdnet"
   out
@@ -766,7 +818,7 @@ cdnet    <- function(formula,
                             ...) {
   stopifnot(class(object) == "cdnet")
   out           <- c(object, list("..." = ...))
-  if(is.null(object$cov$parms)){
+  if(is.null(object$cov)){
     env.formula <- environment(object$info$formula)
     Rbar        <- object$info$Rbar
     Rmax        <- object$info$Rmax
@@ -829,25 +881,12 @@ cdnet    <- function(formula,
       paste0("deltabar:", x_)
     })))
     
-    Gamma2      <- Gamma
-    ixWi        <- 0:(Kz - 1)
-    if("(Intercept)" %in% coln){
-      Gamma2    <- Gamma[tail(coln, Kz) != "(Intercept)"]
-      ixWi      <- ixWi[tail(coln, Kz) != "(Intercept)"]
-    }
-    tmp         <- fcovCDI(theta = theta, Gamma2 = Gamma2, Gye = GEyt, X = X, ixWi = ixWi, G = Glist, lCa = lCa, nCa = nCa, 
-                           igroup = igr, ngroup = M, K = Kz, n = na, sumn = sumn, idelta = idelta, ndelta = ndelta,
-                           Rbar = Rbar, R = Rmax, S = npl.S, ccov = TRUE)
-    
-    # Covariances
-    covt        <- tmp$covt
-    covm        <- tmp$covm
+    covt        <- fcovCDI(theta = theta, Gye = GEyt, X = X, G = Glist, lCa = lCa, nCa = nCa, 
+                           igroup = igr, ngroup = M, K = Kz, n = na, sumn = sumn, idelta = idelta, 
+                           ndelta = ndelta, Rbar = Rbar, R = Rmax, S = npl.S)
     colnames(covt)  <- namtheta
     rownames(covt)  <- namtheta
-    colnames(covm)  <- names(out$meff$ameff)
-    rownames(covm)  <- names(out$meff$ameff)
-    
-    out$cov         <- list(parms = covt, ameff = covm)
+    out$cov         <- covt
   }
   class(out) <- "summary.cdnet"
   out
@@ -875,9 +914,7 @@ cdnet    <- function(formula,
   
   coef                 <- c(x$estimate$lambda, x$estimate$Gamma)
   K                    <- length(coef)
-  meff                 <- x$meff$ameff
-  std                  <- sqrt(head(diag(x$cov$parms), K))
-  std.meff             <- sqrt(diag(x$cov$ameff))
+  std                  <- sqrt(head(diag(x$cov), K))
   delta                <- x$estimate$delta
   
   llh                  <- x$info$log.like
@@ -886,11 +923,6 @@ cdnet    <- function(formula,
   out_print            <- tmp$out_print
   out                  <- tmp$out
   out_print            <- c(list(out_print), x[-(1:7)], list(...))
-  
-  tmp.meff             <- fcoefficients(meff, std.meff)
-  out_print.meff       <- tmp.meff$out_print
-  out.meff             <- tmp.meff$out
-  out_print.meff       <- c(list(out_print.meff), x[-(1:7)], list(...))
   
   cat("Count data Model with Social Interactions\n\n")
   cat("Call:\n")
@@ -902,9 +934,6 @@ cdnet    <- function(formula,
   
   cat("Coefficients:\n")
   do.call("print", out_print)
-  
-  cat("\nMarginal Effects:\n")
-  do.call("print", out_print.meff)
   cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
   
   cat("Cost function -- Number of groups: ", nCa, "\n", sep = "")
@@ -930,6 +959,7 @@ cdnet    <- function(formula,
   
   cat("log pseudo-likelihood: ", llh, sep = "", "\n")
   cat("AIC: ", AIC, " -- BIC: ", BIC, sep = "", "\n")
+  cat("The summary method no longer displays `Marginal Effects`. They can now be computed using the `meffects` method.\n")
   
   invisible(x)
 }
@@ -969,7 +999,7 @@ simcdEy <- function(object,
                     maxit        = 500,
                     S            = 1e3){
   stopifnot(inherits(object, c("cdnet", "summary.cdnet")))
-  covparms    <- object$cov$parms
+  covparms    <- object$cov
   if(is.null(covparms)) stop("`object` does not include a covariance matrix")
   env.formula <- environment(object$info$formula)
   Rbar        <- object$info$Rbar
@@ -996,7 +1026,7 @@ simcdEy <- function(object,
   idelta      <- matrix(c(0, cumsum(ndelta)[-length(ndelta)], cumsum(ndelta) - 1), ncol = 2); idelta[ndelta == 0,] <- NA
   delta       <- c(fdelta(deltat = delta, lambda = lambda, idelta = idelta, ndelta = ndelta, nCa = nCa))
   
-
+  
   
   # Network
   stopifnot(inherits(Glist, c("list", "matrix", "array")))
@@ -1031,8 +1061,8 @@ simcdEy <- function(object,
   GEy         <- matrix(0, sumn, nCl)
   xb          <- c(X %*% Gamma)
   t           <- fye(ye = Ey, Gye = GEy, G = Glist, lCa = lCa, nCa = nCa, igroup = igr, ngroup = M, 
-                   psi = xb, lambda = lambda, delta = delta, idelta = idelta, n = na, sumn = sumn,
-                   Rbar = Rbar, R = Rmax, tol = tol, maxit = maxit)
+                     psi = xb, lambda = lambda, delta = delta, idelta = idelta, n = na, sumn = sumn,
+                     Rbar = Rbar, R = Rmax, tol = tol, maxit = maxit)
   if(t >= maxit) warning("Point-fixed: The maximum number of iterations has been reached.")
   
   dEy         <- fcddEy(theta = theta, Gye = GEy, X = X, psi = xb, G = Glist, lCa = lCa, nCa = nCa, igroup = igr, 

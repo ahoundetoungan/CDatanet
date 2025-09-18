@@ -7,6 +7,8 @@
 #' @param Glist The network matrix. For networks consisting of multiple subnets, `Glist` can be a list 
 #' of subnets with the `m`-th element being an `ns*ns` adjacency matrix, where `ns` is the number of nodes 
 #' in the `m`-th subnet.
+#' @param cont.var A character vector of continuous variable names for which the marginal effects should be computed.
+#' @param bin.var A character vector of binary variable names for which the marginal effects should be computed.
 #' @param theta a vector defining the true value of \eqn{\theta = (\lambda, \Gamma, \sigma)} (see the model specification in the details).
 #' @param tol the tolerance value used in the fixed-point iteration method to compute `y`. The process stops 
 #' if the \eqn{\ell_1}-distance between two consecutive values of `y` is less than `tol`.
@@ -99,10 +101,31 @@
 simsart   <- function(formula,
                       Glist,
                       theta,
+                      cont.var,
+                      bin.var,
                       tol   = 1e-15,
                       maxit = 500,
                       cinfo = TRUE,
                       data) {
+  if (missing(cont.var)) {
+    cont.var <- NULL
+  } else if (cinfo) {
+    stop("Marginal effects are not provided for the complete information game in this version. 
+         You can use simulations to obtain them instead. 
+         Feel free to contribute to the package by adding marginal effects for the complete information model.")
+  }
+  if (missing(bin.var)) {
+    bin.var <- NULL
+  }else if (cinfo) {
+    stop("Marginal effects are not provided for the complete information game in this version. 
+         You can use simulations to obtain them instead. 
+         Feel free to contribute to the package by adding marginal effects for the complete information model.")
+  }
+  meff.var   <- c(cont.var, bin.var)
+  if (any(duplicated(meff.var))) {
+    stop("At least one variable is declared as both continuous and binary.")
+  }
+  
   if (!is.list(Glist)) {
     Glist  <- list(Glist)
   }
@@ -115,6 +138,7 @@ simsart   <- function(formula,
   
   f.t.data <- formula.to.data(formula, FALSE, Glist, M, igr, data, "sim", 0)
   X        <- f.t.data$X
+  cnames   <- colnames(X)
   
   K        <- length(theta)
   if(K != (ncol(X) + 2)) {
@@ -150,21 +174,41 @@ simsart   <- function(formula,
   }
   
   # marginal effects
-  coln      <- c("lambda", colnames(X))
-  thetaWI   <- head(theta, K - 1)
-  if("(Intercept)" %in% coln) {
-    thetaWI <- thetaWI[-2]
-    coln    <- coln[-2]
+  imeff      <- NULL
+  ameff      <- NULL
+  if (!cinfo) {
+    idmcon     <- numeric()
+    idmdis     <- numeric()
+    ncont      <- length(cont.var)
+    nbin       <- length(bin.var)
+    if (ncont > 0){
+      idmcon   <- sapply(cont.var, function(xx) which(xx == cnames)) - 1
+    }
+    if (nbin > 0){
+      idmdis   <- sapply(bin.var, function(xx) which(xx == cnames)) - 1
+    }
+    idmarg     <- c(idmcon, idmdis)
+    conti      <- c(rep(1, ncont), rep(0, nbin))
+    Order      <- order(idmarg)
+    idmarg     <- idmarg[Order]
+    conti      <- conti[Order]
+    
+    dis0       <- rep(0, ncol(X))
+    dis1       <- rep(1, ncol(X))
+    
+    imeff      <- fSImeffects(Gye = GEy, X = X, lambda = lambda, sigma = sigma, beta = b,
+                              conti = conti, dis0 = dis0, dis1 = dis1, indexmarg = idmarg, 
+                              sumn = n)
+    colnames(imeff) <- c("lambda", cnames[idmarg + 1])
+    ameff           <- apply(imeff, 2, mean)
   }
-  imeff     <- pnorm(Ztl/sigma) %*% t(thetaWI); colnames(imeff) <- coln
-  
   
   list("yst"       = yst,
        "y"         = y,
        "Ey"        = Ey,
        "Gy"        = Gy,
        "GEy"       = GEy,
-       "meff"      = list(ameff = apply(imeff, 2, mean), imeff = imeff),
+       "meff"      = list(ameff = ameff, imeff = imeff),
        "iteration" = t)
 }
 
@@ -314,6 +358,7 @@ sart <- function(formula,
     stop("fastlbfgs is only implemented for the rational expectation model in this version. Use another solver.")
   }
   env.formula <- environment(formula)
+  
   # controls
   npl.print   <- npl.ctr$print
   npl.tol     <- npl.ctr$tol
@@ -368,7 +413,7 @@ sart <- function(formula,
   GEyt       <- NULL
   theta      <- NULL
   Ztlambda   <- NULL
-  
+  covt       <- NULL
   
   if(cinfo){
     G2list     <- lapply(1:M, function(w) Glist[[w]][idposlis[[w]], idposlis[[w]]])
@@ -401,9 +446,11 @@ sart <- function(formula,
     resTO    <- do.call(get(optimizer), ctr)
     theta    <- resTO[[par1]]
     
-    tmp      <- fcovSTC(theta = theta, X = X, G2 = G2list, I = Ilist, W = Wlist, K =  K, n = n, 
+    if (cov) {
+      covt   <- fcovSTC(theta = theta, X = X, G2 = G2list, I = Ilist, W = Wlist, K =  K, n = n, 
                         y = y, Gy = Gy, indzero = indzero, indpos = indpos, igroup = igr, 
-                        ngroup = M, ccov = cov)
+                        ngroup = M)
+    }
     
     theta    <- c(1/(1 + exp(-theta[1])), theta[2:(K + 1)], exp(theta[K + 2]))
     llh      <- -resTO[[like]]
@@ -493,32 +540,17 @@ sart <- function(formula,
     if (npl.maxit == t) {
       warning("The maximum number of iterations of the NPL algorithm has been reached.")
     }
-    tmp        <- fcovSTI(n = n, GEy = GEyt, theta = thetat, X = X, K = K, G = Glist,
-                          igroup = igr, ngroup = M, ccov = cov)
+    if (cov) {
+      covt   <- fcovSTI(n = n, GEy = GEyt, theta = thetat, X = X, K = K, G = Glist,
+                        igroup = igr, ngroup = M)
+    }
   }
   
   names(theta) <- c(coln, "sigma")
   
-  # Marginal effects
-  imeff        <- tmp$meff; colnames(imeff) <- coln
-  indexWI      <- 1:(K + 1)
-  if("(Intercept)" %in% coln){
-    indexWI    <- indexWI[coln != "(Intercept)"]
-  }
-  imeff        <- imeff[, indexWI, drop = FALSE]
-  meff         <- list(ameff = apply(imeff, 2, mean), imeff = imeff)
-  
-  # Covariances
-  covm         <- tmp$covm
-  covt         <- tmp$covt
-
   if(cov) {
-    covm            <- covm[indexWI, indexWI]
     colnames(covt)  <- c(coln, "sigma")
     rownames(covt)  <- c(coln, "sigma")
-    colnames(covm)  <- coln[indexWI]
-    rownames(covm)  <- coln[indexWI]
-
   }
   
   INFO              <- list("M"          = M,
@@ -532,10 +564,9 @@ sart <- function(formula,
   
   out               <- list("info"       = INFO,
                             "estimate"   = theta,
-                            "meff"       = meff,
                             "Ey"         = Eyt, 
                             "GEy"        = GEyt,
-                            "cov"        = list(parms = covt, ameff = covm),
+                            "cov"        = covt,
                             "details"    = resTO)
   class(out)        <- "sart"
   out
@@ -558,7 +589,7 @@ sart <- function(formula,
                            ...) {
   stopifnot(class(object) == "sart")
   out           <- c(object, list("..." = ...)) 
-  if(is.null(object$cov$parms)){
+  if(is.null(object$cov)){
     env.formula <- environment(object$info$formula)
     thetat      <- object$estimate
     thetat      <- c(log(thetat[1]/(1 - thetat[1])), thetat[-c(1, length(thetat))], log(thetat[length(thetat)]))
@@ -578,7 +609,7 @@ sart <- function(formula,
     X        <- f.t.data$X
     K        <- ncol(X)
     coln     <- c("lambda", colnames(X))
-    tmp      <- NULL
+    covt     <- NULL
     if(is.null(GEyt)){
       indpos     <- (y > 1e-323)
       indzero    <- !indpos
@@ -592,33 +623,15 @@ sart <- function(formula,
       I2list     <- lapply(npos, diag)
       Ilist      <- lapply(nvec, diag)  
       Wlist      <- lapply(1:M, function(x) (indpos[(igr[x,1]:igr[x,2]) + 1] %*% t(indpos[(igr[x,1]:igr[x,2]) + 1]))*Glist[[x]])
-      tmp        <- fcovSTC(theta = thetat, X = X, G2 = G2list, I = Ilist, W = Wlist, K =  K, n = n, 
+      covt       <- fcovSTC(theta = thetat, X = X, G2 = G2list, I = Ilist, W = Wlist, K =  K, n = n, 
                             y = y, Gy = Gy, indzero = indzero, indpos = indpos, igroup = igr, 
-                            ngroup = M, ccov = TRUE)
+                            ngroup = M)
     } else {
-      tmp        <- fcovSTI(n = n, GEy = GEyt, theta = thetat, X = X, K = K, G = Glist,
-                        igroup = igr, ngroup = M, ccov = TRUE)
+      covt       <- fcovSTI(n = n, GEy = GEyt, theta = thetat, X = X, K = K, G = Glist,
+                            igroup = igr, ngroup = M)
     }
-    
-    # Marginal effects
-    imeff        <- tmp$meff; colnames(imeff) <- coln
-    indexWI      <- 1:(K + 1)
-    if("(Intercept)" %in% coln){
-      indexWI    <- indexWI[coln != "(Intercept)"]
-    }
-    imeff        <- imeff[, indexWI, drop = FALSE]
-    meff         <- list(ameff = apply(imeff, 2, mean), imeff = imeff)
-    
-    # Covariances
-    covm         <- tmp$covm
-    covt         <- tmp$covt
-    
-    covm            <- covm[indexWI, indexWI]
     colnames(covt)  <- c(coln, "sigma")
-    rownames(covt)  <- c(coln, "sigma")
-    colnames(covm)  <- coln[indexWI]
-    rownames(covm)  <- coln[indexWI]
-    out$cov         <- list(parms = covt, ameff = covm)
+    out$cov         <- covt
   }
   class(out)    <- "summary.sart"
   out
@@ -638,9 +651,7 @@ sart <- function(formula,
   formula              <- x$info$formula
   K                    <- length(estimate)
   coef                 <- estimate[-K]
-  meff                 <- x$meff$ameff
-  std                  <- sqrt(diag(x$cov$parms)[-K])
-  std.meff             <- sqrt(diag(x$cov$ameff))
+  std                  <- sqrt(diag(x$cov)[-K])
   sigma                <- estimate[K]
   llh                  <- x$info$log.like
   censored             <- x$info$censured
@@ -651,13 +662,6 @@ sart <- function(formula,
   out_print            <- tmp$out_print
   out                  <- tmp$out
   out_print            <- c(list(out_print), x[-(1:7)], list(...))
-  
-  
-  tmp.meff             <- fcoefficients(meff, std.meff)
-  out_print.meff       <- tmp.meff$out_print
-  out.meff             <- tmp.meff$out
-  out_print.meff       <- c(list(out_print.meff), x[-(1:7)], list(...))
-  
   
   nfr                  <- x$info$nlinks
   cat("sart Model", ifelse(RE, "with Rational Expectation", ""), "\n\n")
@@ -680,12 +684,12 @@ sart <- function(formula,
   cat("Coefficients:\n")
   do.call("print", out_print)
   
-  cat("\nMarginal Effects:\n")
-  do.call("print", out_print.meff)
   cat("---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
   cat("sigma: ", sigma, "\n")
   cat("log likelihood: ", llh, "\n")
-  
+  if (RE){
+    cat("The summary method no longer displays `Marginal Effects`. They can now be computed using the `meffects` method.\n")
+  }
   invisible(x)
 }
 

@@ -1,6 +1,13 @@
-// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::depends(RcppArmadillo, RcppEigen, RcppNumerical)]]
 #include <RcppArmadillo.h>
+//#define NDEBUG
+#include <RcppNumerical.h>
+#include <RcppEigen.h>
 
+typedef Eigen::Map<Eigen::MatrixXd> MapMatr;
+typedef Eigen::Map<Eigen::VectorXd> MapVect;
+
+using namespace Numer;
 using namespace Rcpp;
 using namespace arma;
 using namespace std;
@@ -39,6 +46,7 @@ int fyTobit(arma::vec& yst,
   if (dist > tol && t < maxit) goto computeyst;
   return t; 
 }
+
 
 // [[Rcpp::export]]
 double foptimTobit(const arma::vec& theta,
@@ -92,7 +100,7 @@ double foptimTobit(const arma::vec& theta,
   
   
   double llh        = sum(Rcpp::pnorm(tzcpp, 0, sigma, false, true)) -
-   npos*(0.5*log(2*acos(-1)) + log(sigma)) + logdetA2(0) - 0.5*sum(pow(tmp.elem(idpos)/sigma, 2));
+    npos*(0.5*log(2*acos(-1)) + log(sigma)) + logdetA2(0) - 0.5*sum(pow(tmp.elem(idpos)/sigma, 2));
   if(llh < -1e293) {
     llh           = -1e293;
   }
@@ -154,7 +162,7 @@ arma::vec fgradvecTobit(arma::vec& theta,
 
 
 //[[Rcpp::export]]
-List fcovSTC(const arma::vec& theta,
+arma::mat fcovSTC(const arma::vec& theta,
                   const arma::mat& X,
                   List& G2,
                   List& I,
@@ -166,56 +174,34 @@ List fcovSTC(const arma::vec& theta,
                   const arma::vec& indzero,
                   const arma::vec& indpos,
                   const arma::mat& igroup,
-                  const int& ngroup,
-                  const bool& ccov) {
+                  const int& ngroup) {
   List out;
   double lambda        = 1.0/(exp(-theta(0)) + 1);
   double sigma         = exp(theta(K + 1));
   arma::vec ZtL        = lambda*Gy + X*theta.subvec(1, K); 
   NumericVector ZtLst  = wrap(ZtL/sigma);
   NumericVector PhiZtLst(Rcpp::pnorm(ZtLst, 0, 1, true, false));
-  double avPhiZtLst    = sum(PhiZtLst)/n;
-  arma::vec lbeta      = arma::join_cols(arma::ones(1)*lambda, theta.subvec(1, K));
-  arma::mat meffects   = as<arma::vec>(PhiZtLst)*lbeta.t();
   
-  if(ccov) {
-    arma::vec tmp        = y - ZtL;
-    NumericVector tmpcpp = wrap(tmp);
-    NumericVector irmcpp = exp(Rcpp::dnorm(tmpcpp/sigma, 0, 1, true) - Rcpp::pnorm(tmpcpp/sigma, 0, 1, true, true));
-    arma::vec     irm    = as<arma::vec>(irmcpp);
-    
-    arma::vec rvec(n);
-    
-    for (int i(0); i < ngroup; ++ i) {
-      arma::mat Wi   = W[i];
-      arma::mat Ii   = I[i];
-      arma::mat Rmat = arma::inv(Ii - lambda*Wi)*Wi;
-      rvec.subvec(igroup(i,0), igroup(i,1)) = arma::diagvec(Rmat);
-    }
-    
-    arma::mat qvec(n, K + 2);
-    
-    qvec.col(0)      = ((-indzero%(irm)/sigma + indpos%tmp/pow(sigma, 2))%Gy - rvec);
-    qvec.cols(1, K)  = arma::repmat(-indzero%irm/sigma + indpos%tmp/pow(sigma, 2), 1, K)%X;
-    qvec.col(K + 1)  = (indzero%irm%ZtL/pow(sigma, 2) - indpos%(1 - pow(tmp/sigma, 2))/sigma);
-    arma::mat covt   = arma::inv(arma::cov(qvec))/n;
-    
-    // cov marginal effects
-    NumericVector phiZtLst   = Rcpp::dnorm4(ZtLst, 0, 1, false);
-    arma::mat Z              = arma::join_rows(Gy, X);
-    arma::rowvec ZavphiZtLst = arma::mean(Z.each_col()%as<arma::vec>(phiZtLst), 0);
-    
-    arma::mat tmp1 = arma::eye<arma::mat>(K + 1, K + 1)*avPhiZtLst + lbeta*ZavphiZtLst/sigma;
-    arma::vec tmp2 = -lbeta*mean(ZtLst*phiZtLst)/sigma;
-    arma::mat tmp3 = arma::join_rows(tmp1, tmp2);
-    arma::mat covm = tmp3*covt*tmp3.t();
-    
-    out = List::create(Named("meff")  = meffects,
-                       Named("covt")  = covt,
-                       Named("covm") = covm);
-  } else {
-    out = List::create(Named("meff") = meffects);
+  arma::vec tmp        = y - ZtL;
+  NumericVector tmpcpp = wrap(tmp);
+  NumericVector irmcpp = exp(Rcpp::dnorm(tmpcpp/sigma, 0, 1, true) - Rcpp::pnorm(tmpcpp/sigma, 0, 1, true, true));
+  arma::vec     irm    = as<arma::vec>(irmcpp);
+  
+  arma::vec rvec(n);
+  
+  for (int i(0); i < ngroup; ++ i) {
+    arma::mat Wi   = W[i];
+    arma::mat Ii   = I[i];
+    arma::mat Rmat = arma::inv(Ii - lambda*Wi)*Wi;
+    rvec.subvec(igroup(i,0), igroup(i,1)) = arma::diagvec(Rmat);
   }
-
-  return out;
+  
+  arma::mat qvec(n, K + 2);
+  
+  qvec.col(0)      = ((-indzero%(irm)/sigma + indpos%tmp/pow(sigma, 2))%Gy - rvec);
+  qvec.cols(1, K)  = arma::repmat(-indzero%irm/sigma + indpos%tmp/pow(sigma, 2), 1, K)%X;
+  qvec.col(K + 1)  = (indzero%irm%ZtL/pow(sigma, 2) - indpos%(1 - pow(tmp/sigma, 2))/sigma);
+  arma::mat covt   = arma::inv(arma::cov(qvec))/n;
+  
+  return covt;
 }

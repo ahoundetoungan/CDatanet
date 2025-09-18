@@ -41,8 +41,16 @@ fcddlambdat <- function(lambda, nCa, a, b) {
     .Call(`_CDatanet_fcddlambdat`, lambda, nCa, a, b)
 }
 
+fcddlambdatEigen <- function(lambdat, nCa, a, b) {
+    .Call(`_CDatanet_fcddlambdatEigen`, lambdat, nCa, a, b)
+}
+
 fcdlambda <- function(lambdat, nCa, a, b) {
     .Call(`_CDatanet_fcdlambda`, lambdat, nCa, a, b)
+}
+
+fcdlambdaEigen <- function(lambdat, nCa, a, b) {
+    .Call(`_CDatanet_fcdlambdaEigen`, lambdat, nCa, a, b)
 }
 
 fcddlambda <- function(lambda, nCa, a, b) {
@@ -53,12 +61,20 @@ fL <- function(ZtLambda, lCa, nCa, delta, idelta, Rbar, R, n, sumn) {
     .Call(`_CDatanet_fL`, ZtLambda, lCa, nCa, delta, idelta, Rbar, R, n, sumn)
 }
 
+fLEigen <- function(ZtLambda, lCa, nCa, delta, idelta, Rbar, R, n, sumn) {
+    .Call(`_CDatanet_fLEigen`, ZtLambda, lCa, nCa, delta, idelta, Rbar, R, n, sumn)
+}
+
 fLncond <- function(ZtLambda, lCa, nCa, delta, idelta, Rbar, R, n, sumn, nsimu) {
     .Call(`_CDatanet_fLncond`, ZtLambda, lCa, nCa, delta, idelta, Rbar, R, n, sumn, nsimu)
 }
 
 fye <- function(ye, Gye, G, lCa, nCa, igroup, ngroup, psi, lambda, delta, idelta, n, sumn, Rbar, R, tol, maxit) {
     .Call(`_CDatanet_fye`, ye, Gye, G, lCa, nCa, igroup, ngroup, psi, lambda, delta, idelta, n, sumn, Rbar, R, tol, maxit)
+}
+
+fyeEigen <- function(ye, Gye, G, lCa, nCa, igroup, ngroup, psi, lambda, delta, idelta, n, sumn, Rbar, R, tol, maxit) {
+    .Call(`_CDatanet_fyeEigen`, ye, Gye, G, lCa, nCa, igroup, ngroup, psi, lambda, delta, idelta, n, sumn, Rbar, R, tol, maxit)
 }
 
 fyencond <- function(ye, Gye, G, lCa, nCa, igroup, ngroup, psi, lambda, delta, idelta, n, sumn, nsimu, Rbar, R, tol, maxit) {
@@ -69,12 +85,16 @@ fy <- function(yst, maxyst, lCa, nCa, delta, idelta, n, sumn, Rbar, R) {
     .Call(`_CDatanet_fy`, yst, maxyst, lCa, nCa, delta, idelta, n, sumn, Rbar, R)
 }
 
-fmeffects <- function(ZtLambda, lambda, Gamma2, lCa, nCa, delta, idelta, sumn, Rbar, R) {
-    .Call(`_CDatanet_fmeffects`, ZtLambda, lambda, Gamma2, lCa, nCa, delta, idelta, sumn, Rbar, R)
+fmeffects <- function(Gye, X, lambda, beta, conti, dis0, dis1, indexmarg, lCa, nCa, delta, idelta, n, sumn, Rbar, R) {
+    .Call(`_CDatanet_fmeffects`, Gye, X, lambda, beta, conti, dis0, dis1, indexmarg, lCa, nCa, delta, idelta, n, sumn, Rbar, R)
 }
 
 fdelta <- function(deltat, lambda, idelta, ndelta, nCa) {
     .Call(`_CDatanet_fdelta`, deltat, lambda, idelta, ndelta, nCa)
+}
+
+fdeltaEigen <- function(deltat, lambda, idelta, ndelta, nCa) {
+    .Call(`_CDatanet_fdeltaEigen`, deltat, lambda, idelta, ndelta, nCa)
 }
 
 foptimREM <- function(ye, Gye, theta, lb_sl, ub_sl, X, G, lCa, nCa, igroup, ngroup, K, n, sumn, Rbar, R, idelta, ndelta, y, maxy, tol = 1e-13, maxit = 1e3L) {
@@ -101,12 +121,16 @@ flogintphi <- function(Mean, lCa, nCa, a, b, sumn, S, simu) {
     .Call(`_CDatanet_flogintphi`, Mean, lCa, nCa, a, b, sumn, S, simu)
 }
 
-fcovCDI <- function(theta, Gamma2, Gye, X, ixWi, G, lCa, nCa, igroup, ngroup, K, n, sumn, idelta, ndelta, Rbar, R, S, ccov) {
-    .Call(`_CDatanet_fcovCDI`, theta, Gamma2, Gye, X, ixWi, G, lCa, nCa, igroup, ngroup, K, n, sumn, idelta, ndelta, Rbar, R, S, ccov)
+fcovCDI <- function(theta, Gye, X, G, lCa, nCa, igroup, ngroup, K, n, sumn, idelta, ndelta, Rbar, R, S) {
+    .Call(`_CDatanet_fcovCDI`, theta, Gye, X, G, lCa, nCa, igroup, ngroup, K, n, sumn, idelta, ndelta, Rbar, R, S)
 }
 
 fcddEy <- function(theta, Gye, X, psi, G, lCa, nCa, igroup, ngroup, K, n, sumn, idelta, ndelta, Rbar, R, S) {
     .Call(`_CDatanet_fcddEy`, theta, Gye, X, psi, G, lCa, nCa, igroup, ngroup, K, n, sumn, idelta, ndelta, Rbar, R, S)
+}
+
+cdmeffects <- function(THETAT, Gye, X, conti, dis0, dis1, indexmarg, indexX, hasCont, indexGX, indexinmarg, G, Gcont, lCa, nCa, igroup, ngroup, idelta, ndelta, sumn, Rbar, lb_sl, ub_sl, n, R, tol, maxit, covparm, simNorm, boot, print, nthreads = 1L) {
+    .Call(`_CDatanet_cdmeffects`, THETAT, Gye, X, conti, dis0, dis1, indexmarg, indexX, hasCont, indexGX, indexinmarg, G, Gcont, lCa, nCa, igroup, ngroup, idelta, ndelta, sumn, Rbar, lb_sl, ub_sl, n, R, tol, maxit, covparm, simNorm, boot, print, nthreads)
 }
 
 fdummies <- function(out, limit, M, n) {
@@ -249,12 +273,20 @@ fgradvecTobit <- function(theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpo
     .Call(`_CDatanet_fgradvecTobit`, theta, X, logdetA2, alphatilde, G2, I2, K, y, Gy, idpos, idzero, ngroup, I, W, n, indzero, indpos, igroup)
 }
 
-fcovSTC <- function(theta, X, G2, I, W, K, n, y, Gy, indzero, indpos, igroup, ngroup, ccov) {
-    .Call(`_CDatanet_fcovSTC`, theta, X, G2, I, W, K, n, y, Gy, indzero, indpos, igroup, ngroup, ccov)
+fcovSTC <- function(theta, X, G2, I, W, K, n, y, Gy, indzero, indpos, igroup, ngroup) {
+    .Call(`_CDatanet_fcovSTC`, theta, X, G2, I, W, K, n, y, Gy, indzero, indpos, igroup, ngroup)
 }
 
 fEytbit <- function(Ey, GEy, G, igroup, ngroup, psi, lambda, sigma, n, tol, maxit) {
     .Call(`_CDatanet_fEytbit`, Ey, GEy, G, igroup, ngroup, psi, lambda, sigma, n, tol, maxit)
+}
+
+fEytbitEigen <- function(Ey, GEy, G, igroup, ngroup, psi, lambda, sigma, n, tol, maxit) {
+    .Call(`_CDatanet_fEytbitEigen`, Ey, GEy, G, igroup, ngroup, psi, lambda, sigma, n, tol, maxit)
+}
+
+fSImeffects <- function(Gye, X, lambda, beta, sigma, conti, dis0, dis1, indexmarg, sumn) {
+    .Call(`_CDatanet_fSImeffects`, Gye, X, lambda, beta, sigma, conti, dis0, dis1, indexmarg, sumn)
 }
 
 foptimRE_TBT <- function(Ey, GEy, theta, yidpos, X, G, igroup, ngroup, npos, idpos, idzero, K, n, tol = 1e-13, maxit = 1e3L) {
@@ -277,7 +309,11 @@ fnewEyTBT <- function(Ey, GEy, G, igroup, ngroup, X, theta, K, n, tol, maxit) {
     invisible(.Call(`_CDatanet_fnewEyTBT`, Ey, GEy, G, igroup, ngroup, X, theta, K, n, tol, maxit))
 }
 
-fcovSTI <- function(n, GEy, theta, X, K, G, igroup, ngroup, ccov) {
-    .Call(`_CDatanet_fcovSTI`, n, GEy, theta, X, K, G, igroup, ngroup, ccov)
+fcovSTI <- function(n, GEy, theta, X, K, G, igroup, ngroup) {
+    .Call(`_CDatanet_fcovSTI`, n, GEy, theta, X, K, G, igroup, ngroup)
+}
+
+SImeffects <- function(THETAT, Gye, X, conti, dis0, dis1, indexmarg, indexX, hasCont, indexGX, indexinmarg, G, Gcont, igroup, ngroup, sumn, tol, maxit, covparm, simNorm, boot, print, nthreads = 1L) {
+    .Call(`_CDatanet_SImeffects`, THETAT, Gye, X, conti, dis0, dis1, indexmarg, indexX, hasCont, indexGX, indexinmarg, G, Gcont, igroup, ngroup, sumn, tol, maxit, covparm, simNorm, boot, print, nthreads)
 }
 
