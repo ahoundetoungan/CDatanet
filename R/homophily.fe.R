@@ -134,7 +134,7 @@ homophily.fe <- function(network,
   }
   N               <- sum(Nvec)
   
-  quiet(gc())
+  invisible(gc())
   if (sum(!((network == 0) | (network == 1))) != 0) {
     stop("Network should contain only 0 and 1.")
   }
@@ -148,7 +148,7 @@ homophily.fe <- function(network,
   index   <- cbind(tmp2, tmp1) 
   rm(list = c("tmp1", "tmp2"))
   
-  quiet(gc())
+  invisible(gc())
   indexgr <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2) #start group, end group
   # INDEXgr         <- matrix(c(cumsum(c(0, Nvec[-M])), cumsum(Nvec) - 1), ncol = 2)
   # Formula to data
@@ -159,13 +159,13 @@ homophily.fe <- function(network,
                                      type = "network", theta0 =  NA)
     if(!missing(data)) {
       rm("data")
-      quiet(gc())
+      invisible(gc())
     }
     formula       <- f.t.data$formula
     dX            <- f.t.data$X
     if(nrow(dX) != N && nrow(dX) != 0) stop("The number of observations in X does not match the network.")
     rm("f.t.data")
-    quiet(gc())
+    invisible(gc())
     hasX          <- TRUE
   }
   coln            <- colnames(dX)
@@ -233,7 +233,7 @@ homophily.LogitFE <- function(network, fe.way, M, nvec, n, N, Nvec, index, index
   
   #starting value
   initllh         <- NULL
-  quiet(gc())
+  invisible(gc())
   if(is.null(init)){
     if(print) cat("starting point searching\n")
     beta          <- NULL
@@ -299,12 +299,12 @@ homophily.LogitFE <- function(network, fe.way, M, nvec, n, N, Nvec, index, index
       }
     } 
   }
-  quiet(gc())
+  invisible(gc())
   
   theta           <- 1*init
   
   estim           <- NULL
-  quiet(gc())
+  invisible(gc())
   
   if(print) {
     cat("maximizer searching\n")
@@ -421,7 +421,7 @@ homophily.LogitFESym <- function(network, M, nvec, n, N, Nvec, index, indexgr, f
   
   #starting value
   initllh         <- NULL
-  quiet(gc())
+  invisible(gc())
   if(is.null(init)){
     if(print) cat("starting point searching\n")
     beta          <- NULL
@@ -465,13 +465,12 @@ homophily.LogitFESym <- function(network, M, nvec, n, N, Nvec, index, indexgr, f
       stopifnot(length(init) == (K + n))
     } 
   }
-  
-  quiet(gc())
+  invisible(gc())
   
   theta           <- 1*init
   
   estim           <- NULL
-  quiet(gc())
+  invisible(gc())
   
   if(print) {
     cat("maximizer searching\n")

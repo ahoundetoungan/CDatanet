@@ -30,7 +30,6 @@
 #' For one-way random effect models (`re.way = 1`), \eqn{\nu_j = \mu_j}. For symmetric models, the network is not directed and the 
 #' random effects need to be one way.
 #' @seealso \code{\link{homophily.fe}}.
-#' @importFrom ddpcr quiet
 #' @importFrom stats lm
 #' @importFrom stats var
 #' @importFrom stats cov
@@ -150,7 +149,7 @@ homophily.re <- function(network,
   }
   N               <- sum(Nvec)
 
-  quiet(gc())
+  invisible(gc())
   if (sum(!((network == 0) | (network == 1))) != 0) {
     stop("Network should contain only 0 and 1.")
   } 
@@ -164,7 +163,7 @@ homophily.re <- function(network,
   tmp2    <- c(0, tmp1[-n] + 1)
   index   <- cbind(tmp2, tmp1) 
   rm(list = c("tmp1", "tmp2"))
-  quiet(gc())
+  invisible(gc())
   
   indexgr         <- matrix(c(cumsum(c(0, nvec[-M])), cumsum(nvec) - 1), ncol = 2)
   INDEXgr         <- matrix(c(cumsum(c(0, Nvec[-M])), cumsum(Nvec) - 1), ncol = 2)
@@ -173,14 +172,14 @@ homophily.re <- function(network,
                                      type = "network", theta0 =  NA)
   if(!missing(data)) {
     rm("data")
-    quiet(gc())
+    invisible(gc())
   }
   
   formula         <- f.t.data$formula
   dX              <- f.t.data$X
   if(nrow(dX) != N) stop("The number of observations in X does not match the network.")
   rm("f.t.data")
-  quiet(gc())
+  invisible(gc())
   coln            <- colnames(dX)
   nfix            <- ifelse("(Intercept)" %in% coln, 1, 0)
   K               <- ncol(dX)
@@ -204,12 +203,12 @@ homophily.re <- function(network,
     dXdX          <- rbind(cbind(diag(Nvec), t(sumdX)), cbind(sumdX, dXdX))
     invdXdX       <- solve(as.matrix(dXdX))
     rm("sumdX")
-    quiet(gc())
+    invisible(gc())
   } else{
     invdXdX       <- solve(as.matrix(dXdX))
   }
   rm("dXdX")
-  quiet(gc())
+  invisible(gc())
   
   #starting value
   beta            <- init$beta
@@ -219,7 +218,7 @@ homophily.re <- function(network,
   snu2            <- init$snu2
   rho             <- init$rho
 
-  quiet(gc())
+  invisible(gc())
   if (is.null(beta)) {
     # print(dim(invdXdX))
     # print(length(sumnetwork))

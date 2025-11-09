@@ -302,7 +302,6 @@ fcoefficients          <- function(coef, std) {
 #' @importFrom stats delete.response
 #' @importFrom stats as.formula
 #' @importFrom Matrix rankMatrix
-#' @importFrom ddpcr quiet
 formula.to.data <- function(formula,
                             contextual, 
                             Glist, 
