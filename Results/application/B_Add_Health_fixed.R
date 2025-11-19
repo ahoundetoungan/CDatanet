@@ -3,7 +3,7 @@ rm(list = ls())
 library(CDatanet)
 library(ggplot2)
 library(dplyr)
-setwd("~/Dropbox/Academy/1.Papers/CountDNtw/Code/Application")
+setwd("")
 
 # Data
 load("MydataCount.rda")
