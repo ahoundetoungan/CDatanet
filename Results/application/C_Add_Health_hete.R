@@ -80,7 +80,7 @@ while (cont) {
 
 save(CDtmp, SCD0_hnf, SCD1_hnf, SCD2_hnf, Rbh, file = "_output/AH_hete.rda")
 
-################ With fixed effects (Model 7)
+################ With fixed effects (Models 7 and 8)
 load("_output/AH_hete.rda")
 # Settings
 form.fix     <- as.formula(paste0(c("nclubs ~ -1 + ", paste0(c(eff, expvc), collapse = " + ")), collapse = ""))
@@ -136,15 +136,52 @@ SCD_hf   <- cdnet(formula = form.fix, Glist =  GHet, Rbar = rep(Rbh, 2), data = 
 save(CDtmp, SCD0_hnf, SCD1_hnf, SCD2_hnf, SCD0_hf, SCD_hf, file = "_output/AH_hete.rda")
 
 
-################ simulate data using these results
-# (the simulations are used in file `D3_Add_Health_Endo.R` to construct Figure Figure B.1)
-load(file = "_output/AH_hete.rda")
+################ simulate data using these results 
 set.seed(123)
 sform.fix   <- as.formula(paste0(c("~ -1 + ", paste0(c(eff, expvc), collapse = " + ")), collapse = ""))
-Rbar        <- 10
-y           <- simcdnet(formula = sform.fix, Glist = GHet, parms = SCD_hf$estimate$parms, 
+# Constructing network matrices
+Gnetnorm     <- norm.network(Gnet)
+group        <- mydata$female
+GHet         <- vector("list", n.school)
+n            <- sapply(Gnet, nrow)
+ncum         <- c(0, cumsum(n))
+for(m in 1:n.school){
+  grp        <- mydata$female[(ncum[m] + 1):ncum[m + 1]]
+  GHet[[m]]  <- norm.network(list(Gnet[[m]] * ((grp == 0) %*% t(grp == 0)), 
+                                  Gnet[[m]] * ((grp == 0) %*% t(grp == 1)), 
+                                  Gnet[[m]] * ((grp == 1) %*% t(grp == 0)), 
+                                  Gnet[[m]] * ((grp == 1) %*% t(grp == 1))))
+}
+
+Rbar        <- 1
+y0          <- simcdnet(formula = sform.fix, Glist = GHet, parms = SCD0_hf$estimate$parms, 
                         data = mydata, Rbar = Rbar, Rmax = 33, group = group)$y
 
-simuAH_hete <- data.frame(model = "C", y = y, Data  = 6) %>%
-  mutate(Datacode = factor(Data, labels = c(expression(paste("(E) Het with FE, ", bar(R), " = 10")))))
+Rbar        <- 10
+y1          <- simcdnet(formula = sform.fix, Glist = GHet, parms = SCD_hf$estimate$parms, 
+                        data = mydata, Rbar = Rbar, Rmax = 33, group = group)$y
+simuAH_hete <- data.frame(model = "C",
+                          y     = c(y0, y1),
+                          Data  = rep(6:7, each = length(y0))) %>%
+  mutate(Datacode = factor(Data, labels = c(expression(paste("(B) With FE, Het., ", bar(R), " =  1")), 
+                                            expression(paste("(C) With FE, Het.,", bar(R), " = 10")))))
+
 saveRDS(simuAH_hete, file = "_output/simuC.RDS")
+
+################ Figure B.1: Histograms of the observed and simulated dependent variables
+dataplot    <- rbind(readRDS(file = "_output/simuA.RDS"),
+                     readRDS(file = "_output/simuB.RDS"),
+                     readRDS(file = "_output/simuC.RDS")) %>% filter(Data %in% c(1, 4, 5, 7)) %>%
+  mutate(Datacode = factor(Data, labels = c("(A) Observed Data",
+                                            "(B) Model 5 (Quadratic cost)", 
+                                            "(C) Model 4 (Semiparametric cost)",
+                                            "(D) Model 7 (Semparametric cost and heterogeneity)")))
+
+library(ggplot2)
+(graph       <- ggplot(dataplot, aes(x = y)) + geom_bar(color = "black", fill = "#eeeeee") + 
+    theme_bw() + facet_wrap(~ Datacode, ncol = 2) + 
+    theme(strip.text = element_text(face = "italic"), 
+          text = element_text(size = 12, family = "Palatino"),
+          axis.title = element_text(size = 12, family = "Palatino")) +  
+    ylab("") + xlab("Number of activities"))
+ggsave("plot_AH_simu.pdf", path = "_output", plot = graph, device = "pdf", width = 7, height = 4)

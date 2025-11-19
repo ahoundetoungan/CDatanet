@@ -77,7 +77,7 @@ save(SART_nf, SSART_nf, CDtmp, Rbh, file = "_output/AH_nofixed.rda")
 save(SART_nf, SSART_nf, CDtmp, SCD0_nf, SCD1_nf, SCD2_nf, Rbh, file = "_output/AH_nofixed.rda")
 
 ################ simulate data using these results 
-# (the simulations are used in file `D3_Add_Health_Endo.R` to construct Figure Figure B.1)
+# (the simulations are used in file `C_Add_Health_hete.R` to construct Figure Figure B.1)
 load(file = "_output/AH_nofixed.rda")
 set.seed(123)
 sform.nofix <- as.formula(paste0(c("~ ", paste0(expvc, collapse = " + ")), collapse = ""))

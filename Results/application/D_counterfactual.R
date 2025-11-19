@@ -70,7 +70,7 @@ out    <- do.call(rbind, simu) %>% group_by(pmale, model) %>%
   mutate(model = factor(model, labels =  c("(A) Model 4 without interations (Semparametric cost)", 
                                            "(B) Model 5 (Quadratic cost)",
                                            "(C) Model 4 (Semiparametric cost)",
-                                           "(D) Model 8 (Semparametric cost, Heter., and Endog.)")))
+                                           "(D) Model 7 (Semparametric cost and heterogeneity)")))
 
 # Figure 4: Counterfactual analysis results
 (graph <- ggplot(out, aes(x = pmale, y = m)) +
@@ -84,6 +84,6 @@ out    <- do.call(rbind, simu) %>% group_by(pmale, model) %>%
           text = element_text(size = 12, family = "Palatino"),
           axis.title = element_text(size = 12, family = "Palatino")))
 
-ggsave("plot:AH:CFA.pdf", path = "_output", plot = graph, device = "pdf", width = 7, height = 5)
+ggsave("plot_AH_CFA.pdf", path = "_output", plot = graph, device = "pdf", width = 7, height = 5)
 
 write.csv(out, row.names = FALSE, file = "_output/plot:AH:CFA.csv")

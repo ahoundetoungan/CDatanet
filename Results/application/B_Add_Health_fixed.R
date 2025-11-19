@@ -79,7 +79,7 @@ SCD_f    <- cdnet(formula = form.fix, Glist =  Gnetnorm, Rbar = Rbh, data = myda
 save(SSART_f, SCD_f0, SCD_f, file = "_output/AH_fixed.rda")
 
 ################ simulate data using these results
-# (the simulations are used in file `D3_Add_Health_Endo.R` to construct Figure Figure B.1)
+# (the simulations are used in file `C_Add_Health_hete.R` to construct Figure Figure B.1)
 load(file = "_output/AH_fixed.rda")
 set.seed(123)
 sform.fix   <- as.formula(paste0(c("~ -1 + ", paste0(c(eff, expvc), collapse = " + ")), collapse = ""))
