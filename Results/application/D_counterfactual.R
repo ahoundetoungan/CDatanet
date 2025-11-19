@@ -5,27 +5,15 @@ library(dplyr)
 library(splines)
 library(ggplot2)
 library(doParallel)
+setwd("")
 
 # Data
-type  <- "FE" 
 load("MydataCount.rda")
 load("_output/AH_fixed.rda")
+load(file = "_output/AH_hete.rda")
 rm(list = c("datanet", "GX")); gc()
 
-SCD_EndoFE <- readRDS(file = paste0("_output/AH_Endo.FE.RDS"))
-load(paste0("_output/munu.", type, ".rda"))  # use munu.FE for fixed effects
-
-mu     <- mu/max(abs(mu))
-nu     <- nu/max(abs(nu))
-Zmu    <- bs(mu, degree = 3L, knots = quantile(mu, probs = seq(0.05, 0.95, 0.05))); colnames(Zmu) <- paste0("mu", 1:ncol(Zmu))
-Znu    <- bs(nu, degree = 3L, knots = quantile(nu, probs = seq(0.05, 0.95, 0.05))); colnames(Znu) <- paste0("nu", 1:ncol(Znu))
-KZmu   <- ncol(Zmu)
-KZnu   <- ncol(Znu)
-
-mydata <- mydata %>% bind_cols(Zmu) %>% bind_cols(Znu)
-
 # Settings
-expmunu  <- c(expvc, paste0("mu", 1:KZmu), paste0("nu", 1:KZnu))
 n        <- sapply(Gnet, nrow)
 ncum     <- c(0, cumsum(n))
 sumn     <- sum(n)
@@ -62,7 +50,7 @@ fsimu    <- function(pmale){
   Ey0 <- simcdEy(object = SCD_f, Glist = G0, data = mydata)
   Ey1 <- simcdEy(object = SCD_f0, Glist = Gnetnorm, data = mydata)
   Ey2 <- simcdEy(object = SCD_f, Glist = Gnetnorm, data = mydata)
-  Ey3 <- simcdEy(object = SCD_EndoFE, Glist = GHet, data = mydata, group = group)
+  Ey3 <- simcdEy(object = SCD_hf, Glist = GHet, data = mydata, group = group)
   data.frame(pmale = pmale, 
              model = rep(0:3, each = sumn),
              Ey    = c(Ey0$Ey, Ey1$Ey, Ey2$Ey, Ey3$Ey),

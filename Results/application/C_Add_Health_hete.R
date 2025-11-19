@@ -3,7 +3,7 @@ rm(list = ls())
 library(CDatanet)
 library(ggplot2)
 library(dplyr)
-setwd("/home/aristide/Dropbox/Academy/1.Papers/CountDNtw/Code/Application")
+setwd("")
 
 # Data
 load("MydataCount.rda")
@@ -103,6 +103,21 @@ for(m in 1:n.school){
                                   Gnet[[m]] * ((grp == 1) %*% t(grp == 1))))
 }
 
+Rbh      <- 1
+starting <- SCD0_hnf$estimate; starting$Gamma <- c(rep(starting$Gamma[1], n.school), starting$Gamma[-1])
+Ey0      <- CDtmp[[Rbh]]$Ey
+
+SCD0_hf  <- cdnet(formula = form.fix, Glist =  GHet, Rbar = rep(Rbh, 2), data = mydata, 
+                  npl.ctr = npl.ctr, opt.ctr = opt.ctr0, cov = FALSE, group = group, 
+                  starting = starting, Ey0 = Ey0)
+SCD0_hf  <- cdnet(formula = form.fix, Glist =  GHet, Rbar = rep(Rbh, 2), data = mydata, 
+                  npl.ctr = npl.ctr, opt.ctr = opt.ctr1, cov = TRUE, group = group,
+                  optimizer = "optim", starting = SCD0_hf$estimate, Ey0 = SCD0_hf$Ey)
+
+(SCD0_hf <- meffects(SCD0_hf, Glist = GHet, data = mydata, cont.var = cont.var, 
+                     bin.var = bin.var, type.var = type.var, boot = 100, progress = TRUE,
+                     Glist.contextual = Gnetnorm))
+
 Rbh      <- 10
 starting <- SCD1_hnf$estimate; starting$Gamma <- c(rep(starting$Gamma[1], n.school), starting$Gamma[-1])
 Ey0      <- CDtmp[[Rbh]]$Ey
@@ -118,7 +133,7 @@ SCD_hf   <- cdnet(formula = form.fix, Glist =  GHet, Rbar = rep(Rbh, 2), data = 
                      bin.var = bin.var, type.var = type.var, boot = 100, progress = TRUE,
                      Glist.contextual = Gnetnorm))
 
-save(CDtmp, SCD0_hnf, SCD1_hnf, SCD2_hnf, SCD_hf, file = "_output/AH_hete.rda")
+save(CDtmp, SCD0_hnf, SCD1_hnf, SCD2_hnf, SCD0_hf, SCD_hf, file = "_output/AH_hete.rda")
 
 
 ################ simulate data using these results

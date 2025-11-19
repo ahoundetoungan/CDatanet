@@ -998,7 +998,7 @@ simcdEy <- function(object,
                     tol          = 1e-10,
                     maxit        = 500,
                     S            = 1e3){
-  stopifnot(inherits(object, c("cdnet", "summary.cdnet")))
+  stopifnot(inherits(object, c("cdnet", "summary.cdnet", "meffects.cdnet")))
   covparms    <- object$cov
   if(is.null(covparms)) stop("`object` does not include a covariance matrix")
   env.formula <- environment(object$info$formula)
