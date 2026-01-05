@@ -1,4 +1,4 @@
-# Estimations with heterogeneity in peer effects without addressing network endogeneity (Model 7)
+# Estimations with heterogeneity in peer effects without addressing network endogeneity (Models 7-8)
 rm(list = ls())
 library(CDatanet)
 library(ggplot2)

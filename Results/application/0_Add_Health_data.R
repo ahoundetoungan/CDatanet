@@ -290,7 +290,7 @@ for (i in 3:9) {
   desc.data[grepl("NA", desc.data[,i]),i]     <- ""
 }
 rownames(desc.data) <- NULL
-# Table 2: Data Summary
+# Table D.2: Data Summary
 print(desc.data)
 stargazer(desc.data, summary = FALSE, rownames = FALSE)
 

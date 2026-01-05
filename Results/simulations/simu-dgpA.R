@@ -2,9 +2,7 @@
 rm(list = ls())
 library(CDatanet)
 library(doParallel)
-pdir <- c("~/Dropbox/Academy/1.Papers/CountDNtw/Code/Monte Carlo/_output",
-          "~/CountDNtw/Code/Monte Carlo/_output")
-setwd(pdir[sapply(pdir, dir.exists)])
+setwd("WORKING/DIRECTORY")
 
 # Parameters
 lambda <- 0.25

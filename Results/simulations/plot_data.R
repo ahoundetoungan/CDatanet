@@ -68,5 +68,4 @@ out     <- do.call(rbind, lapply(1:4, fsim))
           text = element_text(size = 13, family = "Palatino"),
           axis.title = element_text(size = 13, family = "Palatino")))
 
-ggsave("mc_plot.pdf", path = "~/Dropbox/Academy/1.Papers/CountDNtw/Code/Monte Carlo/_output", 
-       plot = graph, device = "pdf", width = 7, height = 4)
+ggsave("mc_plot.pdf", path = "_output", plot = graph, device = "pdf", width = 7, height = 4)
