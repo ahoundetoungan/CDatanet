@@ -28,7 +28,7 @@ data summary in Table D.2 as well as Figure 3.
 peer effects (Models 7 and 8 in Table 2, D.7 and D.8).
 * File `D_counterfactual.R` replicates the counterfactual analysis (Figure 4).
 
-## Add Health Data
+# Add Health Data
 This research uses data from Add Health, a program directed by Kathleen Mullan 
 Harris and designed by J. Richard Udry, Peter S. Bearman, and Kathleen Mullan 
 Harris at the University of North Carolina at Chapel Hill, and funded by Grant 
