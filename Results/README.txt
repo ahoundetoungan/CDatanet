@@ -16,8 +16,15 @@ from CRAN or from GitHub.
 * File `plot_data.R` plots examples of simulated data for DGPs A, B, C, and D 
 (Figure 2).
 
-# Application: Effects of Social Interactions on Participation in Extracurricular 
-Activities
+# Empirical Application: Effects of Social Interactions on Participation in 
+Extracurricular Activities
+* This application uses data from Add Health, a program directed by Kathleen 
+Mullan Harris and designed by J. Richard Udry, Peter S. Bearman, and Kathleen 
+Mullan Harris at the University of North Carolina at Chapel Hill, and funded by 
+Grant P01-HD31921 from the Eunice Kennedy Shriver National Institute of Child 
+Health and Human Development, with cooperative funding from 23 other federal 
+agencies and foundations. Information on how to obtain Add Health data files is 
+available on the Add Health website (https://addhealth.cpc.unc.edu/).
 * File `0_Add_Health_data.R` prepares the data set to be used and produces the 
 data summary in Table D.2 as well as Figure 3.
 * File `A_Add_Health_nofixed.R` replicates the estimations without fixed effects 
@@ -28,11 +35,4 @@ data summary in Table D.2 as well as Figure 3.
 peer effects (Models 7 and 8 in Table 2, D.7 and D.8).
 * File `D_counterfactual.R` replicates the counterfactual analysis (Figure 4).
 
-# Add Health Data
-This research uses data from Add Health, a program directed by Kathleen Mullan 
-Harris and designed by J. Richard Udry, Peter S. Bearman, and Kathleen Mullan 
-Harris at the University of North Carolina at Chapel Hill, and funded by Grant 
-P01-HD31921 from the Eunice Kennedy Shriver National Institute of Child Health 
-and Human Development, with cooperative funding from 23 other federal agencies 
-and foundations. Information on how to obtain Add Health data files is available 
-on the Add Health website (https://addhealth.cpc.unc.edu/). 
+
