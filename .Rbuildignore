@@ -1,0 +1,22 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^doc$
+^Meta$
+^test$
+^archives$
+^Results$
+^.github$
+^scripts$
+^\.travis\.yml$
+^\.gitignore$
+^\.Rbuildignore$
+^\.Rhistory$
+^CDatanet\.Rproj$
+^CDatanet\.Rproj, README\.md$
+^vignettes/\.gitignore$
+^scr/*\.so$
+^scr/*\.o$
+^README\.md$
+^QuantilePeer\.Rproj, README\.md$
+^\.tar\.gz$
+^vignettes/\.pdf$

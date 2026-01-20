@@ -1,0 +1,128 @@
+############### THIS CODE REPLICATES THE MONTE CARLO RESULTS FOR DGP A ############### 
+rm(list = ls())
+library(CDatanet)
+library(doParallel)
+setwd("WORKING/DIRECTORY")
+
+# Parameters
+lambda <- 0.25
+Gamma  <- c(2, 1.5, -1.2, 0.5, -0.9)
+delta  <- 0.3
+parms  <- c(lambda, Gamma, delta) 
+lGamma <- c(lambda, Gamma)
+names(lGamma) <- c("lambda", "(Intercept)", "x1", "x2", "gx1", "gx2")
+
+opt.ctr0 <- list(maxit = 5e3, eps_f = 1e-13, eps_g = 1e-13)
+opt.ctr1 <- list(control = list(abstol = 1e-11, reltol = 1e-11, maxit = 5e3),
+                 method  = "Nelder-Mead")
+npl.ctr  <- list(maxit   = 2e3, tol = 5e-4, print = FALSE)
+
+# Functions
+# This function performs the iteration in the Monte Carlo
+f.estim  <- function(nvec){
+  n      <- sum(nvec)
+  S      <- length(nvec)
+  
+  G      <- list()
+  for(s in 1:S){
+    ns           <- nvec[s]
+    Gs           <- matrix(0, ns, ns)
+    for (i in 1:ns) {
+      max_d      <- 10
+      tmp        <- sample((1:ns)[-i], sample(0:max_d, 1))
+      Gs[i, tmp] <- 1
+    }
+    G[[s]]       <- Gs
+  }
+  G       <- norm.network(G)
+  
+  X       <- cbind(runif(n, 0, 5), rpois(n, 2))
+  data    <- data.frame(X, peer.avg(G, X)); colnames(data) <- c("x1", "x2", "gx1", "gx2")
+  
+  ytmp    <- simcdnet(formula = ~ x1 + x2 + gx1 + gx2, Glist = G, 
+                      parms = parms, Rbar = 1, data = data, Rmax = 100,
+                      cont.var = c("x1", "x2", "gx1", "gx2"))
+  data$y  <- ytmp$y
+  # hist(data$y, breaks = max(data$y) + 1)
+  ameff   <- ytmp$meff$ameff; names(ameff) <- paste("ameff", names(ameff))
+  
+  cont    <- TRUE
+  Rbh     <- 0
+  BIC     <- Inf
+  ecd     <- list()
+  while(cont){
+    Rbh         <- Rbh + 1
+    tp          <- cdnet(y ~ x1 + x2 + gx1 + gx2, Glist = G, npl.ctr = npl.ctr, 
+                         opt.ctr = opt.ctr0, Rbar = Rbh, data = data, cov = FALSE, Rmax = 100)
+    starting    <- NULL
+    Ey0         <- NULL
+    if(!is.null(tp$estimate$parms)){
+      starting  <- tp$estimate
+    }
+    if(!is.null(tp$Ey)){
+      Ey0       <- tp$Ey
+    }
+    ecd[[Rbh]]  <- cdnet(y ~ x1 + x2 + gx1 + gx2, Glist = G, optimizer = "optim", 
+                         npl.ctr = npl.ctr, opt.ctr = opt.ctr1, Rbar = Rbh, data = data, 
+                         cov = FALSE, starting = starting, Ey0 = Ey0, Rmax = 100)
+    cont        <- (BIC > ecd[[Rbh]]$info$BIC)
+    BIC         <- ecd[[Rbh]]$info$BIC
+  }
+  
+  ccd0          <- c(ecd[[1]]$estimate$lambda, ecd[[1]]$estimate$Gamma) 
+  names(ccd0)   <- paste0("cd.coef.R0", names(ccd0))
+  ccd           <- c(ecd[[Rbh]]$estimate$lambda, ecd[[Rbh]]$estimate$Gamma) 
+  names(ccd)    <- paste0("cd.coef.Rh.", names(ccd))
+  
+  # Marginal effects
+  mcd0          <- meffects(ecd[[1]], Glist = G, cont.var = c("x1", "x2", "gx1", "gx2"), data = data, 
+                            boot = 0, progress = FALSE)$meffects$estimate$direct
+  names(mcd0)   <- paste0("cd.meff.R0.", names(mcd0))
+  mcd           <- meffects(ecd[[Rbh]], Glist = G, cont.var = c("x1", "x2", "gx1", "gx2"), data = data, 
+                            boot = 0, progress = FALSE)$meffects$estimate$direct
+  names(mcd)    <- paste0("cd.meff.Rh.", names(mcd))
+  
+  tp            <- sart(y ~ x1 + x2 + gx1 + gx2, Glist = G, npl.ctr = npl.ctr, opt.ctr = opt.ctr0, 
+                        cinfo = FALSE, data = data, cov = FALSE)
+  starting      <- NULL
+  Ey0           <- NULL
+  if(!is.null(tp$estimate)){
+    starting    <- tp$estimate
+  }
+  if(!is.null(tp$Ey)){
+    Ey0         <- tp$Ey
+  }
+  esart         <- sart(y ~ x1 + x2 + gx1 + gx2, Glist = G, optimizer = "optim", npl.ctr = npl.ctr, 
+                        opt.ctr = opt.ctr1, cinfo = FALSE, data = data, cov = FALSE,
+                        starting = starting, Ey0 = Ey0)
+  
+  cTo           <- esart$estimate; cTo <- cTo[-c(2, length(cTo))]; names(cTo) <- paste0("To.coef.", names(cTo))
+  mTo           <- meffects(esart, Glist = G, cont.var = c("x1", "x2", "gx1", "gx2"), data = data, 
+                            boot = 0, progress = FALSE)$meffects$estimate$direct
+  
+  names(mTo)    <- paste0("To.meff.", names(mTo))
+  
+  c(lGamma, ameff, ccd0, mcd0, "Rh" = Rbh, ccd, mcd, cTo, mTo)
+}
+
+# The summary functions
+sum.func     <- function(x) {
+  out        <- c("Mean" = mean(x, na.rm = TRUE), 
+                  "Sd."  = sd(x, na.rm = TRUE),
+                  quantile(x, na.rm = TRUE, probs = c(0, 0.1, 0.25, 0.5, 0.75, 0.9, 1)))
+  return(out)
+}
+
+# Simulations
+nsimu     <- 1000
+RNGkind("L'Ecuyer-CMRG")
+set.seed(1234)
+nvec      <- rep(250, 2)
+out500    <- mclapply(1:nsimu, function(x){cat(x, "\n"); f.estim(nvec)}, mc.cores = 2L)
+
+nvec      <- rep(250, 8)
+out2000   <- mclapply(1:nsimu, function(x){cat(x, "\n"); f.estim(nvec)}, mc.cores = 2L)
+
+save(out500, out2000, file = "dgpA.rda")
+write.csv(cbind(t(apply(do.call(cbind, out500), 1, sum.func)), 
+                t(apply(do.call(cbind, out2000), 1, sum.func))), file = "dgpA.csv")
