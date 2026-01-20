@@ -1,0 +1,90 @@
+name: R-CMD-check
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  R-CMD-check:
+    name: R CMD check on ${{ matrix.os }} (R ${{ matrix.r }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            r: release
+            http-user-agent: ''
+          - os: windows-latest
+            r: release
+            http-user-agent: ''
+          - os: ubuntu-latest
+            r: devel
+            http-user-agent: 'release'
+          - os: ubuntu-latest
+            r: release
+            http-user-agent: ''
+
+    env:
+      R_KEEP_PKG_SOURCE: yes
+      _R_CHECK_FORCE_SUGGESTS_: false
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # ----------------------- Set up R -----------------------
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r }}
+          http-user-agent: ${{ matrix.http-user-agent }}
+
+      # ----------------------- TinyTeX setup -----------------------
+      - name: Install TinyTeX
+        run: |
+          Rscript -e "install.packages('tinytex')"
+          Rscript -e "tinytex::install_tinytex(force = TRUE)"
+          Rscript -e "tinytex::tlmgr_install(c('latex-bin','pdftex','babel-english','xcolor','framed','inconsolata'))"
+
+      - name: Set TinyTeX PATH (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          export PATH="$HOME/bin/TinyTeX/bin:$PATH"
+          echo "$HOME/bin/TinyTeX/bin" >> $GITHUB_PATH
+      
+      - name: Set TinyTeX PATH (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $texPath = "C:/Users/runneradmin/AppData/Roaming/TinyTeX/bin/windows"
+          $env:PATH = "$texPath;$env:PATH"
+          Get-Command pdflatex
+          
+      # ------------------------ Install tidy ------------------------
+      - name: Install tidy (macOS only)
+        if: runner.os == 'macOS'
+        run: brew install tidy-html5
+
+      - name: Install tidy (Linux only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y tidy
+
+      # ------------------- Install R dependencies -------------------
+      - name: Install R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::V8
+            any::qpdf
+            any::rcmdcheck
+            any::tinytex
+
+      # ----------------- Run R CMD check -----------------
+      - name: Run R CMD check
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--as-cran","--no-manual")'
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          upload-snapshots: true
