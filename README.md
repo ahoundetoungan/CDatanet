@@ -5,8 +5,8 @@
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![R-CMD-check](https://github.com/ahoundetoungan/CDatanet/actions/workflows/R-CMD-check.yml/badge.svg)](https://github.com/ahoundetoungan/CDatanet/actions/workflows/R-CMD-check.yml)
 
-  [![R-universe](https://ahoundetoungan.r-universe.dev/badges/CDatanet)](https://ahoundetoungan.r-universe.dev/CDatanet)
   [![CRAN](https://www.r-pkg.org/badges/version/CDatanet)](https://CRAN.R-project.org/package=CDatanet)
+  [![R-universe](https://ahoundetoungan.r-universe.dev/badges/CDatanet)](https://ahoundetoungan.r-universe.dev/CDatanet)
   [![DOI](https://img.shields.io/badge/DOI-10.32614%2FCRAN.package.CDatanet-blue)](https://doi.org/10.32614/CRAN.package.CDatanet)
   [![CRAN Downloads](https://img.shields.io/endpoint?url=https://ahoundetoungan.github.io/cranlogs/badges/CDatanet.json)](https://cran.r-project.org/package=CDatanet)
 <!-- badges: end -->
