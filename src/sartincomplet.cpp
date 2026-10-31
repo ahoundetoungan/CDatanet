@@ -633,7 +633,7 @@ List SImeffects(const Eigen::VectorXd& THETAT,
     }
     
     // indirect
-    Eigen::ArrayXXd meff2idi(meff2tot - meff2dir(Eigen::all, indexinmarg));
+    Eigen::ArrayXXd meff2idi(meff2tot - meff2dir(Eigen::indexing::all, indexinmarg));
     
     Lmeffdir.col(booti)  = meffdir.colwise().mean().transpose();
     Lmeff2idi.col(booti) = meff2idi.colwise().mean().transpose();

@@ -56,3 +56,6 @@ Fixed effect is allowed in the model SAR.
 - The summary method for `cdnet` and `sart` no longer displays marginal effects.  
 - The `meffects` method has been added and can be applied to the outputs of `cdnet` and `sart`.  
   This method computes direct, indirect, and total marginal effects.  
+
+# Changes in version 2.2.3
+- Changing `Eigen::all` to `Eigen::indexing::all` because the former will not be supported by the new version of `RcppEigen`.

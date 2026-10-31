@@ -20,3 +20,4 @@
 ^QuantilePeer\.Rproj, README\.md$
 ^\.tar\.gz$
 ^vignettes/\.pdf$
+^[^/]+\.R$

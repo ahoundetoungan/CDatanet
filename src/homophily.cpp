@@ -1112,7 +1112,6 @@ private:
   const int& m;
   const int& nm;
   const int& nparms;
-  const bool& Print;
 public:
   llhhomomunu2f(const arma::vec& a_,
                 const arma::vec& dxb_,
@@ -1123,8 +1122,7 @@ public:
                 arma::vec& llh_,
                 const int& m_,
                 const int& nm_,
-                const int& nparms_,
-                const bool& Print_) : 
+                const int& nparms_) : 
   a(a_),
   dxb(dxb_),
   sadxb(sadxb_),
@@ -1134,8 +1132,7 @@ public:
   llh(llh_),
   m(m_),
   nm(nm_),
-  nparms(nparms_),
-  Print(Print_){}
+  nparms(nparms_){}
   
   arma::vec Grad;
   
@@ -1249,7 +1246,7 @@ double fhomobetamunu2f(arma::vec& theta,
     am(a.subvec(N1, N2)), dxbm(dxb.subvec(N1, N2)), dm(d.subvec(igr1, igr2)), bm(b.subvec(igr1, igr2));
     Eigen::VectorXd thetaEi(Eigen::Map<Eigen::VectorXd>(thetacpp.memptr(), nparms));
     double fopt, adxbm(sum(adxb.subvec(N1, N2)));
-    llhhomomunu2f f(am, dxbm, adxbm, dm, bm, indexm, llh, m, nm, nparms, Print);
+    llhhomomunu2f f(am, dxbm, adxbm, dm, bm, indexm, llh, m, nm, nparms);
     optim_lbfgs(f, thetaEi, fopt, maxit, eps_f, eps_g);
     llh(m)     = -fopt;
     mu.subvec(igr1, igr2)             = arma::vec(thetaEi.segment(0, nm).data(), nm, false, false); 
@@ -1480,7 +1477,6 @@ private:
   const int& m;
   const int& nm;
   const int& nparms;
-  const bool& Print;
 public:
   llhhomomu1f(const arma::vec& a_,
               const arma::vec& dxb_,
@@ -1491,8 +1487,7 @@ public:
               arma::vec& llh_,
               const int& m_,
               const int& nm_,
-              const int& nparms_,
-              const bool& Print_) : 
+              const int& nparms_) : 
   a(a_),
   dxb(dxb_),
   sadxb(sadxb_),
@@ -1502,8 +1497,7 @@ public:
   llh(llh_),
   m(m_),
   nm(nm_),
-  nparms(nparms_),
-  Print(Print_){}
+  nparms(nparms_){}
   
   arma::vec Grad;
   
@@ -1603,7 +1597,7 @@ double fhomobetamu1f(arma::vec& theta,
     bm(b.subvec(igr1, igr2));
     Eigen::VectorXd thetaEi(Eigen::Map<Eigen::VectorXd>(mum.memptr(), nparms));
     double fopt, adxbm(sum(adxb.subvec(N1, N2)));
-    llhhomomu1f f(am, dxbm, adxbm, dm, bm, indexm, llh, m, nm, nparms, Print);
+    llhhomomu1f f(am, dxbm, adxbm, dm, bm, indexm, llh, m, nm, nparms);
     optim_lbfgs(f, thetaEi, fopt, maxit, eps_f, eps_g);
     llh(m)     = -fopt;
     mu.subvec(igr1, igr2) = arma::vec(thetaEi.data(), nm, false, false); 
@@ -1834,7 +1828,6 @@ private:
   const int& m;
   const int& nm;
   const int& nparms;
-  const bool& Print;
 public:
   llhhomomusym(const arma::vec& a_,
                const arma::vec& dxb_,
@@ -1845,8 +1838,7 @@ public:
                arma::vec& llh_,
                const int& m_,
                const int& nm_,
-               const int& nparms_,
-               const bool& Print_) : 
+               const int& nparms_) : 
   a(a_),
   dxb(dxb_),
   sadxb(sadxb_),
@@ -1856,8 +1848,7 @@ public:
   llh(llh_),
   m(m_),
   nm(nm_),
-  nparms(nparms_),
-  Print(Print_){}
+  nparms(nparms_){}
   
   arma::vec Grad;
   
@@ -1954,7 +1945,7 @@ double fhomobetamusym(arma::vec& theta,
     bm(b.subvec(igr1, igr2));
     Eigen::VectorXd thetaEi(Eigen::Map<Eigen::VectorXd>(mum.memptr(), nparms));
     double fopt, adxbm(sum(adxb.subvec(N1, N2)));
-    llhhomomusym f(am, dxbm, adxbm, dm, bm, indexm, llh, m, nm, nparms, Print);
+    llhhomomusym f(am, dxbm, adxbm, dm, bm, indexm, llh, m, nm, nparms);
     optim_lbfgs(f, thetaEi, fopt, maxit, eps_f, eps_g);
     llh(m)     = -fopt;
     mu.subvec(igr1, igr2) = arma::vec(thetaEi.data(), nm, false, false); 
